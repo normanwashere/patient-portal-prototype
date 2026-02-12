@@ -1,0 +1,1115 @@
+/* =============================================
+   V6: Premium UI - Profile & Identity
+   ============================================= */
+
+.profile-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 5rem;
+    max-width: 640px;
+    margin: 0 auto;
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Premium Header */
+.profile-header-premium {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+.avatar-wrapper {
+    position: relative;
+}
+
+.avatar-large-glow {
+    width: 80px;
+    height: 80px;
+    border-radius: 2rem;
+    background: linear-gradient(135deg, var(--color-primary), #c2410c);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px -5px rgba(234, 88, 12, 0.4);
+    border: 3px solid white;
+}
+
+.profile-info-v2 h2 {
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin: 0;
+    color: #000;
+    letter-spacing: -0.025em;
+}
+
+.member-id-v2 {
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 700;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* Premium HMO Card */
+.hmo-card-v2 {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-radius: 2rem;
+    padding: 1.75rem;
+    color: white;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.hmo-card-v2::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 60%;
+    height: 140%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+}
+
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.card-logo-v2 {
+    height: 32px;
+    filter: brightness(0) invert(1);
+}
+
+.member-tier {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.4rem 0.8rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    backdrop-filter: blur(10px);
+}
+
+.tier-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fbbf24;
+    box-shadow: 0 0 10px #fbbf24;
+}
+
+.card-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.card-field label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.5;
+    margin-bottom: 0.35rem;
+}
+
+.card-field span {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+}
+
+.card-bottom-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.card-footer-v2 {
+    margin-top: 2rem;
+    margin-bottom: -0.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.sos-label {
+    font-size: 0.6rem;
+    font-weight: 800;
+    opacity: 0.6;
+    margin-bottom: 0.25rem;
+}
+
+.sos-value {
+    font-weight: 900;
+    font-size: 1rem;
+}
+
+.card-chip-icon {
+    opacity: 0.4;
+}
+
+/* Quick Actions */
+.profile-quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.quick-action-btn {
+    background: white;
+    border: 1px solid #f1f5f9;
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-primary);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.quick-action-btn span {
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+/* Sections */
+.profile-section-v2 {
+    margin-top: 1rem;
+}
+
+.section-header-v2 h3 {
+    font-size: 1rem;
+    font-weight: 900;
+    color: #000;
+    margin-bottom: 1rem;
+}
+
+.contact-card-premium {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #f1f5f9;
+}
+
+.contact-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.contact-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #fff1f2;
+    color: #e11d48;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.contact-details-v2 {
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-name {
+    font-weight: 800;
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+.contact-relation {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.call-action-btn {
+    background: #059669;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 800;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+/* Menu Items */
+.menu-list-v2 {
+    background: white;
+    border-radius: 1.5rem;
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+}
+
+.menu-item-v2 {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 1.25rem;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    text-align: left;
+}
+
+.menu-item-v2:last-child {
+    border-bottom: none;
+}
+
+.icon-v2 {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.menu-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-title {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #1e293b;
+}
+
+.menu-desc {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.chevron-v2 {
+    color: #cbd5e1;
+}
+
+/* Logout */
+.btn-logout-v2 {
+    width: 100%;
+    padding: 1.25rem;
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid #ffe4e6;
+    border-radius: 1.25rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-logout-v2:hover {
+    background: #ffe4e6;
+}
+
+/* PhilHealth Card */
+.ph-id-card {
+    background: #0072bc;
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    color: white;
+    margin-bottom: 2rem;
+    box-shadow: 0 20px 30px -10px rgba(0, 114, 188, 0.4);
+}
+
+.ph-card-inner {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1rem;
+    padding: 1.5rem;
+}
+
+.ph-card-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.ph-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 900;
+    font-size: 1.1rem;
+}
+
+.ph-ring {
+    width: 20px;
+    height: 20px;
+    border: 4px solid #fde047;
+    border-radius: 50%;
+}
+
+.ph-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.ph-number {
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    font-family: monospace;
+    margin-bottom: 0.5rem;
+}
+
+.ph-name {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.ph-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.ph-meta-item label {
+    display: block;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-bottom: 0.25rem;
+}
+
+.ph-meta-item span {
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+.ph-status {
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.ph-status.active {
+    color: #86efac;
+}
+
+.ph-status.updating {
+    color: #fde047;
+}
+
+.ph-card-footer {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    font-weight: 700;
+    opacity: 0.6;
+    text-transform: uppercase;
+}
+
+/* Dependents */
+.principal-summary {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    padding: 1rem;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.principal-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.principal-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.principal-name {
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.plan-badge {
+    background: #fbbf24;
+    color: #92400e;
+    font-weight: 900;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+}
+
+.dependent-card-premium {
+    background: white;
+    border: 1px solid #f1f5f9;
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.dep-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dep-info {
+    flex: 1;
+}
+
+.dep-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.dep-header h4 {
+    margin: 0;
+    font-weight: 900;
+    font-size: 1rem;
+    color: #000;
+}
+
+.dep-relation {
+    font-size: 0.7rem;
+    font-weight: 800;
+    background: #f1f5f9;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    color: #475569;
+}
+
+.dep-meta {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-top: 0.25rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.add-dep-btn {
+    background: none;
+    border: 1px dashed #cbd5e1;
+    color: var(--color-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-weight: 800;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.coverage-alert {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    display: flex;
+    gap: 1rem;
+    color: #0369a1;
+}
+
+.alert-content p {
+    font-size: 0.8rem;
+    margin: 0.25rem 0 0;
+    line-height: 1.4;
+    color: #0c4a6e;
+}
+
+/* PhilHealth UHC & Konsulta Enhancements */
+.badge-uhc {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    letter-spacing: 0.05em;
+}
+
+.pc-clinic-card {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    border: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    position: relative;
+    overflow: hidden;
+}
+
+.pc-clinic-icon {
+    width: 3rem;
+    height: 3rem;
+    background: #f8fafc;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.pc-clinic-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.pc-clinic-name {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.pc-clinic-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.fpe-status {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.fpe-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.fpe-value {
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+}
+
+.fpe-value.completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.fpe-value.pending {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.fpe-value.not-registered {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* Benefits Grid UHC */
+.benefits-grid-uhc {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.uhc-benefit-group {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    border: 1px solid #f1f5f9;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.uhc-benefit-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 800;
+    color: #1e293b;
+    font-size: 0.95rem;
+}
+
+.uhc-benefit-header svg {
+    color: var(--color-primary);
+}
+
+.uhc-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.uhc-tag {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.uhc-tag-more {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    padding: 0.35rem 0.75rem;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.5rem;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.premium-modal {
+    background: white;
+    width: 100%;
+    max-width: 480px;
+    border-radius: 2rem;
+    padding: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 950;
+    color: #000;
+    letter-spacing: -0.025em;
+}
+
+.close-btn {
+    background: #f1f5f9;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.premium-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #475569;
+}
+
+.form-group input,
+.form-group select {
+    padding: 0.85rem 1rem;
+    border-radius: 1rem;
+    border: 2px solid #f1f5f9;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    transition: all 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1);
+}
+
+.form-actions {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-cancel {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    padding: 1rem;
+    border-radius: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.btn-submit {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 1rem;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 10px 15px -3px rgba(234, 88, 12, 0.3);
+}
+
+.btn-submit:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+}
+
+/* =============================================
+   Finance Hub Styles
+   ============================================= */
+
+.finance-section {
+    margin-bottom: 2rem;
+}
+
+.coverage-scroll-container {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 0.5rem 0.25rem 1.25rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.coverage-scroll-container::-webkit-scrollbar {
+    display: none;
+}
+
+.mini-hmo-card {
+    flex-shrink: 0;
+    width: 220px;
+    background: white;
+    padding: 1.25rem;
+    border-radius: 1.5rem;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mini-hmo-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    border-color: var(--color-primary-light, #f1f5f9);
+}
+
+.mini-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-primary);
+    font-size: 0.75rem;
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.mini-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.mini-card-no {
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: #0f172a;
+    font-family: 'JetBrains Mono', 'Monaco', monospace;
+}
+
+.mini-card-type {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.mini-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #475569;
+    margin-top: auto;
+    padding-top: 0.5rem;
+    border-top: 1px solid #f8fafc;
+}
+
+.ph-mini {
+    background: linear-gradient(135deg, #ffffff, #f0f9ff);
+    border-top: 4px solid #3b82f6;
+}
+
+.hmo-accent {
+    border-top: 4px solid var(--color-primary);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #cbd5e1;
+}
+
+.status-dot.active {
+    background: #10b981;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+/* Wellness Benefit List */
+.wellness-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.wellness-item-card {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 1.5rem;
+    border: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    transition: all 0.2s;
+}
+
+.wellness-item-card:hover {
+    border-color: #fca5a555;
+    background: #fffcfc;
+}
+
+.wellness-icon {
+    width: 3rem;
+    height: 3rem;
+    background: #fff7ed;
+    color: #f97316;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.1);
+}
+
+.wellness-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.wellness-title {
+    font-size: 1rem;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.wellness-desc {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.wellness-value {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.benefit-balance {
+    font-size: 0.95rem;
+    font-weight: 950;
+    color: var(--color-primary);
+}
+
+.benefit-validity {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* HMO Card States & Progress */
+.mini-hmo-card.pending {
+    opacity: 0.7;
+    border: 1px dashed #cbd5e1;
+    cursor: default !important;
+    background: #f8fafc;
+}
+
+.mini-hmo-card.pending .mini-card-header span {
+    color: #64748b;
+}
+
+.pending-badge {
+    margin-left: auto;
+    background: #fef9c3;
+    color: #854d0e;
+    font-size: 0.6rem;
+    font-weight: 800;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.mini-benefit-summary {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.mini-benefit-summary .label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.mini-progress-bar {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.mini-progress-bar .fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 3px;
+}
+
+.ph-mini .mini-progress-bar .fill {
+    background: #0072bc;
+}

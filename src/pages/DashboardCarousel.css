@@ -1,0 +1,162 @@
+/* Carousel Container */
+.carousel-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    width: 100%;
+    max-width: 100%;
+}
+
+.marketing-banner-section {
+    position: relative;
+    overflow: hidden;
+    min-height: 180px;
+    border-radius: var(--radius);
+    margin-bottom: 1.25rem;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* The Ops Hat: Content must be readable. */
+/* The UX Hat: Transitions must be smooth. */
+.carousel-track {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    /* Elegant easing */
+    height: 100%;
+}
+
+.carousel-slide {
+    min-width: 100%;
+    position: relative;
+    min-height: 200px;
+    height: auto;
+    /* Changed to auto to prevent clipping */
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+/* Gradient Overlay for Text Readability */
+.carousel-slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0) 100%);
+    z-index: 1;
+}
+
+.banner-content {
+    position: relative;
+    z-index: 2;
+    padding: 2rem;
+    color: white;
+    max-width: 65%;
+}
+
+.banner-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.banner-content h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+}
+
+.banner-content p {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin: 0 0 1rem 0;
+    line-height: 1.4;
+}
+
+.banner-btn {
+    background: white;
+    color: var(--color-primary);
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.banner-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Indicators */
+.carousel-indicators {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 3;
+}
+
+.indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.indicator.active {
+    background: white;
+    width: 24px;
+    /* UX: Elongated pill for active state implies continuity */
+    border-radius: 4px;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 640px) {
+    .marketing-banner-section {
+        min-height: 180px;
+    }
+
+    .carousel-slide {
+        height: 180px;
+    }
+
+    .banner-content {
+        max-width: 70%;
+        padding: 1rem;
+    }
+
+    .banner-content h3 {
+        font-size: 1.15rem;
+    }
+
+    .banner-content p {
+        font-size: 0.8rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .banner-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+}

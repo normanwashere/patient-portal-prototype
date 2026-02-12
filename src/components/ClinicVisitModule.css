@@ -1,0 +1,51 @@
+/* =============================================
+   V8: Clinic Visit Module Styles
+   ============================================= */
+
+.clinic-module {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.08), rgba(13, 148, 136, 0.02));
+    border: 1px solid rgba(13, 148, 136, 0.15);
+    border-radius: var(--radius-xl);
+}
+
+.clinic-module .module-icon.clinic {
+    background: linear-gradient(135deg, #0d9488, #14b8a6);
+    color: white;
+    box-shadow: 0 8px 20px -4px rgba(13, 148, 136, 0.4);
+}
+
+/* Clinic Action Buttons */
+.clinic-module .action-btn.primary {
+    background: linear-gradient(135deg, #0d9488, #14b8a6);
+    color: white;
+    box-shadow: 0 8px 20px -4px rgba(13, 148, 136, 0.35);
+}
+
+.clinic-module .action-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px -4px rgba(13, 148, 136, 0.45);
+}
+
+.clinic-module .action-btn.secondary {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--color-text);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+}
+
+.clinic-module .action-btn.secondary:hover {
+    background: white;
+    border-color: #0d9488;
+}
+
+.clinic-module .action-btn.primary .action-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.clinic-module .action-btn.secondary .action-icon {
+    background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+    color: #0d9488;
+}

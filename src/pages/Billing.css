@@ -1,0 +1,633 @@
+/* =============================================
+   Billing & Payment Premium Styles
+   ============================================= */
+
+.billing-container {
+    padding-bottom: 5rem;
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Premium Balance Card */
+.premium-balance-card {
+    position: relative;
+    padding: 2rem;
+    border-radius: 1.5rem;
+    color: white;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.premium-balance-card.has-debt {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+}
+
+.premium-balance-card.cleared {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.balance-content {
+    position: relative;
+    z-index: 2;
+}
+
+.balance-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.balance-value-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.balance-amount {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin: 0;
+    letter-spacing: -0.03em;
+}
+
+.pay-outstanding-btn {
+    background: white;
+    color: #b91c1c;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+}
+
+.pay-outstanding-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.cleared-badge {
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    backdrop-filter: blur(4px);
+}
+
+.balance-bg-effect {
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 60%;
+    height: 140%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    z-index: 1;
+}
+
+/* Filter Section */
+.billing-controls {
+    margin-bottom: 1.5rem;
+}
+
+.filter-chips {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.chip {
+    padding: 0.6rem 1.5rem;
+    border-radius: 9999px;
+    background: white;
+    border: 1px solid #f1f5f9;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chip:hover {
+    background: #f8fafc;
+}
+
+.chip.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px var(--color-primary-transparent);
+}
+
+/* Premium Invoice Cards */
+.invoice-card-premium {
+    background: white;
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    border: 1px solid #f1f5f9;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.invoice-card-premium:hover {
+    transform: translateX(4px);
+    border-color: var(--color-primary);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+.invoice-icon-box {
+    width: 56px;
+    height: 56px;
+    border-radius: 1rem;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.invoice-icon-box svg.pending {
+    color: #f97316;
+}
+
+.invoice-icon-box svg.paid {
+    color: #10b981;
+}
+
+.invoice-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.invoice-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+    gap: 0.5rem;
+}
+
+.invoice-main h4 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #000000;
+    /* High Contrast */
+}
+
+.invoice-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.loa-applied-pill {
+    font-size: 0.6rem;
+    font-weight: 900;
+    background: #ecfdf5;
+    color: #059669;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #a7f3d0;
+    letter-spacing: 0.05em;
+}
+
+.status-pill-v2 {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+}
+
+.status-pill-v2.pending {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.status-pill-v2.paid {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.invoice-meta-v2 {
+    font-size: 0.85rem;
+    color: #475569;
+    margin: 0;
+    font-weight: 600;
+}
+
+.invoice-ref-v2 {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin: 0.25rem 0 0;
+    font-family: monospace;
+}
+
+.invoice-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.75rem;
+    min-width: 120px;
+}
+
+.invoice-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.125rem;
+    color: #000000;
+}
+
+.invoice-price .currency {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.invoice-price .price {
+    font-size: 1.35rem;
+    font-weight: 900;
+}
+
+.invoice-actions-v2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.icon-btn-v2 {
+    background: #f1f5f9;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.icon-btn-v2:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.pay-now-btn-v2 {
+    background: #0072bc;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.pay-now-btn-v2:hover {
+    background: #005a96;
+    transform: translateY(-1px);
+}
+
+/* =============================================
+   Checkout Page Specific
+   ============================================= */
+.checkout-page {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.back-btn-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #f1f5f9;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1e293b;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.checkout-card {
+    background: white;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+}
+
+.section-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 1.25rem;
+    letter-spacing: 0.1em;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.detail-row span {
+    color: #64748b;
+}
+
+.detail-row strong {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.checkout-divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 1.5rem 0;
+}
+
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.method-opt {
+    position: relative;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    border: 2px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.method-opt.active {
+    border-color: var(--color-primary);
+    background: #f0f9ff;
+}
+
+.method-opt span {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.method-opt .check-icon {
+    margin-left: auto;
+    color: var(--color-primary);
+}
+
+.price-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    color: #64748b;
+}
+
+.price-row.total {
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 2px dashed #f1f5f9;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #000000;
+}
+
+.pay-now-btn {
+    width: 100%;
+    margin-top: 2rem;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.pay-now-btn:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-2px);
+}
+
+.pay-now-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.secure-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* =============================================
+   Success Page
+   ============================================= */
+.success-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 2rem;
+}
+
+.success-content {
+    background: white;
+    width: 100%;
+    max-width: 500px;
+    padding: 3rem 2rem;
+    border-radius: 2rem;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+}
+
+.success-icon-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.success-bg-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #dcfce7;
+    border-radius: 50%;
+    animation: success-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes success-ping {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+.success-title {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: #0f172a;
+    margin-bottom: 1rem;
+}
+
+.success-message {
+    color: #64748b;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.receipt-preview {
+    background: #f8fafc;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.receipt-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.receipt-row span {
+    color: #94a3b8;
+}
+
+.receipt-row strong {
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.success-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.success-btn {
+    flex: 1;
+    padding: 0.875rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.success-btn.primary {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+}
+
+.success-btn.secondary {
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+}
+
+.success-footer-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.success-link {
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    text-decoration: none;
+}
+
+.spinner-small {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

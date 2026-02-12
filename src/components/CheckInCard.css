@@ -1,0 +1,322 @@
+/* =============================================
+   Single Check-In Button & Queue Status
+   ============================================= */
+
+/* Single Check-In Button */
+.checkin-single-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.checkin-single-btn.priority {
+    background: linear-gradient(135deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-primary), black 10%) 100%);
+    color: white;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary), transparent 70%);
+}
+
+.checkin-single-btn.priority:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-primary), transparent 60%);
+}
+
+.checkin-single-btn.walkin {
+    background: linear-gradient(135deg, var(--color-warning) 0%, color-mix(in srgb, var(--color-warning), black 10%) 100%);
+    color: white;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-warning), transparent 70%);
+}
+
+.checkin-single-btn.walkin:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-warning), transparent 60%);
+}
+
+.checkin-single-btn:active {
+    transform: scale(0.98);
+}
+
+.queue-status-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1.25rem 1.5rem;
+    height: 100%;
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    background: white;
+    /* Default background if not overridden */
+}
+
+/* Row Layout */
+.queue-status-content-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+    gap: 1rem;
+}
+
+.queue-info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-start;
+}
+
+.queue-status-col {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.queue-number-large {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    line-height: 1;
+    letter-spacing: -0.5px;
+}
+
+.queue-destination {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+
+.queue-destination svg {
+    color: var(--color-primary);
+}
+
+/* Stage Badges */
+.stage-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.35rem 0.75rem;
+    border-radius: 100px;
+    color: white;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-top: 0.25rem;
+}
+
+.stage-badge.waiting {
+    background-color: #6b7280;
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+.stage-badge.queued {
+    background-color: #f59e0b;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.stage-badge.ready {
+    background-color: var(--color-success);
+    background: linear-gradient(135deg, var(--color-success), var(--color-primary-dark));
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-success), transparent 70%);
+}
+
+.stage-badge.in-progress {
+    background-color: var(--color-primary);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    animation: badge-pulse 2s infinite;
+}
+
+.stage-badge.complete {
+    background-color: #64748b;
+    background: linear-gradient(135deg, #64748b, #475569);
+}
+
+/* Attention Grabber for Ready State */
+.journey-card.ready-attention {
+    animation: ready-flash 2.5s infinite;
+    border-color: var(--color-success);
+}
+
+@keyframes ready-flash {
+    0% {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border-color: var(--color-border);
+    }
+
+    50% {
+        box-shadow: 0 0 20px color-mix(in srgb, var(--color-success), transparent 40%);
+        border-color: var(--color-success);
+        background-color: color-mix(in srgb, var(--color-success), white 95%);
+    }
+
+    100% {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border-color: var(--color-border);
+    }
+}
+
+@keyframes badge-pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 var(--color-primary-transparent);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px transparent;
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 transparent;
+    }
+}
+
+@media (max-width: 768px) {
+    .queue-status-main {
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+
+    .queue-number-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+        width: 100%;
+    }
+
+    .queue-number-large {
+        font-size: 1.75rem;
+        line-height: 1;
+    }
+
+    .stage-badge {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.6rem;
+    }
+}
+
+.queue-destination {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.queue-destination svg {
+    color: var(--color-primary);
+}
+
+/* Floating Simulate FAB - Bottom Right */
+.simulate-fab {
+    position: fixed;
+    bottom: 90px;
+    right: 1rem;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-primary);
+    backdrop-filter: blur(10px);
+    border-radius: 100px;
+    border: none;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px var(--color-primary-transparent);
+    transition: all 0.2s ease;
+}
+
+.simulate-fab:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--color-primary-transparent);
+}
+
+.simulate-fab:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.simulate-fab.simulating {
+    background: var(--color-primary-dark);
+}
+
+.simulate-fab.reset {
+    background: var(--color-success);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-success), transparent 70%);
+}
+
+.simulate-fab.reset:hover {
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--color-success), transparent 60%);
+}
+
+.simulate-fab .spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Floating Demo Toggle */
+.demo-fab {
+    position: fixed;
+    bottom: 90px;
+    left: 1rem;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-info);
+    backdrop-filter: blur(10px);
+    border-radius: 100px;
+    border: none;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-info), transparent 70%);
+    transition: all 0.2s ease;
+}
+
+.demo-fab:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--color-info), transparent 60%);
+}
+
+.demo-fab .indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fbbf24;
+}
+
+.demo-fab .indicator.active {
+    background: #10b981;
+}

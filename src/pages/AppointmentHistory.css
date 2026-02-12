@@ -1,0 +1,213 @@
+.appointment-history-container {
+    padding: 1.5rem 0;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-header h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.page-subtitle {
+    color: var(--color-text-muted);
+    margin: 0.25rem 0 0 0;
+}
+
+/* Filter Tabs */
+.filter-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+}
+
+.filter-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 99px;
+    background: var(--color-surface);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.filter-tab:hover {
+    border-color: var(--color-text-muted);
+    color: var(--color-text);
+}
+
+.filter-tab.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+}
+
+/* Section */
+.appointment-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.75rem 0;
+}
+
+/* Appointment List */
+.appointment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.appointment-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.15s ease;
+}
+
+.appointment-card:hover {
+    border-color: var(--color-text-muted);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.appointment-card.upcoming {
+    border-left: 3px solid var(--color-primary);
+}
+
+.appointment-card.completed {
+    opacity: 0.8;
+}
+
+.appointment-card.cancelled {
+    opacity: 0.6;
+}
+
+.card-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.type-icon {
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+}
+
+.type-icon.teleconsult {
+    color: var(--color-primary);
+}
+
+.type-icon.clinic {
+    color: var(--color-secondary);
+}
+
+.card-info h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.card-info .specialty {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    margin: 0.125rem 0 0 0;
+}
+
+.card-info .datetime {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.card-info .datetime span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.card-info .location {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+}
+
+.card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.status-badge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.status-badge.upcoming {
+    background: color-mix(in srgb, var(--color-primary), white 85%);
+    color: var(--color-primary);
+}
+
+.status-badge.completed {
+    background: color-mix(in srgb, var(--color-success), white 85%);
+    color: var(--color-success);
+}
+
+.status-badge.cancelled {
+    background: color-mix(in srgb, var(--color-error), white 85%);
+    color: var(--color-error);
+}
+
+.chevron {
+    color: var(--color-text-muted);
+}
+
+.empty-state {
+    color: var(--color-text-muted);
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+    .appointment-history-container {
+        padding: 1rem;
+    }
+
+    .card-info .datetime {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}

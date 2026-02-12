@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banner Clipping Reproduction</title>
+    <style>
+        :root {
+            --radius: 1rem;
+            --color-primary: #0d9488;
+        }
+
+        body {
+            font-family: sans-serif;
+            background: #f0fdf4;
+            padding: 20px;
+        }
+
+        /* Copied CSS */
+        .carousel-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 600px;
+            /* Force narrow width to trigger wrapping */
+            margin: 0 auto;
+            background: #fff;
+        }
+
+        .marketing-banner-section {
+            position: relative;
+            overflow: hidden;
+            min-height: 180px;
+            /* This might be the issue */
+            border-radius: var(--radius);
+            margin-bottom: 1.25rem;
+            padding: 0;
+            width: 100%;
+        }
+
+        .carousel-track {
+            display: flex;
+            /* height: 100%;  This expects the parent to have height */
+        }
+
+        .carousel-slide {
+            min-width: 100%;
+            position: relative;
+            min-height: 200px;
+            /* CHANGED from height to min-height */
+            height: auto;
+            /* Added to allow growth */
+            display: flex;
+            align-items: center;
+            /* overflow: hidden;  -- removing this is dangerous if image bleeds, but container has overflow hidden. 
+               Actually, we want the container to grow. flex container items (slides) will grow if height is auto.
+            */
+            background-size: cover;
+            background-position: center;
+            background-image: url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop');
+            padding-top: 1rem;
+            /* Added padding to ensure content doesn't touch edges if it grows */
+            padding-bottom: 1rem;
+        }
+
+        .carousel-slide::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0) 100%);
+            z-index: 1;
+        }
+
+        .banner-content {
+            position: relative;
+            z-index: 2;
+            padding: 2rem;
+            color: white;
+            max-width: 65%;
+        }
+
+        .banner-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .banner-content h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            line-height: 1.2;
+        }
+
+        .banner-content p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin: 0 0 1rem 0;
+            line-height: 1.4;
+        }
+
+        .banner-btn {
+            background: white;
+            color: var(--color-primary);
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Current State (Fixed Height 200px)</h2>
+    <div class="carousel-container">
+        <div class="carousel-track">
+            <div class="carousel-slide">
+                <div class="banner-content">
+                    <span class="banner-badge">Join Movement</span>
+                    <h3>"I Am Well" Campaign</h3>
+                    <p>Make a personal commitment to wellness and self-care.</p>
+                    <button class="banner-btn">Join Now</button>
+                    <!-- Added extra text to force more height if needed for testing -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

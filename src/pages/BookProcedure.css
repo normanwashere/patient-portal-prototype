@@ -1,0 +1,105 @@
+/* Book Procedure Specific Styles */
+
+.procedure-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.procedure-list .selection-card {
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+}
+
+.procedure-list .selection-card.active {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+    box-shadow: 0 0 0 2px var(--color-primary-transparent);
+}
+
+.date-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    color: var(--color-text);
+    background: white;
+    margin-top: 0.5rem;
+}
+
+.prep-notice {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-radius: 0.75rem;
+    color: #92400e;
+    margin: 1.5rem 0;
+    font-size: 0.85rem;
+}
+
+.prep-notice svg {
+    color: #d97706;
+    flex-shrink: 0;
+}
+
+.next-steps-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    margin: 1.5rem 0;
+    width: 100%;
+    text-align: left;
+}
+
+.next-steps-card h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.9rem;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.next-steps-card ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.next-steps-card li {
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.success-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.animate-in {
+    animation: fadeInSlideUp 0.4s ease-out;
+}
+
+@keyframes fadeInSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(8px);
+}

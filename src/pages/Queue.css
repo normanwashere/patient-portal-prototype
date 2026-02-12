@@ -1,0 +1,909 @@
+/* Queue / Patient Journey CSS */
+
+/* Main Container */
+.journey-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    padding-bottom: 6rem;
+}
+
+/* Card Styles */
+.journey-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f3f4f6;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+/* Top Gradient Line */
+.journey-card-top-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--color-border);
+}
+
+.journey-card-progress {
+    height: 100%;
+    background: linear-gradient(to right, var(--color-success), var(--color-primary));
+    /* Dynamic width will be set inline */
+    transition: width 0.5s ease;
+}
+
+/* Header inside Card */
+.journey-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.25rem 1.25rem 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.journey-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.125rem;
+}
+
+.journey-subtitle {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.view-journey-link {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.view-journey-link:hover {
+    color: #1d4ed8;
+}
+
+/* Horizontal Steps (Top Widget) */
+.horizontal-steps {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.h-step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    position: relative;
+    z-index: 10;
+}
+
+.h-step-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-background);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    transition: all 0.3s ease;
+}
+
+.h-step-label {
+    font-size: 0.625rem;
+    font-weight: 500;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+/* Step States */
+.h-step-item.completed .h-step-icon {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-color: transparent;
+}
+
+.h-step-item.completed .h-step-label {
+    color: #059669;
+    /* Or stick to gray? Design keeps gray */
+}
+
+/* Active Highlight (Pulse) */
+.h-step-item.active .h-step-icon {
+    background: var(--color-primary);
+    color: white;
+    box-shadow: 0 0 0 4px var(--color-primary-transparent);
+    border-color: transparent;
+    animation: pulse-ring 2s infinite;
+}
+
+.h-step-item.active .h-step-label {
+    color: var(--color-primary);
+    font-weight: 700;
+    position: absolute;
+    bottom: -1.25rem;
+}
+
+/* Connectors */
+.h-connector {
+    flex: 1;
+    height: 2px;
+    background: #e5e7eb;
+    margin: 0 0.5rem;
+    margin-bottom: 1rem;
+    /* Align with icon center roughly */
+}
+
+.h-connector.filled {
+    background: #a7f3d0;
+    /* Light emerald */
+}
+
+/* Queue Info Box */
+.queue-info-box {
+    background: var(--color-primary-light);
+    border: 1px solid var(--color-primary-transparent);
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    /* Reduced padding slightly to save space */
+    margin: 0 1rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.queue-info-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.your-number-badge {
+    background: white;
+    padding: 0.5rem 0.6rem;
+    border-radius: 0.6rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    flex-shrink: 0;
+    /* Important: prioritize space */
+    min-width: 54px;
+    /* Ensure enough for C-101 */
+}
+
+.your-number-label {
+    display: block;
+    font-size: 0.625rem;
+    color: #9ca3af;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.125rem;
+}
+
+.your-number-value {
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--color-primary);
+    line-height: 1;
+    white-space: nowrap;
+    /* Prevent wrapping */
+}
+
+.queue-details-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    /* Allow text to be squeezed */
+}
+
+.queue-name {
+    font-size: 0.725rem;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+    line-height: 1.3;
+    /* Optional: text-overflow if too long */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.people-ahead {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+/* Circular Progress */
+.circular-progress {
+    width: 3rem;
+    height: 3rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.circular-text {
+    position: absolute;
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: #4b5563;
+}
+
+/* Active Visit Header */
+.active-visit-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 1rem;
+    margin-bottom: 2rem;
+}
+
+.active-pill {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    margin-bottom: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.pulsing-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--color-primary);
+    border-radius: 50%;
+    margin-right: 0.375rem;
+    animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.journey-main-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-align: center;
+    color: #111827;
+}
+
+.journey-date {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+/* Vertical Timeline */
+.timeline-container {
+    position: relative;
+    padding-left: 2.5rem;
+    /* Space for line */
+    padding-bottom: 2rem;
+}
+
+/* The vertical Line */
+.timeline-container::before {
+    content: '';
+    position: absolute;
+    left: 1.25rem;
+    /* Center of icon space */
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, transparent, #cbd5e1 10%, #cbd5e1 90%, transparent);
+}
+
+.timeline-step {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+/* Timeline Icon (Left) */
+.timeline-icon-wrapper {
+    position: absolute;
+    left: -2.5rem;
+    /* Relative to content start */
+    top: 0.25rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.timeline-icon-circle {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 4px solid white;
+    /* Creates gap from line */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Step Content Card */
+.step-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1rem;
+    border: 1px solid #f3f4f6;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    opacity: 1;
+    /* Force full opacity for readability */
+}
+
+/* Active Step Styling */
+.timeline-step.active .step-card,
+.timeline-step.completed .step-card {
+    opacity: 1;
+}
+
+.timeline-step.active .step-card {
+    border-color: var(--color-primary);
+    box-shadow: 0 8px 30px var(--color-primary-transparent);
+    background: #ffffff !important;
+    position: relative;
+    overflow: visible;
+    opacity: 1 !important;
+}
+
+.timeline-step.active .timeline-icon-circle {
+    background: var(--color-primary);
+    color: white;
+    box-shadow: 0 10px 15px -3px var(--color-primary-transparent);
+    animation: pulse-ring 2s infinite;
+}
+
+.active-bar {
+    height: 6px;
+    width: 100%;
+    background: linear-gradient(to right, var(--color-primary), var(--color-success));
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.step-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.step-title {
+    font-weight: 800;
+    color: #000000 !important;
+    /* Pure black for maximum contrast */
+    font-size: 1.15rem;
+    margin-bottom: 0.25rem;
+}
+
+.step-meta {
+    font-size: 0.85rem;
+    color: #374151 !important;
+    /* Dark Slate 700 */
+    font-weight: 700;
+    margin-top: 0.35rem;
+    display: flex;
+    align-items: center;
+}
+
+.step-status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.step-status-badge.completed {
+    background: #d1fae5;
+    color: #047857;
+}
+
+.step-status-badge.in-progress {
+    background: var(--color-primary);
+    color: white;
+}
+
+.step-status-badge.pending {
+    background: #f3f4f6;
+    color: #4b5563 !important;
+    /* Force darker gray for pending */
+}
+
+/* Active Highlight Section */
+.active-highlight-box {
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin-top: 1rem;
+}
+
+.queue-comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.queue-stat {
+    text-align: center;
+    padding: 1rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #374151 !important;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: #000000 !important;
+    line-height: 1;
+    margin-top: 0.25rem;
+}
+
+.stat-value.highlight {
+    color: var(--color-primary);
+}
+
+.queue-stat:first-child {
+    border-right: 1px solid #e5e7eb;
+}
+
+.wait-time-row {
+    margin-top: 0;
+    padding-top: 1rem;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+}
+
+.wait-time-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+/* Action Buttons */
+.step-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    /* Soft shadow for buttons */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.action-btn.primary {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+}
+
+.action-btn.primary:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-1px);
+}
+
+.action-btn.primary:active {
+    transform: translateY(0);
+}
+
+.action-btn.secondary {
+    background: white;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+}
+
+.action-btn.secondary:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+/* Animations */
+@keyframes pulse-ring {
+    0% {
+        box-shadow: 0 0 0 0 var(--color-primary-transparent);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px transparent;
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 transparent;
+    }
+}
+
+@keyframes ping {
+
+    75%,
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Board View (Multi-Stream) */
+.board-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.board-section-title {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.board-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.active-orders-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .active-orders-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .active-orders-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.active-tile {
+    background: white;
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 160px;
+}
+
+.active-tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.active-tile.expanded {
+    grid-column: 1 / -1;
+    min-height: auto;
+    cursor: default;
+    transform: none !important;
+    border-color: #3b82f6;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.active-tile.ready {
+    border-color: var(--color-success);
+    background: white;
+    box-shadow: 0 0 0 2px var(--color-success);
+}
+
+.active-tile.in-session {
+    border-color: var(--color-primary);
+    background: white;
+}
+
+.tile-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.tile-icon-box {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    color: #64748b;
+    transition: all 0.3s ease;
+}
+
+.active-tile.ready .tile-icon-box {
+    background: #10b981;
+    color: white;
+}
+
+.active-tile.in-session .tile-icon-box {
+    background: #3b82f6;
+    color: white;
+}
+
+.tile-ticket {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94a3b8;
+    background: #f1f5f9;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.tile-main h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.tile-location {
+    font-size: 0.7rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.tile-footer {
+    margin-top: auto;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding-top: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tile-status-tag {
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 9999px;
+}
+
+.tag-ready {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.tag-in-session {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.tag-queued {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.tile-wait {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Expansion Content on Board */
+.tile-expansion-content {
+    margin-top: 0.5rem;
+    animation: fadeInSlideUp 0.3s ease-out;
+}
+
+.requeue-reminder {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-radius: 0.75rem;
+    color: #92400e;
+    margin-bottom: 2rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.requeue-reminder svg {
+    color: #d97706;
+    flex-shrink: 0;
+}
+
+.board-expansion {
+    margin-top: 0.75rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.board-expansion .queue-comparison-grid {
+    background: white;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #f1f5f9;
+}
+
+@keyframes fadeInSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Secondary List for Pending/Completed */
+.step-list-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.mini-step-item {
+    background: white;
+    border-radius: 1rem;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+}
+
+.mini-step-item.completed {
+    background: #f8fafc;
+    opacity: 0.7;
+}
+
+.mini-step-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+}
+
+.completed .mini-step-icon {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.mini-step-info {
+    flex: 1;
+}
+
+.mini-step-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.mini-join-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mini-join-btn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.join-all-btn {
+    transition: all 0.2s ease;
+}
+
+.join-all-btn:hover {
+    background: #2563eb !important;
+    transform: translateY(-1px);
+}
+
+.mini-step-item.queuable {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.mini-step-meta {
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+@media (max-width: 480px) {
+    .active-orders-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Dark Mode Support - DISABLED for consistency and high contrast */
