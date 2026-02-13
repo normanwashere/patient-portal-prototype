@@ -57,6 +57,7 @@ import { Analytics } from './provider/pages/Analytics';
 import { FormsManagement } from './provider/pages/FormsManagement';
 import { Integrations } from './provider/pages/Integrations';
 import { Architecture } from './provider/pages/Architecture';
+import { TeleconsultQueue } from './provider/pages/TeleconsultQueue';
 import { ProviderNotifications } from './provider/pages/ProviderNotifications';
 import { ProviderProfile } from './provider/pages/ProviderProfile';
 import { ProviderSettings } from './provider/pages/ProviderSettings';
@@ -71,6 +72,7 @@ import { DoctorResults } from './doctor/pages/DoctorResults';
 import { DoctorSchedule } from './doctor/pages/DoctorSchedule';
 import { DoctorPrescriptions } from './doctor/pages/DoctorPrescriptions';
 import { DoctorTasks } from './doctor/pages/DoctorTasks';
+import { DoctorMessages } from './doctor/pages/DoctorMessages';
 import { ImmunizationManagement } from './doctor/pages/ImmunizationManagement';
 import { LOAReview } from './doctor/pages/LOAReview';
 
@@ -137,6 +139,7 @@ function App() {
                                         <Route path="/provider" element={<ProviderDashboard />} />
                                         <Route path="/provider/dashboard" element={<ProviderDashboard />} />
                                         <Route path="/provider/queue" element={<QueueManagement />} />
+                                        <Route path="/provider/teleconsult-queue" element={<TeleconsultQueue />} />
                                         <Route path="/provider/scheduling" element={<SchedulingOps />} />
                                         <Route path="/provider/nursing" element={<NursingStation />} />
                                         <Route path="/provider/billing" element={<BillingRevenue />} />
@@ -166,6 +169,7 @@ function App() {
                                         <Route path="/doctor/schedule" element={<DoctorSchedule />} />
                                         <Route path="/doctor/prescriptions" element={<DoctorPrescriptions />} />
                                         <Route path="/doctor/tasks" element={<DoctorTasks />} />
+                                        <Route path="/doctor/messages" element={<DoctorMessages />} />
                                         <Route path="/doctor/immunizations" element={<ImmunizationManagement />} />
                                         <Route path="/doctor/loa" element={<LOAReview />} />
                                     </Route>

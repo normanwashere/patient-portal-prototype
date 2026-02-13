@@ -24,6 +24,7 @@ import {
   Stethoscope,
   Cable,
   Server,
+  Video,
 } from 'lucide-react';
 import { useProvider } from '../context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
@@ -52,6 +53,7 @@ const SIDEBAR_SECTIONS: SidebarSection[] = [
     items: [
       { to: `${PREFIX}/dashboard`, icon: LayoutDashboard, label: 'Dashboard' },
       { to: `${PREFIX}/queue`, icon: Users, label: 'Queue Management', visible: (f) => f.queue },
+      { to: `${PREFIX}/teleconsult-queue`, icon: Video, label: 'Teleconsult Queue', visible: (f) => f.visits.teleconsultEnabled },
       { to: `${PREFIX}/scheduling`, icon: CalendarDays, label: 'Scheduling', visible: (f) => f.appointments },
     ],
   },

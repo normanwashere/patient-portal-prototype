@@ -6,10 +6,23 @@ import {
   FileSignature,
   ChevronDown,
   ChevronUp,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  MessageSquare,
 } from 'lucide-react';
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
+
+// Mock historical data for trend view
+const HISTORY: Record<string, { date: string; value: string }[]> = {
+  'CBC': [{ date: '2025-11-20', value: 'WBC 7.2, Hgb 14.1, Plt 245' }, { date: '2025-08-15', value: 'WBC 6.8, Hgb 13.9, Plt 230' }],
+  'Lipid Panel': [{ date: '2025-10-10', value: 'TC 210, LDL 140, HDL 45' }, { date: '2025-06-05', value: 'TC 225, LDL 155, HDL 42' }],
+  'FBS': [{ date: '2025-12-01', value: '6.2 mmol/L' }, { date: '2025-09-15', value: '5.8 mmol/L' }],
+  'HbA1c': [{ date: '2025-10-15', value: '7.1%' }, { date: '2025-07-01', value: '6.8%' }],
+  'ECG': [{ date: '2025-11-01', value: 'Normal sinus rhythm' }],
+};
 
 type FilterType = 'all' | 'pending' | 'critical' | 'reviewed';
 
@@ -20,6 +33,7 @@ export const DoctorResults = () => {
   const hasCDSS = tenant.features.cdss ?? false;
   const [filter, setFilter] = useState<FilterType>('all');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState<Record<string, string>>({});
 
   // Only show orders for this doctor
   const myOrders = labOrders.filter((o) => o.doctorName === currentStaff?.name);
@@ -178,6 +192,81 @@ export const DoctorResults = () => {
                       {order.notes && (
                         <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 12 }}>
                           Notes: {order.notes}
+                        </div>
+                      )}
+
+                      {/* Trend view — historical results */}
+                      {HISTORY[order.testName] && (
+                        <div style={{
+                          padding: 12, borderRadius: 8, background: 'rgba(139,92,246,0.04)',
+                          border: '1px solid rgba(139,92,246,0.1)', marginBottom: 12,
+                        }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <TrendingUp size={14} /> Previous Results
+                          </div>
+                          {HISTORY[order.testName].map((h, i) => (
+                            <div key={i} style={{
+                              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                              padding: '6px 0', borderBottom: i < HISTORY[order.testName].length - 1 ? '1px solid rgba(139,92,246,0.08)' : 'none',
+                              fontSize: 12,
+                            }}>
+                              <span style={{ color: 'var(--color-text-muted)' }}>{h.date}</span>
+                              <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{h.value}</span>
+                            </div>
+                          ))}
+                          {order.result && HISTORY[order.testName].length > 0 && (() => {
+                            const curr = order.result;
+                            const prev = HISTORY[order.testName][0].value;
+                            const currNum = parseFloat(curr.replace(/[^0-9.]/g, ''));
+                            const prevNum = parseFloat(prev.replace(/[^0-9.]/g, ''));
+                            if (isNaN(currNum) || isNaN(prevNum)) return null;
+                            const diff = currNum - prevNum;
+                            const pct = prevNum !== 0 ? ((diff / prevNum) * 100).toFixed(1) : '0';
+                            return (
+                              <div style={{
+                                marginTop: 8, padding: '6px 10px', borderRadius: 6,
+                                background: diff > 0 ? 'rgba(239,68,68,0.06)' : diff < 0 ? 'rgba(16,185,129,0.06)' : 'var(--color-background)',
+                                fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
+                                color: diff > 0 ? 'var(--color-error)' : diff < 0 ? 'var(--color-success)' : 'var(--color-text-muted)',
+                              }}>
+                                {diff > 0 ? <TrendingUp size={14} /> : diff < 0 ? <TrendingDown size={14} /> : <Minus size={14} />}
+                                {diff > 0 ? '+' : ''}{pct}% from previous ({prev.split(',')[0]})
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+
+                      {/* Follow-up comment */}
+                      {(isPending || isReviewed) && (
+                        <div style={{ marginBottom: 12 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4, color: 'var(--color-text-muted)' }}>
+                            <MessageSquare size={12} /> Follow-up Action
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <input
+                              value={commentText[order.id] ?? ''}
+                              onChange={e => setCommentText(prev => ({ ...prev, [order.id]: e.target.value }))}
+                              placeholder="e.g. Recheck in 2 weeks, adjust dosage..."
+                              style={{
+                                flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--color-border)',
+                                fontSize: 12, background: 'var(--color-surface)', color: 'var(--color-text)',
+                              }}
+                            />
+                            <button
+                              onClick={() => {
+                                showToast(`Follow-up noted: ${commentText[order.id] || '(no comment)'}`, 'success');
+                                setCommentText(prev => ({ ...prev, [order.id]: '' }));
+                              }}
+                              style={{
+                                padding: '8px 14px', borderRadius: 8, border: 'none',
+                                background: 'var(--color-primary)', color: 'white',
+                                fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+                              }}
+                            >
+                              Save
+                            </button>
+                          </div>
                         </div>
                       )}
 

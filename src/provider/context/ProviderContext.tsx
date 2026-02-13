@@ -31,6 +31,10 @@ import {
   MOCK_CDSS_ALERTS,
   MOCK_DASHBOARD_KPIS,
   MOCK_APPOINTMENTS,
+  MOCK_TC_DOCTORS,
+  MOCK_TC_SESSIONS,
+  MOCK_CONVERSATIONS,
+  MOCK_CHAT_MESSAGES,
 } from '../data/providerMockData';
 import type {
   StaffUser,
@@ -61,10 +65,27 @@ import type {
   DoctorOrder,
   DoctorOrderType,
   StationVisit,
+  TeleconsultSession,
+  TeleconsultDoctor,
+  TeleconsultSessionStatus,
+  DoctorTCStatus,
+  TeleconsultType,
+  Conversation,
+  ChatMessage,
+  ConversationType,
 } from '../types';
 
 type CurrentApp = 'provider' | 'doctor';
 type QueueMode = 'LINEAR' | 'MULTI_STREAM';
+type DoctorMode = 'in-clinic' | 'teleconsult';
+
+/** Lightweight global state for an active teleconsult call — persists across page navigation */
+export interface ActiveTeleconsultCall {
+  id: string;
+  patientName: string;
+  startedAt: number;          // Date.now() when the call started
+  chiefComplaint?: string;
+}
 
 const now = () => new Date().toISOString();
 let _idCounter = 1000;
@@ -88,9 +109,11 @@ interface ProviderContextType {
   currentStaff: StaffUser;
   currentApp: CurrentApp;
   queueMode: QueueMode;
+  doctorMode: DoctorMode;
   switchStaff: (staffId: string) => void;
   switchApp: (app: CurrentApp) => void;
   toggleQueueMode: () => void;
+  setDoctorMode: (mode: DoctorMode) => void;
 
   // Data state
   staff: StaffUser[];
@@ -146,6 +169,7 @@ interface ProviderContextType {
   approvePrescription: (prescriptionId: string) => void;
   denyPrescription: (prescriptionId: string) => void;
   addPrescription: (rx: Omit<Prescription, 'id'>) => void;
+  updatePrescription: (prescriptionId: string, updates: Partial<Omit<Prescription, 'id'>>) => void;
 
   // ── Lab orders ──
   updateLabOrderStatus: (orderId: string, status: string) => void;
@@ -153,6 +177,7 @@ interface ProviderContextType {
 
   // ── Alerts ──
   dismissAlert: (alertId: string) => void;
+  actionAlert: (alertId: string) => void;
   addCdssAlert: (alert: Omit<CDSSAlert, 'id'>) => void;
 
   // ── Appointments ──
@@ -200,6 +225,53 @@ interface ProviderContextType {
   // ── Audit ──
   addAuditLog: (action: string, module: string, details: string) => void;
 
+  // ── Teleconsult Queue ──
+  tcSessions: TeleconsultSession[];
+  tcDoctors: TeleconsultDoctor[];
+  /** Add a new teleconsult session (patient joins) */
+  addTcSession: (session: Omit<TeleconsultSession, 'id'>) => void;
+  /** Update session status (waiting→intake→ready→in-session→wrap-up→completed) */
+  updateTcSessionStatus: (sessionId: string, status: TeleconsultSessionStatus) => void;
+  /** Assign a doctor to a session */
+  assignTcDoctor: (sessionId: string, doctorId: string) => void;
+  /** Start a teleconsult session (doctor begins video call) */
+  startTcSession: (sessionId: string) => void;
+  /** End / complete a teleconsult session */
+  endTcSession: (sessionId: string) => void;
+  /** Mark session as no-show */
+  markTcNoShow: (sessionId: string) => void;
+  /** Cancel a session */
+  cancelTcSession: (sessionId: string) => void;
+  /** Update doctor teleconsult status */
+  updateTcDoctorStatus: (doctorId: string, status: DoctorTCStatus, activity?: string) => void;
+  /** Check in a scheduled doctor for teleconsult shift */
+  checkInTcDoctor: (doctorId: string) => void;
+  /** Computed: teleconsult stats */
+  tcStats: {
+    totalWaiting: number;
+    totalInSession: number;
+    totalCompleted: number;
+    totalNoShow: number;
+    avgWaitMinutes: number;
+    doctorsAvailable: number;
+    doctorsInSession: number;
+    doctorsOnBreak: number;
+    nowQueueLength: number;
+    laterQueueLength: number;
+  };
+
+  // ── Active teleconsult call (global, persists across navigation) ──
+  activeTeleconsultCall: ActiveTeleconsultCall | null;
+  setActiveTeleconsultCall: (call: ActiveTeleconsultCall | null) => void;
+
+  // ── Messaging / Conversations ──
+  conversations: Conversation[];
+  chatMessages: ChatMessage[];
+  sendChatMessage: (conversationId: string, text: string, type?: ChatMessage['type']) => void;
+  createConversation: (type: ConversationType, name: string, participantIds: string[], departmentTag?: string) => string;
+  markConversationRead: (conversationId: string) => void;
+  totalUnreadMessages: number;
+
   // Computed values
   pendingLabOrders: LabOrder[];
   criticalAlerts: CDSSAlert[];
@@ -230,6 +302,7 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [currentStaff, setCurrentStaff] = useState<StaffUser>(firstDoctor);
   const [currentApp, setCurrentApp] = useState<CurrentApp>('provider');
   const [queueMode, setQueueMode] = useState<QueueMode>('LINEAR');
+  const [doctorMode, setDoctorModeState] = useState<DoctorMode>('in-clinic');
 
   const [staff, setStaff] = useState<StaffUser[]>(MOCK_STAFF);
   const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>(MOCK_CLINICAL_NOTES);
@@ -255,6 +328,13 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [cdssAlerts, setCDSSAlerts] = useState<CDSSAlert[]>(MOCK_CDSS_ALERTS);
   const [dashboardKpis] = useState<DashboardKPI[]>(MOCK_DASHBOARD_KPIS);
   const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS);
+  const [tcSessions, setTcSessions] = useState<TeleconsultSession[]>(MOCK_TC_SESSIONS);
+  const [tcDoctors, setTcDoctors] = useState<TeleconsultDoctor[]>(MOCK_TC_DOCTORS);
+  const [conversations, setConversations] = useState<Conversation[]>(MOCK_CONVERSATIONS);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(MOCK_CHAT_MESSAGES);
+
+  // Global active teleconsult call state (persists across route changes)
+  const [activeTeleconsultCall, setActiveTeleconsultCall] = useState<ActiveTeleconsultCall | null>(null);
 
   // ── Basic switches ──
   const switchStaff = useCallback((staffId: string) => {
@@ -263,6 +343,7 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [staff]);
   const switchApp = useCallback((app: CurrentApp) => setCurrentApp(app), []);
   const toggleQueueMode = useCallback(() => setQueueMode((p) => (p === 'LINEAR' ? 'MULTI_STREAM' : 'LINEAR')), []);
+  const setDoctorMode = useCallback((mode: DoctorMode) => setDoctorModeState(mode), []);
 
   // ── Audit helper ──
   const _audit = useCallback((action: string, module: string, details: string) => {
@@ -517,6 +598,11 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
     _audit('add_rx', 'Pharmacy', `New prescription for ${rx.patientName}`);
   }, [_audit]);
 
+  const updatePrescription = useCallback((id: string, updates: Partial<Omit<Prescription, 'id'>>) => {
+    setPrescriptions((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
+    _audit('update_rx', 'Pharmacy', `Updated prescription ${id}`);
+  }, [_audit]);
+
   // ── Lab orders ──
   const updateLabOrderStatus = useCallback((orderId: string, status: string) => {
     setLabOrders((prev) =>
@@ -539,6 +625,10 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
   // ── Alerts ──
   const dismissAlert = useCallback((alertId: string) => {
     setCDSSAlerts((prev) => prev.map((a) => (a.id === alertId ? { ...a, dismissed: true } : a)));
+  }, []);
+
+  const actionAlert = useCallback((alertId: string) => {
+    setCDSSAlerts((prev) => prev.map((a) => (a.id === alertId ? { ...a, actioned: true, dismissed: true } : a)));
   }, []);
 
   const addCdssAlert = useCallback((alert: Omit<CDSSAlert, 'id'>) => {
@@ -689,6 +779,211 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
     _audit(action, module, details);
   }, [_audit]);
 
+  // ═══════ Messaging / Conversations ═══════
+
+  const sendChatMessage = useCallback((conversationId: string, text: string, type: ChatMessage['type'] = 'text') => {
+    const newMsg: ChatMessage = {
+      id: genId('cm'),
+      conversationId,
+      fromId: currentStaff.id,
+      fromName: currentStaff.name,
+      fromRole: currentStaff.role,
+      text,
+      timestamp: now(),
+      read: true,
+      type,
+    };
+    setChatMessages((prev) => [...prev, newMsg]);
+    // Update conversation's last message
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === conversationId
+          ? { ...c, lastMessageText: text, lastMessageAt: now(), lastMessageFromId: currentStaff.id, lastMessageFromName: currentStaff.name }
+          : c
+      )
+    );
+  }, [currentStaff]);
+
+  const createConversation = useCallback((type: ConversationType, name: string, participantIds: string[], departmentTag?: string): string => {
+    const id = genId('conv');
+    const participantNames = participantIds.map((pid) => {
+      const s = staff.find((st) => st.id === pid);
+      return s?.name ?? pid;
+    });
+    const newConv: Conversation = {
+      id, type, name, participantIds, participantNames,
+      departmentTag,
+      lastMessageText: '', lastMessageAt: now(),
+      lastMessageFromId: currentStaff.id, lastMessageFromName: currentStaff.name,
+      unreadCount: 0,
+    };
+    setConversations((prev) => [newConv, ...prev]);
+    _audit('create_conversation', 'Messaging', `Created ${type} conversation: ${name}`);
+    return id;
+  }, [currentStaff, staff, _audit]);
+
+  const markConversationRead = useCallback((conversationId: string) => {
+    setConversations((prev) =>
+      prev.map((c) => (c.id === conversationId ? { ...c, unreadCount: 0 } : c))
+    );
+    setChatMessages((prev) =>
+      prev.map((m) => (m.conversationId === conversationId && !m.read ? { ...m, read: true } : m))
+    );
+  }, []);
+
+  const totalUnreadMessages = useMemo(() =>
+    conversations.reduce((acc, c) => acc + c.unreadCount, 0),
+  [conversations]);
+
+  // ═══════ Teleconsult Queue Actions ═══════
+
+  const addTcSession = useCallback((session: Omit<TeleconsultSession, 'id'>) => {
+    const newSession: TeleconsultSession = { ...session, id: genId('tcs') };
+    setTcSessions((prev) => [...prev, newSession]);
+    _audit('tc_session_add', 'Teleconsult', `New ${session.type} session for ${session.patientName}`);
+  }, [_audit]);
+
+  const updateTcSessionStatus = useCallback((sessionId: string, status: TeleconsultSessionStatus) => {
+    setTcSessions((prev) =>
+      prev.map((s) => {
+        if (s.id !== sessionId) return s;
+        const updates: Partial<TeleconsultSession> = { status };
+        // Intake is already done before entering the queue (Consult Now: before "Join Queue"; Consult Later: at booking)
+        if (status === 'in-session') updates.sessionStartedAt = now();
+        if (status === 'wrap-up') updates.sessionEndedAt = now();
+        if (status === 'completed') { updates.sessionEndedAt = updates.sessionEndedAt ?? now(); updates.patientOnline = false; }
+        return { ...s, ...updates };
+      })
+    );
+    _audit('tc_status', 'Teleconsult', `Session ${sessionId} → ${status}`);
+  }, [_audit]);
+
+  const assignTcDoctor = useCallback((sessionId: string, doctorId: string) => {
+    const doc = tcDoctors.find((d) => d.id === doctorId);
+    if (!doc) return;
+    setTcSessions((prev) =>
+      prev.map((s) =>
+        s.id === sessionId
+          ? { ...s, assignedDoctorId: doctorId, assignedDoctorName: doc.name, status: 'doctor-assigned' as const, intakeCompleted: true }
+          : s
+      )
+    );
+    _audit('tc_assign', 'Teleconsult', `Assigned ${doc.name} to session ${sessionId}`);
+  }, [tcDoctors, _audit]);
+
+  const startTcSession = useCallback((sessionId: string) => {
+    setTcSessions((prev) =>
+      prev.map((s) =>
+        s.id === sessionId
+          ? { ...s, status: 'in-session' as const, sessionStartedAt: now() }
+          : s
+      )
+    );
+    // Update the doctor status
+    const session = tcSessions.find((s) => s.id === sessionId);
+    if (session?.assignedDoctorId) {
+      setTcDoctors((prev) =>
+        prev.map((d) =>
+          d.id === session.assignedDoctorId
+            ? { ...d, status: 'in-session' as const, currentSessionId: sessionId, currentActivity: `Teleconsult with ${session.patientName}` }
+            : d
+        )
+      );
+    }
+    _audit('tc_start', 'Teleconsult', `Session ${sessionId} started`);
+  }, [tcSessions, _audit]);
+
+  const endTcSession = useCallback((sessionId: string) => {
+    const session = tcSessions.find((s) => s.id === sessionId);
+    setTcSessions((prev) =>
+      prev.map((s) =>
+        s.id === sessionId
+          ? { ...s, status: 'completed' as const, sessionEndedAt: now(), patientOnline: false }
+          : s
+      )
+    );
+    // Free the doctor
+    if (session?.assignedDoctorId) {
+      setTcDoctors((prev) =>
+        prev.map((d) =>
+          d.id === session.assignedDoctorId
+            ? { ...d, status: 'available' as const, currentSessionId: undefined, currentActivity: undefined, sessionsCompleted: d.sessionsCompleted + 1 }
+            : d
+        )
+      );
+    }
+    _audit('tc_end', 'Teleconsult', `Session ${sessionId} completed`);
+  }, [tcSessions, _audit]);
+
+  const markTcNoShow = useCallback((sessionId: string) => {
+    setTcSessions((prev) =>
+      prev.map((s) => (s.id === sessionId ? { ...s, status: 'no-show' as const, patientOnline: false } : s))
+    );
+    _audit('tc_noshow', 'Teleconsult', `Session ${sessionId} marked no-show`);
+  }, [_audit]);
+
+  const cancelTcSession = useCallback((sessionId: string) => {
+    const session = tcSessions.find((s) => s.id === sessionId);
+    setTcSessions((prev) =>
+      prev.map((s) => (s.id === sessionId ? { ...s, status: 'cancelled' as const, patientOnline: false } : s))
+    );
+    if (session?.assignedDoctorId) {
+      setTcDoctors((prev) =>
+        prev.map((d) =>
+          d.id === session.assignedDoctorId && d.currentSessionId === sessionId
+            ? { ...d, status: 'available' as const, currentSessionId: undefined, currentActivity: undefined }
+            : d
+        )
+      );
+    }
+    _audit('tc_cancel', 'Teleconsult', `Session ${sessionId} cancelled`);
+  }, [tcSessions, _audit]);
+
+  const updateTcDoctorStatus = useCallback((doctorId: string, status: DoctorTCStatus, activity?: string) => {
+    setTcDoctors((prev) =>
+      prev.map((d) =>
+        d.id === doctorId
+          ? { ...d, status, currentActivity: activity ?? d.currentActivity }
+          : d
+      )
+    );
+    _audit('tc_doctor_status', 'Teleconsult', `Doctor ${doctorId} → ${status}`);
+  }, [_audit]);
+
+  const checkInTcDoctor = useCallback((doctorId: string) => {
+    setTcDoctors((prev) =>
+      prev.map((d) =>
+        d.id === doctorId
+          ? { ...d, checkedIn: true, status: 'available' as const }
+          : d
+      )
+    );
+    _audit('tc_doctor_checkin', 'Teleconsult', `Doctor ${doctorId} checked in`);
+  }, [_audit]);
+
+  const tcStats = useMemo(() => {
+    const active = tcSessions.filter((s) => !['completed', 'no-show', 'cancelled'].includes(s.status));
+    const waiting = active.filter((s) => s.status === 'in-queue' || s.status === 'doctor-assigned' || s.status === 'connecting');
+    const inSession = active.filter((s) => s.status === 'in-session' || s.status === 'wrap-up');
+    const completed = tcSessions.filter((s) => s.status === 'completed');
+    const noShow = tcSessions.filter((s) => s.status === 'no-show');
+    const waitTimes = waiting.map((s) => s.waitMinutes);
+    const avgWait = waitTimes.length > 0 ? Math.round(waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length) : 0;
+    const checkedInDocs = tcDoctors.filter((d) => d.checkedIn);
+    return {
+      totalWaiting: waiting.length,
+      totalInSession: inSession.length,
+      totalCompleted: completed.length,
+      totalNoShow: noShow.length,
+      avgWaitMinutes: avgWait,
+      doctorsAvailable: checkedInDocs.filter((d) => d.status === 'available').length,
+      doctorsInSession: checkedInDocs.filter((d) => d.status === 'in-session').length,
+      doctorsOnBreak: checkedInDocs.filter((d) => d.status === 'on-break' || d.status === 'clinic-consult' || d.status === 'rounds').length,
+      nowQueueLength: tcSessions.filter((s) => s.type === 'now' && !['completed', 'no-show', 'cancelled'].includes(s.status)).length,
+      laterQueueLength: tcSessions.filter((s) => s.type === 'later' && !['completed', 'no-show', 'cancelled'].includes(s.status)).length,
+    };
+  }, [tcSessions, tcDoctors]);
+
   // ═══════ Computed ═══════
   const pendingLabOrders = useMemo(() => labOrders.filter((o) => o.status === 'Ordered' || o.status === 'In Progress'), [labOrders]);
   const criticalAlerts = useMemo(() => cdssAlerts.filter((a) => !a.dismissed), [cdssAlerts]);
@@ -707,7 +1002,7 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const value: ProviderContextType = useMemo(
     () => ({
-      currentStaff, currentApp, queueMode, switchStaff, switchApp, toggleQueueMode,
+      currentStaff, currentApp, queueMode, doctorMode, switchStaff, switchApp, toggleQueueMode, setDoctorMode,
       staff, clinicalNotes, prescriptions, labOrders, availability, rooms, equipment,
       queuePatients, shiftSchedules, pharmacyItems, dispensing, triageRecords, nursingTasks,
       formTemplates, formSubmissions, immunizationRecords, managedEvents, eventRegistrations,
@@ -718,11 +1013,11 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       // Clinical
       signNote, saveDraftNote, addClinicalNote,
       // Prescriptions
-      approvePrescription, denyPrescription, addPrescription,
+      approvePrescription, denyPrescription, addPrescription, updatePrescription,
       // Lab
       updateLabOrderStatus, addLabOrder,
       // Alerts
-      dismissAlert, addCdssAlert,
+      dismissAlert, actionAlert, addCdssAlert,
       // Appointments
       updateAppointmentStatus, addAppointment, cancelAppointment,
       // Messages
@@ -745,25 +1040,38 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       addImmunizationRecord,
       // Audit
       addAuditLog,
+      // Messaging
+      conversations, chatMessages, sendChatMessage, createConversation, markConversationRead, totalUnreadMessages,
+      // Teleconsult Queue
+      tcSessions, tcDoctors,
+      addTcSession, updateTcSessionStatus, assignTcDoctor, startTcSession, endTcSession,
+      markTcNoShow, cancelTcSession, updateTcDoctorStatus, checkInTcDoctor, tcStats,
+      // Active teleconsult call
+      activeTeleconsultCall, setActiveTeleconsultCall,
       // Computed
       pendingLabOrders, criticalAlerts, todayAppointments, queueStats,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      currentStaff, currentApp, queueMode, staff, clinicalNotes, prescriptions, labOrders,
+      currentStaff, currentApp, queueMode, doctorMode, staff, clinicalNotes, prescriptions, labOrders,
       availability, rooms, equipment, queuePatients, shiftSchedules, pharmacyItems, dispensing,
       triageRecords, nursingTasks, formTemplates, formSubmissions, immunizationRecords,
       managedEvents, eventRegistrations, auditLogs, paymentTransactions, internalMessages,
       cdssAlerts, dashboardKpis, appointments, pendingLabOrders, criticalAlerts, todayAppointments, queueStats,
-      switchStaff, switchApp, toggleQueueMode, transferPatient, addDoctorOrders, startOrder, completeOrder, completeCurrentOrder,
+      conversations, chatMessages, totalUnreadMessages,
+      tcSessions, tcDoctors, tcStats, activeTeleconsultCall,
+      switchStaff, switchApp, toggleQueueMode, setDoctorMode, setActiveTeleconsultCall, transferPatient, addDoctorOrders, startOrder, completeOrder, completeCurrentOrder,
       checkInPatient, callNextPatient, startPatient, completePatient, markNoShow, skipPatient,
-      signNote, saveDraftNote, addClinicalNote, approvePrescription, denyPrescription, addPrescription,
-      updateLabOrderStatus, addLabOrder, dismissAlert, addCdssAlert, updateAppointmentStatus, addAppointment, cancelAppointment,
+      signNote, saveDraftNote, addClinicalNote, approvePrescription, denyPrescription, addPrescription, updatePrescription,
+      updateLabOrderStatus, addLabOrder, dismissAlert, actionAlert, addCdssAlert, updateAppointmentStatus, addAppointment, cancelAppointment,
       markMessageRead, sendMessage, updateNursingTaskStatus, addTriageRecord, addNursingTask,
       dispenseItem, updatePharmacyStock, addPayment, refundPayment,
       updateStaffStatus, updateShiftStatus, updateRoomStatus, updateEquipmentStatus,
       addEvent, updateEventStatus, updateRegistrationStatus,
       updateFormSubmissionStatus, addFormTemplate, addImmunizationRecord, addAuditLog,
+      addTcSession, updateTcSessionStatus, assignTcDoctor, startTcSession, endTcSession,
+      markTcNoShow, cancelTcSession, updateTcDoctorStatus, checkInTcDoctor,
+      sendChatMessage, createConversation, markConversationRead,
     ]
   );
 

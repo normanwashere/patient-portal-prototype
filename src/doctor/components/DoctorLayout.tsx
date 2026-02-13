@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet, NavLink, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import {
   CalendarClock,
   Users,
@@ -16,10 +16,16 @@ import {
   ClipboardList,
   LogOut,
   ChevronDown,
+  Building2,
+  Clock,
+  PhoneCall,
+  MessageSquare,
 } from 'lucide-react';
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
 import type { TenantFeatures } from '../../types/tenant';
+import { TeleconsultPiP } from './TeleconsultPiP';
+import { DoctorSimulation } from './DoctorSimulation';
 import './DoctorLayout.css';
 
 const PREFIX = '/doctor';
@@ -28,7 +34,7 @@ interface NavItem {
   to: string;
   icon: React.FC<{ size?: number; className?: string }>;
   label: string;
-  hasBadge?: 'queue' | 'results' | 'tasks';
+  hasBadge?: 'queue' | 'results' | 'tasks' | 'teleconsult';
   badgeKey?: string;
   visible?: (f: TenantFeatures) => boolean;
 }
@@ -44,14 +50,20 @@ const SIDEBAR_SECTIONS: NavSection[] = [
     items: [
       { to: PREFIX, icon: LayoutDashboard, label: 'Dashboard' },
       { to: `${PREFIX}/schedule`, icon: Calendar, label: 'My Schedule' },
-      { to: `${PREFIX}/queue`, icon: Users, label: 'My Queue', hasBadge: 'queue', visible: (f) => f.queue },
+    ],
+  },
+  {
+    label: 'My Queue',
+    items: [
+      { to: `${PREFIX}/queue`, icon: Users, label: 'In-Clinic Queue', hasBadge: 'queue', visible: (f) => f.queue },
+      { to: `${PREFIX}/teleconsult`, icon: Video, label: 'Teleconsult Queue', hasBadge: 'teleconsult', visible: (f) => f.visits.teleconsultNowEnabled },
     ],
   },
   {
     label: 'Clinical',
     items: [
       { to: `${PREFIX}/encounter`, icon: Stethoscope, label: 'Patient Encounter' },
-      { to: `${PREFIX}/teleconsult`, icon: Video, label: 'Teleconsult', visible: (f) => f.visits.teleconsultEnabled },
+      { to: `${PREFIX}/teleconsult`, icon: Video, label: 'Teleconsult', visible: (f) => f.visits.teleconsultEnabled && !f.visits.teleconsultNowEnabled },
       { to: `${PREFIX}/results`, icon: FlaskConical, label: 'Lab Results', hasBadge: 'results', visible: (f) => f.visits.clinicLabFulfillmentEnabled },
       { to: `${PREFIX}/prescriptions`, icon: Pill, label: 'Prescriptions' },
     ],
@@ -59,6 +71,7 @@ const SIDEBAR_SECTIONS: NavSection[] = [
   {
     label: 'Management',
     items: [
+      { to: `${PREFIX}/messages`, icon: MessageSquare, label: 'Messages', hasBadge: 'messages' as any },
       { to: `${PREFIX}/tasks`, icon: ClipboardList, label: 'Tasks', hasBadge: 'tasks' },
       { to: `${PREFIX}/immunizations`, icon: Syringe, label: 'Immunizations' },
       { to: `${PREFIX}/loa`, icon: FileCheck, label: 'LOA Review', visible: (f) => f.loa },
@@ -81,21 +94,50 @@ export const DoctorLayout = () => {
     internalMessages,
     queueStats,
     criticalAlerts,
+    doctorMode,
+    setDoctorMode,
+    activeTeleconsultCall,
   } = useProvider();
+  const navigate = useNavigate();
   const { tenant } = useTheme();
+  const teleconsultEnabled = tenant.features.visits.teleconsultEnabled;
+  const teleconsultNowEnabled = tenant.features.visits.teleconsultNowEnabled;
+  // Live queue mode toggle only when teleconsult NOW is available
+  const hasLiveQueue = teleconsultNowEnabled;
 
   const hasCDSS = tenant.features.cdss ?? false;
 
-  const notificationCount = internalMessages.filter(
+  const messageCount = internalMessages.filter(
     (m) => m.toId === currentStaff.id && !m.read
   ).length;
 
   const queueCount = queueStats.totalInQueue;
   const alertBadgeCount = hasCDSS ? criticalAlerts.filter(a => !a.dismissed).length : 0;
   const pendingResultCount = 0; // placeholder – not yet in context
-  const taskBadgeCount = notificationCount + alertBadgeCount;
+  const teleconsultQueueCount = 3; // mock – patients waiting in teleconsult queue
+  const taskBadgeCount = alertBadgeCount;
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showSimulation, setShowSimulation] = useState(false);
+
+  // Expose simulation state globally for DemoControls
+  useEffect(() => {
+    (window as any).__startDoctorSimulation = () => setShowSimulation(true);
+    (window as any).__doctorSimulationRunning = showSimulation;
+    return () => { delete (window as any).__startDoctorSimulation; };
+  }, [showSimulation]);
+
+  // Active teleconsult elapsed timer for sidebar
+  const [tcElapsed, setTcElapsed] = useState(0);
+  useEffect(() => {
+    if (!activeTeleconsultCall) { setTcElapsed(0); return; }
+    const tick = () => setTcElapsed(Math.floor((Date.now() - activeTeleconsultCall.startedAt) / 1000));
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [activeTeleconsultCall]);
+  const fmtTime = (s: number) =>
+    `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
     <div className="doctor-shell">
@@ -118,14 +160,41 @@ export const DoctorLayout = () => {
           </div>
         </button>
         <div className="doctor-header-actions">
+          {/* Mobile mode toggle */}
+          {hasLiveQueue && (
+            <button
+              onClick={() => setDoctorMode(doctorMode === 'in-clinic' ? 'teleconsult' : 'in-clinic')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '8px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                fontSize: 12, fontWeight: 700, minHeight: 36,
+                background: doctorMode === 'teleconsult' ? 'var(--color-secondary-bg, rgba(124,58,237,0.1))' : 'var(--color-primary-transparent, rgba(59,130,246,0.08))',
+                color: doctorMode === 'teleconsult' ? 'var(--color-secondary, #7c3aed)' : 'var(--color-primary)',
+              }}
+              aria-label="Toggle doctor mode"
+            >
+              {doctorMode === 'teleconsult' ? <Video size={14} /> : <Building2 size={14} />}
+              {doctorMode === 'teleconsult' ? 'Tele' : 'Clinic'}
+            </button>
+          )}
+          <Link
+            to={`${PREFIX}/messages`}
+            className="doctor-header-btn doctor-notification-btn"
+            aria-label="Messages"
+          >
+            <MessageSquare size={19} />
+            {messageCount > 0 && (
+              <span className="doctor-header-badge">{messageCount}</span>
+            )}
+          </Link>
           <Link
             to={`${PREFIX}/tasks`}
             className="doctor-header-btn doctor-notification-btn"
             aria-label="Tasks & Notifications"
           >
             <Bell size={20} />
-            {notificationCount > 0 && (
-              <span className="doctor-header-badge">{notificationCount}</span>
+            {taskBadgeCount > 0 && (
+              <span className="doctor-header-badge">{taskBadgeCount}</span>
             )}
           </Link>
           <img
@@ -183,6 +252,90 @@ export const DoctorLayout = () => {
             </div>
           </div>
 
+          {/* Mode toggle: In Clinic ↔ Teleconsult (only when live teleconsult NOW is available) */}
+          {hasLiveQueue && (
+            <div style={{
+              margin: '0 12px 8px', padding: 3, borderRadius: 10,
+              background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+              display: 'flex', gap: 2,
+            }}>
+              <button
+                onClick={() => setDoctorMode('in-clinic')}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '8px 6px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 700, transition: 'all 0.2s',
+                  background: doctorMode === 'in-clinic' ? 'var(--color-primary)' : 'transparent',
+                  color: doctorMode === 'in-clinic' ? '#fff' : 'var(--color-text-muted)',
+                }}
+              >
+                <Building2 size={14} /> In Clinic
+              </button>
+              <button
+                onClick={() => setDoctorMode('teleconsult')}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '8px 6px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 700, transition: 'all 0.2s',
+                  background: doctorMode === 'teleconsult' ? 'var(--color-secondary, #7c3aed)' : 'transparent',
+                  color: doctorMode === 'teleconsult' ? '#fff' : 'var(--color-text-muted)',
+                }}
+              >
+                <Video size={14} /> Teleconsult
+              </button>
+            </div>
+          )}
+
+          {/* Active teleconsult call indicator in sidebar */}
+          {activeTeleconsultCall && (
+            <div
+              onClick={() => navigate('/doctor/teleconsult')}
+              style={{
+                margin: '0 12px 10px', padding: '10px 12px', borderRadius: 10,
+                background: 'linear-gradient(135deg, rgba(124,58,237,0.08), rgba(99,102,241,0.05))',
+                border: '1.5px solid rgba(124,58,237,0.2)',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <div style={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: '#4ade80', animation: 'pulse 2s infinite',
+                }} />
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-secondary, #7c3aed)', letterSpacing: '0.03em' }}>
+                  ACTIVE CALL
+                </span>
+                <span style={{
+                  marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: 'var(--color-secondary, #7c3aed)',
+                  display: 'flex', alignItems: 'center', gap: 3,
+                }}>
+                  <Clock size={10} />
+                  {fmtTime(tcElapsed)}
+                </span>
+              </div>
+              <div style={{
+                fontSize: 12, fontWeight: 600, color: 'var(--color-text)',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                marginBottom: 6,
+              }}>
+                {activeTeleconsultCall.patientName}
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate('/doctor/teleconsult'); }}
+                style={{
+                  width: '100%', padding: '6px 0', borderRadius: 7,
+                  border: 'none', cursor: 'pointer',
+                  background: 'var(--color-secondary, linear-gradient(135deg, #7c3aed, #6366f1))',
+                  color: '#fff', fontSize: 11, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                }}
+              >
+                <PhoneCall size={12} /> Return to Call
+              </button>
+            </div>
+          )}
+
           <nav className="doctor-sidebar-nav">
             {SIDEBAR_SECTIONS.map((section) => {
               const visibleItems = section.items.filter(
@@ -197,6 +350,8 @@ export const DoctorLayout = () => {
                       item.hasBadge === 'queue' ? queueCount :
                       item.hasBadge === 'results' ? pendingResultCount :
                       item.hasBadge === 'tasks' ? taskBadgeCount :
+                      item.hasBadge === 'teleconsult' ? teleconsultQueueCount :
+                      (item.hasBadge as string) === 'messages' ? messageCount :
                       0;
                     return (
                       <NavLink
@@ -246,6 +401,9 @@ export const DoctorLayout = () => {
         <Outlet />
       </main>
 
+      {/* Teleconsult PiP — floating mini video when call is active and user navigates away */}
+      <TeleconsultPiP />
+
       {/* Mobile Bottom Nav - filtered by tenant features */}
       <nav
         className="doctor-bottom-nav"
@@ -259,6 +417,8 @@ export const DoctorLayout = () => {
               item.badgeKey === 'queue' ? queueCount :
               item.badgeKey === 'results' ? pendingResultCount :
               item.badgeKey === 'tasks' ? taskBadgeCount :
+              item.badgeKey === 'teleconsult' ? teleconsultQueueCount :
+              item.badgeKey === 'messages' ? messageCount :
               0;
             return (
               <NavLink
@@ -278,6 +438,11 @@ export const DoctorLayout = () => {
             );
           })}
       </nav>
+
+      {/* Doctor Simulation Overlay */}
+      {showSimulation && (
+        <DoctorSimulation onClose={() => setShowSimulation(false)} />
+      )}
     </div>
   );
 };

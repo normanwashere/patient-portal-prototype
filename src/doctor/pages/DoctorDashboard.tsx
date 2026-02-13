@@ -35,6 +35,7 @@ import {
   Send,
   Bot,
   User,
+  Building2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useProvider } from '../../provider/context/ProviderContext';
@@ -65,7 +66,7 @@ export const DoctorDashboard = () => {
   const {
     currentStaff, queuePatients, queueStats, todayAppointments,
     labOrders, prescriptions, clinicalNotes, criticalAlerts,
-    callNextPatient, startPatient,
+    callNextPatient, startPatient, doctorMode, activeTeleconsultCall,
   } = useProvider();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -76,10 +77,14 @@ export const DoctorDashboard = () => {
   const labsEnabled = tenant.features.visits.clinicLabFulfillmentEnabled;
   const queueEnabled = tenant.features.queue;
   const teleconsultEnabled = tenant.features.visits.teleconsultEnabled;
+  const teleconsultNowEnabled = tenant.features.visits.teleconsultNowEnabled;
   const loaEnabled = tenant.features.loa;
+  // Only show mode toggle when live teleconsult queue is available
+  const hasLiveQueue = teleconsultNowEnabled;
   const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' && window.innerWidth >= 1024);
-  const [handsFreeMode, setHandsFreeMode] = useState(true);
-  const [aiCollapsed, setAiCollapsed] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [handsFreeMode, setHandsFreeMode] = useState(false);
+  const [aiCollapsed, setAiCollapsed] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [aiInput, setAiInput] = useState('');
   const [aiProcessing, setAiProcessing] = useState(false);
@@ -93,6 +98,19 @@ export const DoctorDashboard = () => {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  // Active teleconsult timer
+  const [tcElapsed, setTcElapsed] = useState(0);
+  useEffect(() => {
+    if (!activeTeleconsultCall) { setTcElapsed(0); return; }
+    const tick = () => setTcElapsed(Math.floor((Date.now() - activeTeleconsultCall.startedAt) / 1000));
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [activeTeleconsultCall]);
+
+  const formatCallTime = (s: number) =>
+    `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
   // ---- Data ----
   const myQueue = queuePatients.filter(
@@ -199,14 +217,14 @@ export const DoctorDashboard = () => {
   const tiles: DashTile[] = [
     {
       id: 'queue',
-      label: 'My Queue',
+      label: 'In-Clinic Queue',
       icon: Users,
-      color: 'rgba(59, 130, 246, 0.1)',
-      iconColor: '#3b82f6',
+      color: doctorMode === 'teleconsult' ? 'rgba(100,116,139,0.06)' : 'rgba(59, 130, 246, 0.1)',
+      iconColor: doctorMode === 'teleconsult' ? '#94a3b8' : '#3b82f6',
       route: '/doctor/queue',
       badge: queueCount,
       visible: queueEnabled,
-      description: queueCount > 0 ? `${queueCount} waiting` : 'No patients',
+      description: doctorMode === 'teleconsult' ? 'On Hold' : (queueCount > 0 ? `${queueCount} waiting` : 'No patients'),
     },
     {
       id: 'schedule',
@@ -276,14 +294,20 @@ export const DoctorDashboard = () => {
     },
     {
       id: 'teleconsult',
-      label: 'Teleconsult',
+      label: teleconsultNowEnabled ? 'Teleconsult Queue' : 'Teleconsult',
       icon: Video,
-      color: 'rgba(139, 92, 246, 0.08)',
-      iconColor: '#7c3aed',
+      color: teleconsultNowEnabled
+        ? (doctorMode === 'in-clinic' ? 'rgba(100,116,139,0.06)' : 'rgba(139, 92, 246, 0.08)')
+        : 'rgba(139, 92, 246, 0.06)',
+      iconColor: teleconsultNowEnabled
+        ? (doctorMode === 'in-clinic' ? '#94a3b8' : '#7c3aed')
+        : '#7c3aed',
       route: '/doctor/teleconsult',
-      badge: 0,
+      badge: teleconsultNowEnabled ? 3 : 0,
       visible: teleconsultEnabled,
-      description: 'Video visits',
+      description: teleconsultNowEnabled
+        ? (doctorMode === 'in-clinic' ? 'On Hold · 3 waiting' : '3 patients waiting')
+        : 'Schedule only',
     },
     {
       id: 'tasks',
@@ -359,66 +383,223 @@ export const DoctorDashboard = () => {
         </div>
       </header>
 
+      {/* ===== Active Mode Indicator (only when live teleconsult NOW is available) ===== */}
+      {hasLiveQueue && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 14px', borderRadius: 10, marginBottom: 2,
+          background: doctorMode === 'teleconsult' ? 'rgba(124,58,237,0.05)' : 'rgba(59,130,246,0.04)',
+          border: `1px solid ${doctorMode === 'teleconsult' ? 'rgba(124,58,237,0.12)' : 'rgba(59,130,246,0.1)'}`,
+        }}>
+          <div style={{
+            width: 8, height: 8, borderRadius: '50%',
+            background: doctorMode === 'teleconsult' ? '#7c3aed' : 'var(--color-primary)',
+            boxShadow: `0 0 6px ${doctorMode === 'teleconsult' ? 'rgba(124,58,237,0.5)' : 'rgba(59,130,246,0.4)'}`,
+            animation: 'pulse 2s infinite',
+          }} />
+          <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: doctorMode === 'teleconsult' ? '#7c3aed' : 'var(--color-primary)' }}>
+            {doctorMode === 'teleconsult' ? (
+              <>
+                <Video size={13} style={{ marginRight: 5, verticalAlign: 'text-bottom' }} />
+                Teleconsult Mode — In-clinic queue on hold
+              </>
+            ) : (
+              <>
+                <Building2 size={13} style={{ marginRight: 5, verticalAlign: 'text-bottom' }} />
+                In-Clinic Mode — Teleconsult queue on hold
+              </>
+            )}
+          </span>
+          <button
+            onClick={() => navigate(doctorMode === 'teleconsult' ? '/doctor/teleconsult' : '/doctor/queue')}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 12, fontWeight: 600, color: doctorMode === 'teleconsult' ? '#7c3aed' : 'var(--color-primary)',
+              textDecoration: 'underline', padding: 0,
+            }}
+          >
+            {doctorMode === 'teleconsult' ? 'View teleconsult →' : 'View queue →'}
+          </button>
+        </div>
+      )}
+
+      {/* ===== Active Teleconsult Encounter Card ===== */}
+      {activeTeleconsultCall && (
+        <div
+          onClick={() => navigate('/doctor/teleconsult')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: isDesktop ? '14px 20px' : '12px 14px',
+            borderRadius: 14,
+            background: 'linear-gradient(135deg, rgba(124,58,237,0.06), rgba(99,102,241,0.04))',
+            border: '1.5px solid rgba(124,58,237,0.2)',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            marginBottom: 2,
+            boxShadow: '0 2px 8px rgba(124,58,237,0.08)',
+          }}
+        >
+          {/* Pulsing video indicator */}
+          <div style={{
+            width: 44, height: 44, borderRadius: 12,
+            background: 'linear-gradient(135deg, #7c3aed, #6366f1)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'relative', flexShrink: 0,
+          }}>
+            <Video size={20} style={{ color: '#fff' }} />
+            <span style={{
+              position: 'absolute', top: -2, right: -2,
+              width: 10, height: 10, borderRadius: '50%',
+              background: '#4ade80',
+              border: '2px solid var(--color-surface)',
+              animation: 'pulse 2s infinite',
+            }} />
+          </div>
+
+          {/* Call info */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#7c3aed', marginBottom: 2 }}>
+              Active Teleconsult — {activeTeleconsultCall.patientName}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--color-text-muted)' }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 3,
+                background: 'rgba(74,222,128,0.1)', color: '#16a34a',
+                padding: '2px 8px', borderRadius: 6, fontWeight: 700, fontSize: 11,
+              }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#16a34a', animation: 'pulse 2s infinite' }} />
+                LIVE
+              </span>
+              <Clock size={11} /> {formatCallTime(tcElapsed)}
+              {activeTeleconsultCall.chiefComplaint && (
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  · {activeTeleconsultCall.chiefComplaint}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Return button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate('/doctor/teleconsult'); }}
+            style={{
+              padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#fff',
+              fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5,
+              boxShadow: '0 2px 8px rgba(124,58,237,0.25)',
+              flexShrink: 0,
+            }}
+          >
+            <Video size={14} /> Return to Call
+          </button>
+        </div>
+      )}
+
       {/* ===== AI & Voice Assistant Section (Functional + Collapsible) ===== */}
       <section style={{
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)',
+        background: aiEnabled
+          ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)'
+          : 'linear-gradient(135deg, #1e293b 0%, #334155 60%, #1e293b 100%)',
         borderRadius: 16,
         color: '#fff',
         position: 'relative',
         overflow: 'hidden',
-        border: `1px solid ${isListening ? 'rgba(34, 197, 94, 0.5)' : 'rgba(99, 102, 241, 0.25)'}`,
-        boxShadow: isListening ? '0 4px 24px rgba(34, 197, 94, 0.2)' : '0 4px 24px rgba(99, 102, 241, 0.12)',
-        transition: 'border-color 0.3s, box-shadow 0.3s',
+        border: `1px solid ${!aiEnabled ? 'rgba(148,163,184,0.15)' : isListening ? 'rgba(34, 197, 94, 0.5)' : 'rgba(99, 102, 241, 0.25)'}`,
+        boxShadow: !aiEnabled ? '0 2px 12px rgba(0,0,0,0.08)' : isListening ? '0 4px 24px rgba(34, 197, 94, 0.2)' : '0 4px 24px rgba(99, 102, 241, 0.12)',
+        transition: 'all 0.3s ease',
+        opacity: aiEnabled ? 1 : 0.85,
       }}>
         {/* Decorative background glow */}
-        <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        {aiEnabled && <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />}
 
         {/* Collapsible Header */}
         <button
-          onClick={() => !isDesktop && setAiCollapsed(!aiCollapsed)}
+          onClick={() => {
+            if (!aiEnabled) return;
+            setAiCollapsed(!aiCollapsed);
+          }}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
-            padding: isDesktop ? '24px 28px 0' : '16px 18px',
-            background: 'none', border: 'none', color: '#fff', cursor: isDesktop ? 'default' : 'pointer',
-            ...(aiCollapsed && !isDesktop ? { paddingBottom: 16 } : {}),
+            padding: aiCollapsed ? '16px 18px' : (isDesktop ? '24px 28px 0' : '16px 18px'),
+            background: 'none', border: 'none', color: '#fff', cursor: aiEnabled ? 'pointer' : 'default',
+            ...(aiCollapsed ? { paddingBottom: 16 } : {}),
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
               width: 44, height: 44, borderRadius: 12,
-              background: isListening ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              background: !aiEnabled ? 'rgba(148,163,184,0.15)' : isListening ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               transition: 'background 0.3s',
-              animation: isListening ? 'pulse 1.5s infinite' : 'none',
+              animation: aiEnabled && isListening ? 'pulse 1.5s infinite' : 'none',
             }}>
-              {isListening ? <Mic size={22} color="#fff" /> : <AudioWaveform size={22} color="#fff" />}
+              {!aiEnabled ? <AudioWaveform size={22} color="#64748b" /> : isListening ? <Mic size={22} color="#fff" /> : <AudioWaveform size={22} color="#fff" />}
             </div>
             <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: isDesktop ? 17 : 15, fontWeight: 700, letterSpacing: '-0.01em' }}>AI Clinical Assistant</div>
+              <div style={{ fontSize: isDesktop ? 17 : 15, fontWeight: 700, letterSpacing: '-0.01em', color: aiEnabled ? '#fff' : '#94a3b8' }}>AI Clinical Assistant</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: isListening ? '#22c55e' : '#6366f1', display: 'inline-block', animation: 'pulse 2s infinite', boxShadow: `0 0 6px ${isListening ? 'rgba(34,197,94,0.6)' : 'rgba(99,102,241,0.5)'}` }} />
-                <span style={{ fontSize: 12, color: '#94a3b8' }}>{isListening ? 'Listening...' : aiProcessing ? 'Processing...' : 'Ready'} · {commandCount} commands today</span>
+                {aiEnabled ? (
+                  <>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: isListening ? '#22c55e' : '#6366f1', display: 'inline-block', animation: 'pulse 2s infinite', boxShadow: `0 0 6px ${isListening ? 'rgba(34,197,94,0.6)' : 'rgba(99,102,241,0.5)'}` }} />
+                    <span style={{ fontSize: 12, color: '#94a3b8' }}>{isListening ? 'Listening...' : aiProcessing ? 'Processing...' : 'Ready'} · {commandCount} commands today</span>
+                  </>
+                ) : (
+                  <span style={{ fontSize: 12, color: '#64748b' }}>Tap toggle to activate AI assistant</span>
+                )}
               </div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span onClick={(e) => { e.stopPropagation(); setHandsFreeMode(!handsFreeMode); }} style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: handsFreeMode ? 'rgba(34, 197, 94, 0.15)' : 'rgba(148, 163, 184, 0.15)',
-              border: `1px solid ${handsFreeMode ? 'rgba(34, 197, 94, 0.3)' : 'rgba(148, 163, 184, 0.2)'}`,
-              borderRadius: 10, padding: '6px 12px', cursor: 'pointer',
-              color: handsFreeMode ? '#4ade80' : '#94a3b8', fontSize: 12, fontWeight: 600,
-            }}>
-              {handsFreeMode ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
-              <span style={{ display: isDesktop ? 'inline' : 'none' }}>Hands-Free</span>
+            {/* ON/OFF Master toggle */}
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                const next = !aiEnabled;
+                setAiEnabled(next);
+                if (next) { setAiCollapsed(false); } else { setAiCollapsed(true); setIsListening(false); setHandsFreeMode(false); }
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: aiEnabled ? 'rgba(99, 102, 241, 0.2)' : 'rgba(148, 163, 184, 0.12)',
+                border: `1px solid ${aiEnabled ? 'rgba(99, 102, 241, 0.35)' : 'rgba(148, 163, 184, 0.2)'}`,
+                borderRadius: 10, padding: '6px 12px', cursor: 'pointer',
+                color: aiEnabled ? '#818cf8' : '#64748b', fontSize: 12, fontWeight: 600,
+                transition: 'all 0.2s',
+              }}
+            >
+              {aiEnabled ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+              {aiEnabled ? 'ON' : 'OFF'}
             </span>
-            {!isDesktop && (aiCollapsed ? <ChevronDown size={18} style={{ color: '#94a3b8' }} /> : <ChevronUp size={18} style={{ color: '#94a3b8' }} />)}
+            {aiEnabled && (aiCollapsed ? <ChevronDown size={18} style={{ color: '#94a3b8' }} /> : <ChevronUp size={18} style={{ color: '#94a3b8' }} />)}
           </div>
         </button>
 
-        {/* Collapsible Body */}
-        {(isDesktop || !aiCollapsed) && (
+        {/* Collapsible Body — only when AI is enabled and expanded */}
+        {aiEnabled && !aiCollapsed && (
           <div style={{ padding: isDesktop ? '16px 28px 24px' : '12px 18px 18px' }}>
+
+            {/* Hands-Free Mode Toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <span
+                onClick={() => setHandsFreeMode(!handsFreeMode)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  background: handsFreeMode ? 'rgba(34, 197, 94, 0.15)' : 'rgba(148, 163, 184, 0.1)',
+                  border: `1px solid ${handsFreeMode ? 'rgba(34, 197, 94, 0.3)' : 'rgba(148, 163, 184, 0.15)'}`,
+                  borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+                  color: handsFreeMode ? '#4ade80' : '#94a3b8', fontSize: 12, fontWeight: 600,
+                  transition: 'all 0.2s',
+                }}
+              >
+                {handsFreeMode ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
+                Hands-Free Mode
+              </span>
+              {handsFreeMode && (
+                <span style={{ fontSize: 11, color: '#4ade80', fontWeight: 500 }}>
+                  Voice commands active — speak to interact
+                </span>
+              )}
+            </div>
 
             {/* Quick Command Chips (clickable) */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -563,56 +744,61 @@ export const DoctorDashboard = () => {
         )}
       </section>
 
-      {/* ===== Step 3: IN_SESSION — Continue encounter ===== */}
-      {inSession && (
-        <div className="doc-active-patient" onClick={() => navigate('/doctor/encounter')}>
-          <div className="doc-active-patient-pulse" />
-          <div className="doc-active-patient-info">
-            <span className="doc-active-patient-label">In Session</span>
-            <span className="doc-active-patient-name">{inSession.patientName}</span>
-            <span className="doc-active-patient-meta">
-              <Clock size={12} /> {inSession.waitMinutes}m
-              {inSession.chiefComplaint && <> · {inSession.chiefComplaint}</>}
-            </span>
-          </div>
-          <button className="doc-active-patient-btn" onClick={(e) => { e.stopPropagation(); navigate('/doctor/encounter'); }}>
-            <Play size={16} /> Continue
-          </button>
-        </div>
-      )}
+      {/* ===== In-clinic patient cards (hidden when in teleconsult mode) ===== */}
+      {doctorMode === 'in-clinic' && (
+        <>
+          {/* Step 3: IN_SESSION — Continue encounter */}
+          {inSession && (
+            <div className="doc-active-patient" onClick={() => navigate('/doctor/encounter')}>
+              <div className="doc-active-patient-pulse" />
+              <div className="doc-active-patient-info">
+                <span className="doc-active-patient-label">In Session</span>
+                <span className="doc-active-patient-name">{inSession.patientName}</span>
+                <span className="doc-active-patient-meta">
+                  <Clock size={12} /> {inSession.waitMinutes}m
+                  {inSession.chiefComplaint && <> · {inSession.chiefComplaint}</>}
+                </span>
+              </div>
+              <button className="doc-active-patient-btn" onClick={(e) => { e.stopPropagation(); navigate('/doctor/encounter'); }}>
+                <Play size={16} /> Continue
+              </button>
+            </div>
+          )}
 
-      {/* ===== Step 2: READY — Start consult (takes priority over queued) ===== */}
-      {!inSession && firstReady && (
-        <div className="doc-next-patient doc-next-patient--ready">
-          <div className="doc-next-patient-info">
-            <span className="doc-next-patient-label doc-next-patient-label--ready">Patient Ready</span>
-            <span className="doc-next-patient-name">{firstReady.patientName}</span>
-            <span className="doc-next-patient-meta">
-              {firstReady.ticketNumber} · {firstReady.waitMinutes}m wait
-              {firstReady.chiefComplaint && <> · {firstReady.chiefComplaint}</>}
-            </span>
-          </div>
-          <button className="doc-next-patient-btn doc-next-patient-btn--start" onClick={handleStartConsult}>
-            <Stethoscope size={16} /> Start Consult
-          </button>
-        </div>
-      )}
+          {/* Step 2: READY — Start consult */}
+          {!inSession && firstReady && (
+            <div className="doc-next-patient doc-next-patient--ready">
+              <div className="doc-next-patient-info">
+                <span className="doc-next-patient-label doc-next-patient-label--ready">Patient Ready</span>
+                <span className="doc-next-patient-name">{firstReady.patientName}</span>
+                <span className="doc-next-patient-meta">
+                  {firstReady.ticketNumber} · {firstReady.waitMinutes}m wait
+                  {firstReady.chiefComplaint && <> · {firstReady.chiefComplaint}</>}
+                </span>
+              </div>
+              <button className="doc-next-patient-btn doc-next-patient-btn--start" onClick={handleStartConsult}>
+                <Stethoscope size={16} /> Start Consult
+              </button>
+            </div>
+          )}
 
-      {/* ===== Step 1: QUEUED — Call patient (only if nobody is ready or in session) ===== */}
-      {!inSession && !firstReady && firstQueued && (
-        <div className="doc-next-patient">
-          <div className="doc-next-patient-info">
-            <span className="doc-next-patient-label">Next in Queue</span>
-            <span className="doc-next-patient-name">{firstQueued.patientName}</span>
-            <span className="doc-next-patient-meta">
-              {firstQueued.ticketNumber} · {firstQueued.waitMinutes}m wait
-              {firstQueued.priority !== 'Normal' && <span className="doc-next-priority">{firstQueued.priority}</span>}
-            </span>
-          </div>
-          <button className="doc-next-patient-btn" onClick={handleCallPatient}>
-            <PhoneCall size={16} /> Call Patient
-          </button>
-        </div>
+          {/* Step 1: QUEUED — Call patient */}
+          {!inSession && !firstReady && firstQueued && (
+            <div className="doc-next-patient">
+              <div className="doc-next-patient-info">
+                <span className="doc-next-patient-label">Next in Queue</span>
+                <span className="doc-next-patient-name">{firstQueued.patientName}</span>
+                <span className="doc-next-patient-meta">
+                  {firstQueued.ticketNumber} · {firstQueued.waitMinutes}m wait
+                  {firstQueued.priority !== 'Normal' && <span className="doc-next-priority">{firstQueued.priority}</span>}
+                </span>
+              </div>
+              <button className="doc-next-patient-btn" onClick={handleCallPatient}>
+                <PhoneCall size={16} /> Call Patient
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* ===== Tile Grid ===== */}

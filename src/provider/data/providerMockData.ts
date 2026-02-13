@@ -32,6 +32,10 @@ import type {
   DoctorOrder,
   StationVisit,
   StationType,
+  TeleconsultSession,
+  TeleconsultDoctor,
+  Conversation,
+  ChatMessage,
 } from '../types';
 
 const BRANCH_MAIN = 'metro-hosp-main';
@@ -441,6 +445,23 @@ export const MOCK_PRESCRIPTIONS: Prescription[] = [
     status: 'Cancelled',
     prescribedDate: '2026-01-25',
     notes: 'Patient switched to alternative - patient request.',
+  },
+  // Amoxicillin for Lourdes Bautista — triggers CDSS drug-allergy alert (Penicillin allergy)
+  {
+    id: 'rx-009',
+    patientId: 'p6',
+    patientName: 'Lourdes Bautista',
+    doctorId: 'staff-001',
+    doctorName: 'Dr. Ricardo Santos',
+    medication: 'Amoxicillin',
+    dosage: '500mg',
+    frequency: 'Three times daily',
+    duration: '7 days',
+    quantity: 21,
+    refillsRemaining: 0,
+    status: 'Pending Approval',
+    prescribedDate: '2026-02-12',
+    notes: 'For suspected UTI — pending approval.',
   },
 ];
 
@@ -932,7 +953,7 @@ export const MOCK_FORM_TEMPLATES: FormTemplate[] = [
 // =============================================
 
 export const MOCK_FORM_SUBMISSIONS: FormSubmission[] = [
-  { id: 'sub-001', templateId: 'form-001', templateName: 'Adult Intake Form', patientId: 'p1', patientName: 'Juan Dela Cruz', submittedDate: todayFormatted, status: 'Pending Review', data: { chiefComplaint: 'Hypertension follow-up', allergies: 'None' } },
+  { id: 'sub-001', templateId: 'form-001', templateName: 'Adult Intake Form', patientId: 'p1', patientName: 'Juan Dela Cruz', submittedDate: todayFormatted, status: 'Pending Review', data: { chiefComplaint: 'Hypertension follow-up', allergies: 'NSAIDs' } },
   { id: 'sub-002', templateId: 'form-001', templateName: 'Adult Intake Form', patientId: 'p3', patientName: 'Carlos Reyes', submittedDate: 'Feb 11, 2026', status: 'Reviewed', data: { chiefComplaint: 'Annual physical', allergies: 'Penicillin' }, reviewedBy: 'Dr. Ricardo Santos', reviewNotes: 'Completed' },
   { id: 'sub-003', templateId: 'form-003', templateName: 'PHQ-9 Depression Screening', patientId: 'p6', patientName: 'Lourdes Bautista', submittedDate: 'Feb 10, 2026', status: 'Flagged', data: { f1: 'Several days', f2: 'Several days' }, reviewedBy: 'Dr. Ricardo Santos', reviewNotes: 'Refer to psych' },
   { id: 'sub-004', templateId: 'form-002', templateName: 'Consent for Treatment', patientId: 'p5', patientName: 'Anna Santos', submittedDate: todayFormatted, status: 'Pending Review', data: {} },
@@ -1012,12 +1033,16 @@ export const MOCK_INTERNAL_MESSAGES: InternalMessage[] = [
 // =============================================
 
 export const MOCK_CDSS_ALERTS: CDSSAlert[] = [
-  // ── Patient-level alerts — visible at encounter onset ──
-  { id: 'cdss-001', type: 'drug_allergy', severity: 'contraindicated', title: 'Drug-Allergy Conflict', message: 'Patient has documented Penicillin allergy. Current medication list includes Amoxicillin which is cross-reactive.', recommendation: 'Discontinue Amoxicillin. Consider Azithromycin 500mg as alternative.', prescriptionId: 'rx-001', dismissed: false, actioned: false, createdAt: todayFormatted },
+  // ── Lourdes Bautista (p6) — Penicillin + Sulfa allergies ──
+  // rx-009 is Amoxicillin 500mg (Pending Approval) for Lourdes — cross-reactive with Penicillin
+  { id: 'cdss-001', type: 'drug_allergy', severity: 'contraindicated', title: 'Drug-Allergy Conflict', message: 'Lourdes Bautista has a documented Penicillin allergy. Amoxicillin (rx-009) is a penicillin-class antibiotic and is contraindicated.', recommendation: 'Discontinue Amoxicillin. Consider Azithromycin 500mg TID × 7 days as alternative for UTI.', prescriptionId: 'rx-009', dismissed: false, actioned: false, createdAt: todayFormatted },
+  // rx-007 is Amlodipine 10mg (Pending Approval) for Lourdes — high dose for elderly
+  { id: 'cdss-003', type: 'dosage_range', severity: 'moderate', title: 'Dosage Review — Elderly Patient', message: 'Amlodipine 10mg may cause symptomatic hypotension in patients over 65. Lourdes Bautista is a senior citizen.', recommendation: 'Consider starting with Amlodipine 5mg and titrating up based on BP response.', prescriptionId: 'rx-007', dismissed: false, actioned: false, createdAt: todayFormatted },
+  // ── Roberto Villanueva (p4b) — Metformin drug interaction ──
+  // rx-005 is Metformin 850mg (Active) for Roberto
+  { id: 'cdss-002', type: 'drug_interaction', severity: 'major', title: 'Drug-Drug Interaction', message: 'Roberto Villanueva is on Metformin 850mg. If contrast imaging is ordered, Metformin must be held to prevent lactic acidosis.', recommendation: 'Hold Metformin 48 hours before and after any contrast imaging procedure.', prescriptionId: 'rx-005', dismissed: true, actioned: false, createdAt: todayFormatted },
+  // ── General preventive care ──
   { id: 'cdss-004', type: 'preventive_care', severity: 'info', title: 'Preventive Care Reminder', message: 'Patient is due for annual flu vaccination (last: Feb 2025). COVID-19 booster eligible.', recommendation: 'Offer flu shot and COVID booster at this visit if no contraindications.', dismissed: false, actioned: false, createdAt: todayFormatted },
-  // ── Action-triggered alerts — dismissed initially, fired dynamically by encounter actions ──
-  { id: 'cdss-002', type: 'drug_interaction', severity: 'major', title: 'Drug-Drug Interaction', message: 'Metformin and contrast dye interaction risk.', recommendation: 'Hold Metformin 48h before/after contrast imaging.', dismissed: true, actioned: false, createdAt: todayFormatted },
-  { id: 'cdss-003', type: 'dosage_range', severity: 'moderate', title: 'Dosage Review', message: 'Amlodipine 10mg may cause hypotension in elderly.', recommendation: 'Consider 5mg starting dose for patients over 65.', prescriptionId: 'rx-007', dismissed: true, actioned: false, createdAt: todayFormatted },
 ];
 
 // =============================================
@@ -1039,8 +1064,470 @@ export const MOCK_DASHBOARD_KPIS: DashboardKPI[] = [
 // 24. MOCK APPOINTMENTS (for todayAppointments computed)
 // =============================================
 
+const tomorrowFormatted = new Date(Date.now() + 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const dayAfterFormatted = new Date(Date.now() + 2 * 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
 export const MOCK_APPOINTMENTS: Appointment[] = [
+  // In-person appointments
   { id: 'apt-001', doctor: 'Dr. Ricardo Santos', specialty: 'Internal Medicine', date: todayFormatted, time: '09:00 AM', status: 'Upcoming', type: 'In-Person', location: BRANCH_NAME },
   { id: 'apt-002', doctor: 'Dr. Ricardo Santos', specialty: 'Internal Medicine', date: todayFormatted, time: '09:30 AM', status: 'Upcoming', type: 'In-Person', location: BRANCH_NAME },
   { id: 'apt-003', doctor: 'Dr. Maria Clara Reyes', specialty: 'Pediatrics', date: 'Feb 10, 2026', time: '10:00 AM', status: 'Completed', type: 'In-Person' },
+
+  // Scheduled teleconsult appointments
+  { id: 'apt-tc-001', doctor: 'Dr. Ricardo Santos', specialty: 'Internal Medicine', date: todayFormatted, time: '02:00 PM', status: 'Upcoming', type: 'Teleconsult', patientName: 'Elena Villareal', patientId: 'p-tc-10', chiefComplaint: 'Follow-up hypertension management', notes: 'Patient requested teleconsult. Last BP reading 138/86 at home.' },
+  { id: 'apt-tc-002', doctor: 'Dr. Ricardo Santos', specialty: 'Internal Medicine', date: todayFormatted, time: '02:30 PM', status: 'Upcoming', type: 'Teleconsult', patientName: 'Roberto Cruz', patientId: 'p-tc-11', chiefComplaint: 'Lab results review — lipid panel', notes: 'Results came in yesterday. Total cholesterol 245. Needs counseling.' },
+  { id: 'apt-tc-003', doctor: 'Dr. Ricardo Santos', specialty: 'Internal Medicine', date: todayFormatted, time: '03:15 PM', status: 'Upcoming', type: 'Teleconsult', patientName: 'Sofia Mendoza', patientId: 'p-tc-12', chiefComplaint: 'Post-surgical follow-up — appendectomy', notes: 'Day 7 post-op. Verify wound healing via video. Clear liquids diet compliance.' },
+  { id: 'apt-tc-004', doctor: 'Dr. Ricardo Santos', specialty: 'Internal Medicine', date: tomorrowFormatted, time: '10:00 AM', status: 'Upcoming', type: 'Teleconsult', patientName: 'Marco Tan', patientId: 'p-tc-13', chiefComplaint: 'Diabetes management check-in', notes: 'HbA1c follow-up. Home glucose readings trending up.' },
+  { id: 'apt-tc-005', doctor: 'Dr. Ricardo Santos', specialty: 'Internal Medicine', date: tomorrowFormatted, time: '11:30 AM', status: 'Upcoming', type: 'Teleconsult', patientName: 'Isabel Garcia', patientId: 'p-tc-14', chiefComplaint: 'Anxiety and sleep issues', notes: 'Referred from GP. First teleconsult visit.' },
+  { id: 'apt-tc-006', doctor: 'Dr. Ricardo Santos', specialty: 'Internal Medicine', date: dayAfterFormatted, time: '09:00 AM', status: 'Upcoming', type: 'Teleconsult', patientName: 'Antonio Reyes Jr.', patientId: 'p-tc-15', chiefComplaint: 'Chronic cough — 3-week follow-up', notes: 'Was prescribed antibiotics last visit. Check resolution.' },
+];
+
+// =============================================
+// Teleconsult Queue Management Mock Data
+// =============================================
+
+export const MOCK_TC_DOCTORS: TeleconsultDoctor[] = [
+  {
+    id: 'tcd-001', staffId: 'staff-001', name: 'Dr. Ricardo Santos', specialty: 'Internal Medicine',
+    photoUrl: '', status: 'in-session', currentSessionId: 'tcs-002',
+    shiftStart: `${todayFormatted}T08:00:00`, shiftEnd: `${todayFormatted}T17:00:00`,
+    sessionsCompleted: 5, avgSessionMinutes: 14, scheduledDate: todayFormatted, checkedIn: true,
+    currentActivity: 'Teleconsult with Maria Cruz',
+  },
+  {
+    id: 'tcd-002', staffId: 'staff-002', name: 'Dr. Ana Reyes', specialty: 'Pediatrics',
+    photoUrl: '', status: 'available',
+    shiftStart: `${todayFormatted}T08:00:00`, shiftEnd: `${todayFormatted}T16:00:00`,
+    sessionsCompleted: 3, avgSessionMinutes: 12, scheduledDate: todayFormatted, checkedIn: true,
+  },
+  {
+    id: 'tcd-003', staffId: 'staff-003', name: 'Dr. Jose Manalo', specialty: 'General Practice',
+    photoUrl: '', status: 'on-break',
+    shiftStart: `${todayFormatted}T07:00:00`, shiftEnd: `${todayFormatted}T15:00:00`,
+    breakStart: `${todayFormatted}T12:00:00`, breakEnd: `${todayFormatted}T12:30:00`,
+    sessionsCompleted: 7, avgSessionMinutes: 10, scheduledDate: todayFormatted, checkedIn: true,
+    currentActivity: 'Lunch break',
+  },
+  {
+    id: 'tcd-004', staffId: 'staff-004', name: 'Dr. Patricia Lim', specialty: 'Dermatology',
+    photoUrl: '', status: 'clinic-consult',
+    shiftStart: `${todayFormatted}T09:00:00`, shiftEnd: `${todayFormatted}T18:00:00`,
+    sessionsCompleted: 2, avgSessionMinutes: 18, scheduledDate: todayFormatted, checkedIn: true,
+    currentActivity: 'Clinic consult Room 3',
+  },
+  {
+    id: 'tcd-005', staffId: 'staff-005', name: 'Dr. Miguel Torres', specialty: 'Cardiology',
+    photoUrl: '', status: 'rounds',
+    shiftStart: `${todayFormatted}T08:00:00`, shiftEnd: `${todayFormatted}T16:00:00`,
+    sessionsCompleted: 1, avgSessionMinutes: 20, scheduledDate: todayFormatted, checkedIn: true,
+    currentActivity: 'Ward rounds Floor 2',
+  },
+  {
+    id: 'tcd-006', staffId: 'staff-006', name: 'Dr. Carmen Bautista', specialty: 'OB-GYN',
+    photoUrl: '', status: 'scheduled',
+    shiftStart: `${todayFormatted}T13:00:00`, shiftEnd: `${todayFormatted}T21:00:00`,
+    sessionsCompleted: 0, avgSessionMinutes: 0, scheduledDate: todayFormatted, checkedIn: false,
+  },
+  {
+    id: 'tcd-007', staffId: 'staff-007', name: 'Dr. Rafael Domingo', specialty: 'Internal Medicine',
+    photoUrl: '', status: 'available',
+    shiftStart: `${todayFormatted}T08:00:00`, shiftEnd: `${todayFormatted}T17:00:00`,
+    sessionsCompleted: 4, avgSessionMinutes: 15, scheduledDate: todayFormatted, checkedIn: true,
+  },
+  {
+    id: 'tcd-008', staffId: 'staff-008', name: 'Dr. Lilia Navarro', specialty: 'Psychiatry',
+    photoUrl: '', status: 'offline',
+    shiftStart: `${tomorrowFormatted}T09:00:00`, shiftEnd: `${tomorrowFormatted}T17:00:00`,
+    sessionsCompleted: 0, avgSessionMinutes: 0, scheduledDate: tomorrowFormatted, checkedIn: false,
+  },
+];
+
+export const MOCK_TC_SESSIONS: TeleconsultSession[] = [
+  // ── Consult Now (on-demand) ──
+  // Intake form is completed BEFORE joining queue.
+  // Queue lifecycle: in-queue → doctor-assigned → connecting → in-session → wrap-up → completed
+  {
+    id: 'tcs-001', patientId: 'p-tc-01', patientName: 'Juan Dela Cruz',
+    type: 'now', status: 'in-queue', specialty: 'General Practice',
+    chiefComplaint: 'Persistent headache for 3 days',
+    queuedAt: `${todayFormatted}T09:15:00`, waitMinutes: 42,
+    priority: 'Normal', intakeCompleted: true, patientOnline: true, connectionQuality: 'good',
+  },
+  {
+    id: 'tcs-002', patientId: 'p-tc-02', patientName: 'Maria Cruz',
+    type: 'now', status: 'in-session', specialty: 'Internal Medicine',
+    chiefComplaint: 'Chest tightness and shortness of breath',
+    assignedDoctorId: 'tcd-001', assignedDoctorName: 'Dr. Ricardo Santos',
+    queuedAt: `${todayFormatted}T09:00:00`, intakeStartedAt: `${todayFormatted}T09:05:00`,
+    sessionStartedAt: `${todayFormatted}T09:20:00`, waitMinutes: 20,
+    priority: 'Urgent', intakeCompleted: true, patientOnline: true, connectionQuality: 'good',
+  },
+  {
+    id: 'tcs-003', patientId: 'p-tc-03', patientName: 'Pedro Alvarez',
+    type: 'now', status: 'in-queue', specialty: 'General Practice',
+    chiefComplaint: 'Skin rash on both arms — spreading',
+    queuedAt: `${todayFormatted}T09:25:00`, intakeStartedAt: `${todayFormatted}T09:25:00`,
+    waitMinutes: 32, priority: 'Normal', intakeCompleted: true,
+    patientOnline: true, connectionQuality: 'fair',
+  },
+  {
+    id: 'tcs-004', patientId: 'p-tc-04', patientName: 'Rosa Mendoza',
+    type: 'now', status: 'doctor-assigned', specialty: 'Internal Medicine',
+    chiefComplaint: 'Dizziness and nausea since yesterday',
+    assignedDoctorId: 'tcd-007', assignedDoctorName: 'Dr. Rafael Domingo',
+    queuedAt: `${todayFormatted}T09:10:00`, intakeStartedAt: `${todayFormatted}T09:15:00`,
+    waitMinutes: 47, priority: 'Normal', intakeCompleted: true,
+    patientOnline: true, connectionQuality: 'good',
+  },
+  {
+    id: 'tcs-005', patientId: 'p-tc-05', patientName: 'Carlos Garcia',
+    type: 'now', status: 'wrap-up', specialty: 'General Practice',
+    chiefComplaint: 'Follow-up — UTI treatment',
+    assignedDoctorId: 'tcd-007', assignedDoctorName: 'Dr. Rafael Domingo',
+    queuedAt: `${todayFormatted}T08:30:00`, intakeStartedAt: `${todayFormatted}T08:35:00`,
+    sessionStartedAt: `${todayFormatted}T08:45:00`, sessionEndedAt: `${todayFormatted}T09:00:00`,
+    waitMinutes: 15, priority: 'Follow-Up', intakeCompleted: true, patientOnline: false, connectionQuality: 'good',
+  },
+  {
+    id: 'tcs-006', patientId: 'p-tc-06', patientName: 'Leticia Tan',
+    type: 'now', status: 'completed', specialty: 'General Practice',
+    chiefComplaint: 'Sore throat and mild fever',
+    assignedDoctorId: 'tcd-003', assignedDoctorName: 'Dr. Jose Manalo',
+    queuedAt: `${todayFormatted}T07:45:00`, intakeStartedAt: `${todayFormatted}T07:50:00`,
+    sessionStartedAt: `${todayFormatted}T08:00:00`, sessionEndedAt: `${todayFormatted}T08:12:00`,
+    waitMinutes: 15, priority: 'Normal', intakeCompleted: true,
+    patientOnline: false,
+  },
+  {
+    id: 'tcs-007', patientId: 'p-tc-07', patientName: 'Fernando Villanueva',
+    type: 'now', status: 'in-queue', specialty: 'Pediatrics',
+    chiefComplaint: 'Child with high fever (39.2°C) and vomiting',
+    queuedAt: `${todayFormatted}T09:40:00`, waitMinutes: 17,
+    priority: 'Urgent', intakeCompleted: true, patientOnline: true, connectionQuality: 'good',
+  },
+  {
+    id: 'tcs-008', patientId: 'p-tc-08', patientName: 'Angela Santos',
+    type: 'now', status: 'no-show', specialty: 'Dermatology',
+    chiefComplaint: 'Acne flare-up consultation',
+    queuedAt: `${todayFormatted}T08:00:00`, waitMinutes: 60,
+    priority: 'Normal', intakeCompleted: true, patientOnline: false,
+  },
+  {
+    id: 'tcs-009', patientId: 'p-tc-21', patientName: 'Ramon Diaz',
+    type: 'now', status: 'cancelled', specialty: 'General Practice',
+    chiefComplaint: 'Mild lower back pain',
+    queuedAt: `${todayFormatted}T09:05:00`, waitMinutes: 0,
+    priority: 'Normal', intakeCompleted: true, patientOnline: false,
+    notes: 'Patient decided to visit clinic in person instead.',
+  },
+  {
+    id: 'tcs-010', patientId: 'p-tc-22', patientName: 'Teresa Lim',
+    type: 'now', status: 'connecting', specialty: 'Internal Medicine',
+    chiefComplaint: 'Recurring stomach cramps after meals',
+    assignedDoctorId: 'tcd-002', assignedDoctorName: 'Dr. Ana Reyes',
+    queuedAt: `${todayFormatted}T09:50:00`, intakeStartedAt: `${todayFormatted}T09:52:00`,
+    waitMinutes: 8, priority: 'Normal', intakeCompleted: true,
+    patientOnline: true, connectionQuality: 'good',
+  },
+
+  // ── Consult Later (scheduled) ──
+  // Intake form is completed when booking/confirming the schedule.
+  // Queue lifecycle: in-queue → doctor-assigned → connecting → in-session → wrap-up → completed
+  {
+    id: 'tcs-101', patientId: 'p-tc-10', patientName: 'Elena Villareal',
+    type: 'later', status: 'in-queue', specialty: 'Internal Medicine',
+    chiefComplaint: 'Follow-up hypertension management',
+    scheduledTime: `${todayFormatted}T14:00:00`,
+    assignedDoctorId: 'tcd-001', assignedDoctorName: 'Dr. Ricardo Santos',
+    queuedAt: `${todayFormatted}T13:50:00`, waitMinutes: 10,
+    priority: 'Follow-Up', intakeCompleted: true, patientOnline: true, connectionQuality: 'good',
+  },
+  {
+    id: 'tcs-102', patientId: 'p-tc-11', patientName: 'Roberto Cruz',
+    type: 'later', status: 'in-queue', specialty: 'Internal Medicine',
+    chiefComplaint: 'Lab results review — lipid panel',
+    scheduledTime: `${todayFormatted}T14:30:00`,
+    assignedDoctorId: 'tcd-001', assignedDoctorName: 'Dr. Ricardo Santos',
+    queuedAt: `${todayFormatted}T14:20:00`, waitMinutes: 10,
+    priority: 'Normal', intakeCompleted: true, patientOnline: false,
+  },
+  {
+    id: 'tcs-103', patientId: 'p-tc-12', patientName: 'Sofia Mendoza',
+    type: 'later', status: 'doctor-assigned', specialty: 'Internal Medicine',
+    chiefComplaint: 'Post-surgical follow-up — appendectomy',
+    scheduledTime: `${todayFormatted}T15:15:00`,
+    assignedDoctorId: 'tcd-007', assignedDoctorName: 'Dr. Rafael Domingo',
+    queuedAt: `${todayFormatted}T15:00:00`, waitMinutes: 15,
+    priority: 'Follow-Up', intakeCompleted: true, patientOnline: true, connectionQuality: 'good',
+  },
+  {
+    id: 'tcs-104', patientId: 'p-tc-13', patientName: 'Marco Tan',
+    type: 'later', status: 'in-queue', specialty: 'Internal Medicine',
+    chiefComplaint: 'Diabetes management check-in',
+    scheduledTime: `${tomorrowFormatted}T10:00:00`,
+    assignedDoctorId: 'tcd-001', assignedDoctorName: 'Dr. Ricardo Santos',
+    queuedAt: `${tomorrowFormatted}T09:50:00`, waitMinutes: 0,
+    priority: 'Follow-Up', intakeCompleted: true, patientOnline: false,
+  },
+  {
+    id: 'tcs-105', patientId: 'p-tc-14', patientName: 'Isabel Garcia',
+    type: 'later', status: 'in-queue', specialty: 'Psychiatry',
+    chiefComplaint: 'Anxiety and sleep issues',
+    scheduledTime: `${tomorrowFormatted}T11:30:00`,
+    assignedDoctorId: 'tcd-008', assignedDoctorName: 'Dr. Lilia Navarro',
+    queuedAt: `${tomorrowFormatted}T11:20:00`, waitMinutes: 0,
+    priority: 'Normal', intakeCompleted: true, patientOnline: false,
+  },
+  {
+    id: 'tcs-106', patientId: 'p-tc-09', patientName: 'Cynthia Reyes',
+    type: 'later', status: 'in-session', specialty: 'OB-GYN',
+    chiefComplaint: 'Prenatal checkup — 2nd trimester',
+    scheduledTime: `${todayFormatted}T10:00:00`,
+    assignedDoctorId: 'tcd-002', assignedDoctorName: 'Dr. Ana Reyes',
+    queuedAt: `${todayFormatted}T09:55:00`, intakeStartedAt: `${todayFormatted}T09:58:00`,
+    sessionStartedAt: `${todayFormatted}T10:02:00`, waitMinutes: 5,
+    priority: 'Normal', intakeCompleted: true, patientOnline: true, connectionQuality: 'good',
+  },
+
+  // ── Consult Later — additional states to ensure full coverage ──
+  {
+    id: 'tcs-107', patientId: 'p-tc-16', patientName: 'Gloria Aquino',
+    type: 'later', status: 'in-queue', specialty: 'Cardiology',
+    chiefComplaint: 'Palpitations and occasional chest pain',
+    scheduledTime: `${todayFormatted}T11:00:00`,
+    assignedDoctorId: 'tcd-005', assignedDoctorName: 'Dr. Miguel Torres',
+    queuedAt: `${todayFormatted}T10:50:00`, intakeStartedAt: `${todayFormatted}T10:50:00`,
+    waitMinutes: 10, priority: 'Urgent', intakeCompleted: true,
+    patientOnline: true, connectionQuality: 'good',
+  },
+  {
+    id: 'tcs-108', patientId: 'p-tc-17', patientName: 'Danilo Ferrer',
+    type: 'later', status: 'wrap-up', specialty: 'Internal Medicine',
+    chiefComplaint: 'Asthma medication review',
+    scheduledTime: `${todayFormatted}T09:00:00`,
+    assignedDoctorId: 'tcd-007', assignedDoctorName: 'Dr. Rafael Domingo',
+    queuedAt: `${todayFormatted}T08:55:00`, intakeStartedAt: `${todayFormatted}T08:58:00`,
+    sessionStartedAt: `${todayFormatted}T09:03:00`, sessionEndedAt: `${todayFormatted}T09:18:00`,
+    waitMinutes: 5, priority: 'Follow-Up', intakeCompleted: true,
+    patientOnline: false, connectionQuality: 'good',
+  },
+  {
+    id: 'tcs-109', patientId: 'p-tc-18', patientName: 'Beatriz Ramirez',
+    type: 'later', status: 'completed', specialty: 'Dermatology',
+    chiefComplaint: 'Eczema flare-up — follow-up treatment plan',
+    scheduledTime: `${todayFormatted}T08:30:00`,
+    assignedDoctorId: 'tcd-004', assignedDoctorName: 'Dr. Patricia Lim',
+    queuedAt: `${todayFormatted}T08:25:00`, intakeStartedAt: `${todayFormatted}T08:28:00`,
+    sessionStartedAt: `${todayFormatted}T08:32:00`, sessionEndedAt: `${todayFormatted}T08:50:00`,
+    waitMinutes: 5, priority: 'Normal', intakeCompleted: true,
+    patientOnline: false,
+  },
+  {
+    id: 'tcs-110', patientId: 'p-tc-19', patientName: 'Ricardo Aguilar',
+    type: 'later', status: 'no-show', specialty: 'Internal Medicine',
+    chiefComplaint: 'Blood pressure monitoring — 3-month follow-up',
+    scheduledTime: `${todayFormatted}T10:30:00`,
+    assignedDoctorId: 'tcd-001', assignedDoctorName: 'Dr. Ricardo Santos',
+    queuedAt: `${todayFormatted}T10:20:00`, waitMinutes: 30,
+    priority: 'Follow-Up', intakeCompleted: true,
+    patientOnline: false,
+  },
+  {
+    id: 'tcs-111', patientId: 'p-tc-20', patientName: 'Maricel Ocampo',
+    type: 'later', status: 'cancelled', specialty: 'OB-GYN',
+    chiefComplaint: 'Postnatal check — 6-week follow-up',
+    scheduledTime: `${todayFormatted}T13:00:00`,
+    assignedDoctorId: 'tcd-002', assignedDoctorName: 'Dr. Ana Reyes',
+    queuedAt: `${todayFormatted}T12:50:00`, waitMinutes: 0,
+    priority: 'Normal', intakeCompleted: true,
+    patientOnline: false,
+    notes: 'Patient called to reschedule — child is sick.',
+  },
+  {
+    id: 'tcs-112', patientId: 'p-tc-23', patientName: 'Angelica Ramos',
+    type: 'later', status: 'connecting', specialty: 'Pediatrics',
+    chiefComplaint: 'Child immunization schedule review',
+    scheduledTime: `${todayFormatted}T10:30:00`,
+    assignedDoctorId: 'tcd-002', assignedDoctorName: 'Dr. Ana Reyes',
+    queuedAt: `${todayFormatted}T10:25:00`, intakeStartedAt: `${todayFormatted}T10:27:00`,
+    waitMinutes: 5, priority: 'Normal', intakeCompleted: true,
+    patientOnline: true, connectionQuality: 'good',
+  },
+];
+
+// =============================================
+// Messaging / Conversations Mock Data
+// =============================================
+
+const t = (h: number, m: number) => {
+  const d = new Date(); d.setHours(h, m, 0, 0);
+  return d.toISOString();
+};
+
+export const MOCK_CONVERSATIONS: Conversation[] = [
+  // ── Direct Messages ──
+  {
+    id: 'conv-dm-001', type: 'direct', name: 'Dr. Maria Clara Reyes',
+    participantIds: ['staff-001', 'staff-002'], participantNames: ['Dr. Ricardo Santos', 'Dr. Maria Clara Reyes'],
+    lastMessageText: 'The pedia referral has been sent. Let me know if you need the labs.', lastMessageAt: t(9, 45),
+    lastMessageFromId: 'staff-002', lastMessageFromName: 'Dr. Maria Clara Reyes', unreadCount: 1, pinned: true,
+  },
+  {
+    id: 'conv-dm-002', type: 'direct', name: 'Nurse Elena Torres',
+    participantIds: ['staff-001', 'staff-004'], participantNames: ['Dr. Ricardo Santos', 'Nurse Elena Torres'],
+    lastMessageText: 'Patient in Bed 3 vitals are stable now. Shall I continue q4h monitoring?', lastMessageAt: t(9, 30),
+    lastMessageFromId: 'staff-004', lastMessageFromName: 'Nurse Elena Torres', unreadCount: 2,
+  },
+  {
+    id: 'conv-dm-003', type: 'direct', name: 'Dr. Albert Go',
+    participantIds: ['staff-001', 'staff-003'], participantNames: ['Dr. Ricardo Santos', 'Dr. Albert Go'],
+    lastMessageText: 'Got it, will handle the ER consult. Thanks Doc.', lastMessageAt: t(8, 50),
+    lastMessageFromId: 'staff-003', lastMessageFromName: 'Dr. Albert Go', unreadCount: 0,
+  },
+  {
+    id: 'conv-dm-004', type: 'direct', name: 'Roberto Villanueva',
+    participantIds: ['staff-001', 'staff-007'], participantNames: ['Dr. Ricardo Santos', 'Roberto Villanueva'],
+    lastMessageText: 'Metformin 500mg is back in stock. I reserved 30 tabs for your patient.', lastMessageAt: t(8, 15),
+    lastMessageFromId: 'staff-007', lastMessageFromName: 'Roberto Villanueva', unreadCount: 0,
+  },
+  {
+    id: 'conv-dm-005', type: 'direct', name: 'Carmen dela Cruz',
+    participantIds: ['staff-001', 'staff-008'], participantNames: ['Dr. Ricardo Santos', 'Carmen dela Cruz'],
+    lastMessageText: 'PhilHealth claim for patient Reyes has been filed. Tracking #PH-2026-0412.', lastMessageAt: t(7, 55),
+    lastMessageFromId: 'staff-008', lastMessageFromName: 'Carmen dela Cruz', unreadCount: 0,
+  },
+
+  // ── Department Channels ──
+  {
+    id: 'conv-dept-lab', type: 'department', name: 'Laboratory',
+    participantIds: ['staff-001', 'staff-002', 'staff-003', 'staff-004', 'staff-006'],
+    participantNames: ['Dr. Ricardo Santos', 'Dr. Maria Clara Reyes', 'Dr. Albert Go', 'Nurse Elena Torres', 'Maria Santos'],
+    departmentTag: 'Laboratory',
+    lastMessageText: 'CBC results for patient Dela Cruz are ready. Hemoglobin slightly low at 11.2.', lastMessageAt: t(9, 55),
+    lastMessageFromId: 'staff-006', lastMessageFromName: 'Maria Santos', unreadCount: 3, pinned: true,
+  },
+  {
+    id: 'conv-dept-nursing', type: 'department', name: 'Nursing Station',
+    participantIds: ['staff-001', 'staff-002', 'staff-003', 'staff-004', 'staff-005'],
+    participantNames: ['Dr. Ricardo Santos', 'Dr. Maria Clara Reyes', 'Dr. Albert Go', 'Nurse Elena Torres', 'Nurse Paolo Mendoza'],
+    departmentTag: 'Nursing',
+    lastMessageText: 'Shift handover complete. 2 patients need wound dressing change at 2pm.', lastMessageAt: t(9, 10),
+    lastMessageFromId: 'staff-005', lastMessageFromName: 'Nurse Paolo Mendoza', unreadCount: 0,
+  },
+  {
+    id: 'conv-dept-pharmacy', type: 'department', name: 'Pharmacy',
+    participantIds: ['staff-001', 'staff-002', 'staff-007'],
+    participantNames: ['Dr. Ricardo Santos', 'Dr. Maria Clara Reyes', 'Roberto Villanueva'],
+    departmentTag: 'Pharmacy',
+    lastMessageText: 'Low stock alert: Amoxicillin 500mg capsules — only 45 units left.', lastMessageAt: t(8, 40),
+    lastMessageFromId: 'staff-007', lastMessageFromName: 'Roberto Villanueva', unreadCount: 1,
+  },
+  {
+    id: 'conv-dept-er', type: 'department', name: 'Emergency Room',
+    participantIds: ['staff-001', 'staff-003', 'staff-005'],
+    participantNames: ['Dr. Ricardo Santos', 'Dr. Albert Go', 'Nurse Paolo Mendoza'],
+    departmentTag: 'Emergency',
+    lastMessageText: 'Incoming trauma case — ETA 10 minutes. MVA, male, mid-30s, conscious.', lastMessageAt: t(10, 5),
+    lastMessageFromId: 'staff-003', lastMessageFromName: 'Dr. Albert Go', unreadCount: 2, pinned: true,
+  },
+  {
+    id: 'conv-dept-admin', type: 'department', name: 'Administration',
+    participantIds: ['staff-001', 'staff-008', 'staff-009', 'staff-010', 'staff-011'],
+    participantNames: ['Dr. Ricardo Santos', 'Carmen dela Cruz', 'Liza Tan', 'Ramon Bautista', 'Ana Lim'],
+    departmentTag: 'Admin',
+    lastMessageText: 'Monthly compliance reports are due by Friday. Please submit to HR.', lastMessageAt: t(8, 0),
+    lastMessageFromId: 'staff-010', lastMessageFromName: 'Ramon Bautista', unreadCount: 0,
+  },
+  {
+    id: 'conv-dept-radiology', type: 'department', name: 'Radiology',
+    participantIds: ['staff-001', 'staff-003', 'staff-012'],
+    participantNames: ['Dr. Ricardo Santos', 'Dr. Albert Go', 'Miguel Fernandez'],
+    departmentTag: 'Radiology',
+    lastMessageText: 'Chest X-ray for Garcia ready for reading. Uploaded to PACS.', lastMessageAt: t(9, 20),
+    lastMessageFromId: 'staff-012', lastMessageFromName: 'Miguel Fernandez', unreadCount: 1,
+  },
+
+  // ── Group chats ──
+  {
+    id: 'conv-grp-001', type: 'group', name: 'Doctors On-Call',
+    participantIds: ['staff-001', 'staff-002', 'staff-003'],
+    participantNames: ['Dr. Ricardo Santos', 'Dr. Maria Clara Reyes', 'Dr. Albert Go'],
+    lastMessageText: 'I can cover the 6pm-10pm slot tonight if needed.', lastMessageAt: t(10, 10),
+    lastMessageFromId: 'staff-003', lastMessageFromName: 'Dr. Albert Go', unreadCount: 1,
+  },
+  {
+    id: 'conv-grp-002', type: 'group', name: 'Patient Care Team - Dela Cruz',
+    participantIds: ['staff-001', 'staff-004', 'staff-006', 'staff-007'],
+    participantNames: ['Dr. Ricardo Santos', 'Nurse Elena Torres', 'Maria Santos', 'Roberto Villanueva'],
+    lastMessageText: 'Pharmacy has dispensed the updated prescription. Nurse please confirm receipt.', lastMessageAt: t(9, 35),
+    lastMessageFromId: 'staff-007', lastMessageFromName: 'Roberto Villanueva', unreadCount: 0,
+  },
+];
+
+export const MOCK_CHAT_MESSAGES: ChatMessage[] = [
+  // ── conv-dm-001: Dr. Santos ↔ Dr. Reyes ──
+  { id: 'cm-001', conversationId: 'conv-dm-001', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'Hi Maria Clara, I have a 7-year-old patient with recurrent febrile seizures. Can I get a pedia consult?', timestamp: t(9, 0), read: true, type: 'text' },
+  { id: 'cm-002', conversationId: 'conv-dm-001', fromId: 'staff-002', fromName: 'Dr. Maria Clara Reyes', fromRole: 'doctor', text: 'Sure, send me the chart. Any family history of epilepsy?', timestamp: t(9, 5), read: true, type: 'text' },
+  { id: 'cm-003', conversationId: 'conv-dm-001', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'No family hx. This is the 3rd episode in 6 months. Last EEG was normal. Sending chart now.', timestamp: t(9, 10), read: true, type: 'text' },
+  { id: 'cm-004', conversationId: 'conv-dm-001', fromId: 'staff-002', fromName: 'Dr. Maria Clara Reyes', fromRole: 'doctor', text: 'Got it. I\'ll review and get back to you within the hour. Might want to consider a repeat EEG.', timestamp: t(9, 20), read: true, type: 'text' },
+  { id: 'cm-005', conversationId: 'conv-dm-001', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'Agree. Also please check if we need any specific labs before starting prophylaxis.', timestamp: t(9, 30), read: true, type: 'text' },
+  { id: 'cm-006', conversationId: 'conv-dm-001', fromId: 'staff-002', fromName: 'Dr. Maria Clara Reyes', fromRole: 'doctor', text: 'The pedia referral has been sent. Let me know if you need the labs.', timestamp: t(9, 45), read: false, type: 'text' },
+
+  // ── conv-dm-002: Dr. Santos ↔ Nurse Torres ──
+  { id: 'cm-010', conversationId: 'conv-dm-002', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'Elena, how is the patient in Bed 3 doing? Last I checked BP was 160/95.', timestamp: t(8, 30), read: true, type: 'text' },
+  { id: 'cm-011', conversationId: 'conv-dm-002', fromId: 'staff-004', fromName: 'Nurse Elena Torres', fromRole: 'nurse', text: 'BP has come down to 140/88 after the 2nd dose of Amlodipine. No complaints of headache now.', timestamp: t(8, 45), read: true, type: 'text' },
+  { id: 'cm-012', conversationId: 'conv-dm-002', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'Good. Continue monitoring. Let me know if it goes above 150 systolic again.', timestamp: t(9, 0), read: true, type: 'text' },
+  { id: 'cm-013', conversationId: 'conv-dm-002', fromId: 'staff-004', fromName: 'Nurse Elena Torres', fromRole: 'nurse', text: 'Noted, Doc. Will take vitals again at 10am.', timestamp: t(9, 10), read: true, type: 'text' },
+  { id: 'cm-014', conversationId: 'conv-dm-002', fromId: 'staff-004', fromName: 'Nurse Elena Torres', fromRole: 'nurse', text: 'Patient in Bed 3 vitals are stable now. Shall I continue q4h monitoring?', timestamp: t(9, 30), read: false, type: 'text' },
+
+  // ── conv-dm-003: Dr. Santos ↔ Dr. Go ──
+  { id: 'cm-020', conversationId: 'conv-dm-003', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'Albert, I have an ER consult request. 45M, chest pain, rule out ACS. Can you take it?', timestamp: t(8, 30), read: true, type: 'text' },
+  { id: 'cm-021', conversationId: 'conv-dm-003', fromId: 'staff-003', fromName: 'Dr. Albert Go', fromRole: 'doctor', text: 'Sure, what bed? I\'ll head there now.', timestamp: t(8, 35), read: true, type: 'text' },
+  { id: 'cm-022', conversationId: 'conv-dm-003', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'ER Bed 7. ECG and troponin already ordered. Thanks!', timestamp: t(8, 40), read: true, type: 'text' },
+  { id: 'cm-023', conversationId: 'conv-dm-003', fromId: 'staff-003', fromName: 'Dr. Albert Go', fromRole: 'doctor', text: 'Got it, will handle the ER consult. Thanks Doc.', timestamp: t(8, 50), read: true, type: 'text' },
+
+  // ── conv-dept-lab: Laboratory channel ──
+  { id: 'cm-030', conversationId: 'conv-dept-lab', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'Maria, can you rush the CBC for patient Dela Cruz? Bed 5, suspected infection.', timestamp: t(9, 0), read: true, type: 'text' },
+  { id: 'cm-031', conversationId: 'conv-dept-lab', fromId: 'staff-006', fromName: 'Maria Santos', fromRole: 'lab_tech', text: 'On it. Sample received. Will have results in 30 minutes.', timestamp: t(9, 10), read: true, type: 'text' },
+  { id: 'cm-032', conversationId: 'conv-dept-lab', fromId: 'staff-002', fromName: 'Dr. Maria Clara Reyes', fromRole: 'doctor', text: 'Can I also add a blood culture to that order? Suspecting sepsis.', timestamp: t(9, 15), read: true, type: 'text' },
+  { id: 'cm-033', conversationId: 'conv-dept-lab', fromId: 'staff-006', fromName: 'Maria Santos', fromRole: 'lab_tech', text: 'Blood culture added. Will need a new sample though — please have nursing draw it.', timestamp: t(9, 25), read: true, type: 'text' },
+  { id: 'cm-034', conversationId: 'conv-dept-lab', fromId: 'staff-004', fromName: 'Nurse Elena Torres', fromRole: 'nurse', text: 'Will draw the blood culture sample now. Sending down in 10 minutes.', timestamp: t(9, 35), read: true, type: 'text' },
+  { id: 'cm-035', conversationId: 'conv-dept-lab', fromId: 'staff-006', fromName: 'Maria Santos', fromRole: 'lab_tech', text: 'CBC results for patient Dela Cruz are ready. Hemoglobin slightly low at 11.2.', timestamp: t(9, 55), read: false, type: 'text' },
+
+  // ── conv-dept-er: Emergency Room channel ──
+  { id: 'cm-040', conversationId: 'conv-dept-er', fromId: 'staff-005', fromName: 'Nurse Paolo Mendoza', fromRole: 'nurse', text: 'ER is getting full. 8 patients waiting, 3 in treatment. Heads up.', timestamp: t(9, 30), read: true, type: 'text' },
+  { id: 'cm-041', conversationId: 'conv-dept-er', fromId: 'staff-003', fromName: 'Dr. Albert Go', fromRole: 'doctor', text: 'Copy. I\'m clearing Bed 2 now — patient being admitted to ward. That should free up a spot.', timestamp: t(9, 40), read: true, type: 'text' },
+  { id: 'cm-042', conversationId: 'conv-dept-er', fromId: 'staff-003', fromName: 'Dr. Albert Go', fromRole: 'doctor', text: 'Incoming trauma case — ETA 10 minutes. MVA, male, mid-30s, conscious.', timestamp: t(10, 5), read: false, type: 'urgent' },
+
+  // ── conv-dept-pharmacy: Pharmacy channel ──
+  { id: 'cm-050', conversationId: 'conv-dept-pharmacy', fromId: 'staff-007', fromName: 'Roberto Villanueva', fromRole: 'pharmacist', text: 'Low stock alert: Amoxicillin 500mg capsules — only 45 units left.', timestamp: t(8, 40), read: false, type: 'urgent' },
+
+  // ── conv-dept-nursing: Nursing Station channel ──
+  { id: 'cm-060', conversationId: 'conv-dept-nursing', fromId: 'staff-004', fromName: 'Nurse Elena Torres', fromRole: 'nurse', text: 'Morning rounds done for Ward A. All patients stable.', timestamp: t(7, 30), read: true, type: 'text' },
+  { id: 'cm-061', conversationId: 'conv-dept-nursing', fromId: 'staff-005', fromName: 'Nurse Paolo Mendoza', fromRole: 'nurse', text: 'Shift handover complete. 2 patients need wound dressing change at 2pm.', timestamp: t(9, 10), read: true, type: 'text' },
+
+  // ── conv-grp-001: Doctors On-Call ──
+  { id: 'cm-070', conversationId: 'conv-grp-001', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'Who\'s covering the evening shift today? I have a teleconsult at 6pm.', timestamp: t(9, 50), read: true, type: 'text' },
+  { id: 'cm-071', conversationId: 'conv-grp-001', fromId: 'staff-002', fromName: 'Dr. Maria Clara Reyes', fromRole: 'doctor', text: 'I\'m on until 4pm only. Albert?', timestamp: t(10, 0), read: true, type: 'text' },
+  { id: 'cm-072', conversationId: 'conv-grp-001', fromId: 'staff-003', fromName: 'Dr. Albert Go', fromRole: 'doctor', text: 'I can cover the 6pm-10pm slot tonight if needed.', timestamp: t(10, 10), read: false, type: 'text' },
+
+  // ── conv-grp-002: Patient Care Team ──
+  { id: 'cm-080', conversationId: 'conv-grp-002', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'Updated prescription for patient Dela Cruz — switching to Augmentin. Please dispense.', timestamp: t(9, 15), read: true, type: 'text' },
+  { id: 'cm-081', conversationId: 'conv-grp-002', fromId: 'staff-006', fromName: 'Maria Santos', fromRole: 'lab_tech', text: 'Lab results confirm bacterial infection. Sensitivity shows Augmentin is appropriate.', timestamp: t(9, 20), read: true, type: 'text' },
+  { id: 'cm-082', conversationId: 'conv-grp-002', fromId: 'staff-007', fromName: 'Roberto Villanueva', fromRole: 'pharmacist', text: 'Pharmacy has dispensed the updated prescription. Nurse please confirm receipt.', timestamp: t(9, 35), read: true, type: 'text' },
+
+  // ── conv-dept-admin: Administration channel ──
+  { id: 'cm-090', conversationId: 'conv-dept-admin', fromId: 'staff-010', fromName: 'Ramon Bautista', fromRole: 'admin', text: 'Monthly compliance reports are due by Friday. Please submit to HR.', timestamp: t(8, 0), read: true, type: 'text' },
+
+  // ── conv-dept-radiology: Radiology channel ──
+  { id: 'cm-100', conversationId: 'conv-dept-radiology', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'Miguel, I ordered a chest X-ray for patient Garcia. Priority please.', timestamp: t(9, 0), read: true, type: 'text' },
+  { id: 'cm-101', conversationId: 'conv-dept-radiology', fromId: 'staff-012', fromName: 'Miguel Fernandez', fromRole: 'imaging_tech', text: 'Chest X-ray for Garcia ready for reading. Uploaded to PACS.', timestamp: t(9, 20), read: false, type: 'text' },
+
+  // ── conv-dm-004: Dr. Santos ↔ Pharmacist ──
+  { id: 'cm-110', conversationId: 'conv-dm-004', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'Roberto, is Metformin 500mg available? Need 30 tabs for a discharge patient.', timestamp: t(8, 0), read: true, type: 'text' },
+  { id: 'cm-111', conversationId: 'conv-dm-004', fromId: 'staff-007', fromName: 'Roberto Villanueva', fromRole: 'pharmacist', text: 'Metformin 500mg is back in stock. I reserved 30 tabs for your patient.', timestamp: t(8, 15), read: true, type: 'text' },
+
+  // ── conv-dm-005: Dr. Santos ↔ Billing ──
+  { id: 'cm-120', conversationId: 'conv-dm-005', fromId: 'staff-001', fromName: 'Dr. Ricardo Santos', fromRole: 'doctor', text: 'Carmen, can you check the PhilHealth claim status for patient Reyes?', timestamp: t(7, 40), read: true, type: 'text' },
+  { id: 'cm-121', conversationId: 'conv-dm-005', fromId: 'staff-008', fromName: 'Carmen dela Cruz', fromRole: 'billing_staff', text: 'PhilHealth claim for patient Reyes has been filed. Tracking #PH-2026-0412.', timestamp: t(7, 55), read: true, type: 'text' },
 ];

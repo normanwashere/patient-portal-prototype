@@ -405,6 +405,39 @@ export interface InternalMessage {
     priority: 'Normal' | 'Urgent';
 }
 
+// ---- Messaging / Conversations ----
+export type ConversationType = 'direct' | 'department' | 'group';
+
+export interface Conversation {
+    id: string;
+    type: ConversationType;
+    name: string;                      // For DM: other person's name. For dept/group: channel name
+    participantIds: string[];
+    participantNames: string[];
+    departmentTag?: string;            // e.g. 'Lab', 'Nursing', 'Pharmacy', 'Emergency', 'Admin', 'Doctors'
+    lastMessageText: string;
+    lastMessageAt: string;
+    lastMessageFromId: string;
+    lastMessageFromName: string;
+    unreadCount: number;
+    pinned?: boolean;
+    avatar?: string;                   // initials or icon key
+}
+
+export interface ChatMessage {
+    id: string;
+    conversationId: string;
+    fromId: string;
+    fromName: string;
+    fromRole?: string;
+    text: string;
+    timestamp: string;
+    read: boolean;
+    type: 'text' | 'system' | 'file' | 'urgent';
+    fileName?: string;
+    replyToId?: string;
+}
+
 // ---- KPIs / Analytics ----
 export interface DashboardKPI {
     label: string;
@@ -467,4 +500,72 @@ export interface QueuePatient {
     // MULTI_STREAM: doctor-ordered re-queues
     doctorOrders: DoctorOrder[];
     currentOrderIndex: number; // -1 = no orders, otherwise index into doctorOrders
+}
+
+// =============================================
+// Teleconsult Queue Management
+// =============================================
+
+export type TeleconsultType = 'now' | 'later';
+/**
+ * Teleconsult session lifecycle — aligned with Patient App + Doctor App flows:
+ *
+ *  NOTE: Intake form is completed BEFORE the session enters the queue.
+ *        - Consult Now  → patient fills intake form, then clicks "Join Queue"
+ *        - Consult Later → patient fills intake form when booking/scheduling
+ *
+ *  in-queue        → Patient in queue, sees "Waiting for Doctor" with timer
+ *  doctor-assigned → Doctor assigned, patient still waiting, doctor sees patient in their queue
+ *  connecting      → Doctor joining call, patient sees "Connecting..." animation
+ *  in-session      → Active video call (patient sees doctor; doctor has SOAP/AI/orders/Rx panel)
+ *  wrap-up         → Call ended; patient sees "Consultation Ended"; doctor completing post-call notes
+ *  completed       → Fully done; patient can leave; doctor back to waiting room
+ *  no-show         → Patient did not connect
+ *  cancelled       → Session cancelled by patient or provider
+ */
+export type TeleconsultSessionStatus = 'in-queue' | 'doctor-assigned' | 'connecting' | 'in-session' | 'wrap-up' | 'completed' | 'no-show' | 'cancelled';
+export type DoctorTCStatus = 'available' | 'in-session' | 'on-break' | 'clinic-consult' | 'rounds' | 'offline' | 'scheduled';
+
+export interface TeleconsultSession {
+    id: string;
+    patientId: string;
+    patientName: string;
+    type: TeleconsultType;
+    status: TeleconsultSessionStatus;
+    assignedDoctorId?: string;
+    assignedDoctorName?: string;
+    specialty: string;
+    chiefComplaint: string;
+    scheduledTime?: string;        // for 'later' type
+    queuedAt: string;
+    intakeStartedAt?: string;
+    sessionStartedAt?: string;
+    sessionEndedAt?: string;
+    waitMinutes: number;
+    priority: 'Normal' | 'Urgent' | 'Follow-Up';
+    intakeCompleted: boolean;
+    notes?: string;
+    // Patient connection
+    patientOnline: boolean;
+    connectionQuality?: 'good' | 'fair' | 'poor';
+}
+
+export interface TeleconsultDoctor {
+    id: string;
+    staffId: string;
+    name: string;
+    specialty: string;
+    photoUrl: string;
+    status: DoctorTCStatus;
+    currentSessionId?: string;
+    shiftStart: string;
+    shiftEnd: string;
+    breakStart?: string;
+    breakEnd?: string;
+    sessionsCompleted: number;
+    avgSessionMinutes: number;
+    // For scheduled doctors not yet checked in
+    scheduledDate: string;
+    checkedIn: boolean;
+    currentActivity?: string; // e.g. 'Clinic consult Room 3', 'Ward rounds Floor 2'
 }

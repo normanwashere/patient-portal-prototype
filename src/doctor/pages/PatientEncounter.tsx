@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Mic,
   MicOff,
@@ -8,8 +8,6 @@ import {
   Pill,
   User,
   AlertTriangle,
-  ChevronDown,
-  ChevronUp,
   ClipboardList,
   Activity,
   ShieldAlert,
@@ -19,6 +17,10 @@ import {
   CheckCircle2,
   Save,
   Loader2,
+  Copy,
+  X,
+  Clock,
+  Star,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useProvider } from '../../provider/context/ProviderContext';
@@ -26,6 +28,7 @@ import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 import type { ClinicalNote, CDSSAlert } from '../../provider/types';
 import type { ReactNode } from 'react';
+import { SoapNotePanel } from '../components/SoapNotePanel';
 
 type TabKey = 'soap' | 'transcriber' | 'cdss' | 'orders' | 'prescriptions' | 'chart';
 type SoapSection = 'S' | 'O' | 'A' | 'P';
@@ -43,42 +46,43 @@ const TRANSCRIPT_LINES = [
   { speaker: 'patient' as const, text: 'Yes, I take everything as prescribed. Aspirin, Atorvastatin, and Metoprolol.', ts: '01:55' },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// AI-generated content uses a special delimiter (⌁AI⌁) that we detect for subtle styling
+const AI_DELIMITER = '⌁AI⌁';
 const AI_SOAP_APPEND = {
-  subjective: '\n\n--- AI Generated ---\nPatient reports chest pressure for 1 week, exertional, resolves with rest. Occasional radiation to left arm. Mild exertional dyspnea. No dizziness or diaphoresis. Medication compliant — Aspirin, Atorvastatin, Metoprolol.',
-  objective: '\n\n--- AI Generated ---\nVS: BP 132/82, HR 78, RR 16, Temp 36.6°C, SpO2 97%.\nCardiac: Regular rate and rhythm, S1/S2 normal, no murmurs.\nLungs: Clear to auscultation bilaterally.\nExtremities: No edema, pulses 2+ bilaterally.',
-  assessment: '\n\n--- AI Generated ---\nStable angina pectoris (ICD-10: I20.9). Exertional chest pain with classic pattern. Currently on appropriate medical therapy.',
-  plan: '\n\n--- AI Generated ---\n1. Continue Aspirin 81mg, Atorvastatin 40mg, Metoprolol 50mg\n2. Order stress ECG to evaluate exercise tolerance\n3. Lipid panel and troponin levels\n4. Nitroglycerin SL 0.4mg PRN for acute episodes\n5. Follow-up in 2 weeks or sooner if symptoms worsen\n6. Patient educated on warning signs requiring ER visit',
+  subjective: `\n\n${AI_DELIMITER}\nPatient reports chest pressure for 1 week, exertional, resolves with rest. Occasional radiation to left arm. Mild exertional dyspnea. No dizziness or diaphoresis. Medication compliant — Aspirin, Atorvastatin, Metoprolol.`,
+  objective: `\n\n${AI_DELIMITER}\nVS: BP 132/82, HR 78, RR 16, Temp 36.6°C, SpO2 97%.\nCardiac: Regular rate and rhythm, S1/S2 normal, no murmurs.\nLungs: Clear to auscultation bilaterally.\nExtremities: No edema, pulses 2+ bilaterally.`,
+  assessment: `\n\n${AI_DELIMITER}\nStable angina pectoris (ICD-10: I20.9). Exertional chest pain with classic pattern. Currently on appropriate medical therapy.`,
+  plan: `\n\n${AI_DELIMITER}\n1. Continue Aspirin 81mg, Atorvastatin 40mg, Metoprolol 50mg\n2. Order stress ECG to evaluate exercise tolerance\n3. Lipid panel and troponin levels\n4. Nitroglycerin SL 0.4mg PRN for acute episodes\n5. Follow-up in 2 weeks or sooner if symptoms worsen\n6. Patient educated on warning signs requiring ER visit`,
 };
 
 const QUICK_ORDERS = ['CBC', 'FBS', 'Lipid Panel', 'Urinalysis', 'Chest X-Ray', 'ECG', 'Ultrasound'];
 const FREQUENCY_OPTIONS = ['Once daily', 'Twice daily', 'Three times daily', 'As needed', 'At bedtime', 'With meals'];
 
 const styles: Record<string, React.CSSProperties> = {
-  root: { display: 'flex', flexDirection: 'column', gap: 'var(--space-4, 16px)', minHeight: '100%' },
+  root: { display: 'flex', flexDirection: 'column', gap: 20, minHeight: '100%', maxWidth: 960, margin: '0 auto', width: '100%' },
   header: {
     background: 'var(--color-surface, white)',
-    borderRadius: 'var(--radius-lg, 12px)',
-    padding: 'var(--space-4, 16px)',
+    borderRadius: 'var(--radius-lg, 14px)',
+    padding: '18px 20px',
     boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.08))',
     display: 'flex',
     flexDirection: 'column',
-    gap: 10,
+    gap: 12,
   },
   headerRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 },
-  patientName: { fontSize: 18, fontWeight: 700, color: 'var(--color-text)' },
-  patientMeta: { fontSize: 13, color: 'var(--color-text-muted)' },
+  patientName: { fontSize: 20, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.3 },
+  patientMeta: { fontSize: 13, color: 'var(--color-text-muted)', marginTop: 2 },
   badge: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 600,
-    padding: '4px 10px',
+    padding: '6px 12px',
     borderRadius: 12,
     background: 'rgba(16, 185, 129, 0.1)',
     color: 'var(--color-success)',
   },
   allergyBadge: {
-    fontSize: 10,
-    padding: '2px 8px',
+    fontSize: 12,
+    padding: '4px 10px',
     borderRadius: 6,
     background: 'rgba(239, 68, 68, 0.12)',
     color: 'var(--color-error)',
@@ -89,23 +93,24 @@ const styles: Record<string, React.CSSProperties> = {
     overflowX: 'auto',
     gap: 4,
     background: 'var(--color-surface)',
-    borderRadius: 'var(--radius)',
-    padding: 4,
+    borderRadius: 12,
+    padding: 5,
     boxShadow: 'var(--shadow-sm)',
+    border: '1px solid var(--color-border, #e2e8f0)',
   },
   tab: {
-    padding: '8px 12px',
+    padding: '10px 16px',
     border: 'none',
     background: 'transparent',
     borderRadius: 8,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: 600,
     color: 'var(--color-text-muted)',
     cursor: 'pointer',
     whiteSpace: 'nowrap',
     display: 'flex',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
     transition: 'all 0.15s',
   },
   tabActive: {
@@ -114,23 +119,25 @@ const styles: Record<string, React.CSSProperties> = {
   },
   panel: {
     background: 'var(--color-surface)',
-    borderRadius: 'var(--radius)',
-    padding: 'var(--space-4)',
+    borderRadius: 14,
+    padding: '20px',
     boxShadow: 'var(--shadow-sm)',
+    border: '1px solid var(--color-border, #e2e8f0)',
     flex: 1,
   },
   soapCard: {
     background: 'var(--color-surface)',
-    borderRadius: 'var(--radius)',
+    borderRadius: 12,
     boxShadow: 'var(--shadow-sm)',
+    border: '1px solid var(--color-border, #e2e8f0)',
     overflow: 'hidden',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   soapCardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '12px 14px',
+    padding: '14px 16px',
     background: 'var(--color-background)',
     borderBottom: '1px solid var(--color-border)',
     cursor: 'pointer',
@@ -152,13 +159,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   textarea: {
     width: '100%',
-    minHeight: 80,
+    minHeight: 100,
     border: '1px solid var(--color-border)',
-    borderRadius: 8,
-    padding: '10px 12px',
-    fontSize: 13,
+    borderRadius: 10,
+    padding: '12px 14px',
+    fontSize: 14,
     fontFamily: 'inherit',
-    lineHeight: 1.5,
+    lineHeight: 1.6,
     color: 'var(--color-text)',
     resize: 'vertical',
     boxSizing: 'border-box',
@@ -200,40 +207,38 @@ const styles: Record<string, React.CSSProperties> = {
   severityBadgeDefault: { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' as const, background: '#6b7280', color: 'white' },
   actionBar: {
     display: 'flex',
-    gap: 10,
-    padding: '16px',
-    background: 'var(--color-surface)',
-    borderTop: '1px solid var(--color-border)',
+    gap: 12,
+    padding: '18px 0',
     flexWrap: 'wrap',
   },
   btnPrimary: {
     flex: 1,
     minWidth: 120,
-    padding: '12px 16px',
-    borderRadius: 'var(--radius)',
+    padding: '14px 18px',
+    borderRadius: 12,
     border: 'none',
     background: 'var(--color-primary)',
     color: 'white',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 600,
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
   },
   btnSecondary: {
-    padding: '12px 16px',
-    borderRadius: 'var(--radius)',
+    padding: '14px 18px',
+    borderRadius: 12,
     border: '1px solid var(--color-border)',
     background: 'var(--color-surface)',
     color: 'var(--color-text)',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 600,
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
 };
 
@@ -267,20 +272,23 @@ export const PatientEncounter = () => {
   const [activeTab, setActiveTab] = useState<TabKey>('soap');
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    S: true,
-    O: true,
-    A: true,
-    P: true,
-  });
   const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' && window.innerWidth >= 1024);
   const [soapForm, setSoapForm] = useState<Partial<ClinicalNote>>({});
+  const [encounterElapsed, setEncounterElapsed] = useState(0);
 
   // AI transcriber state
   const [transcriptLines, setTranscriptLines] = useState<typeof TRANSCRIPT_LINES>([]);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [aiGenerated, setAiGenerated] = useState(false);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
+
+  // Sign note / CDSS confirmation state
+  const [showCdssConfirm, setShowCdssConfirm] = useState(false);
+  const [signAction, setSignAction] = useState<'sign' | 'signAndClose' | null>(null);
+  const [showSignedNote, setShowSignedNote] = useState(false);
+  const [signedNoteSnapshot, setSignedNoteSnapshot] = useState<Partial<ClinicalNote> | null>(null);
+  const [signedTimestamp, setSignedTimestamp] = useState('');
+  const [encounterClosed, setEncounterClosed] = useState(false);
 
   // Prescription form state
   const [rxSearch, setRxSearch] = useState('');
@@ -372,21 +380,78 @@ export const PatientEncounter = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const toggleSection = (key: string) => {
-    setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  // Encounter timer — counts up while patient is in session
+  useEffect(() => {
+    if (!currentPatient || encounterClosed) return;
+    const t = setInterval(() => setEncounterElapsed(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [currentPatient, encounterClosed]);
+
+  const formatElapsed = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m > 0 ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
   };
 
   const updateSoapField = (field: keyof ClinicalNote, value: string | string[]) => {
     setSoapForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSignNote = () => {
-    if (firstNote) {
-      signNote(firstNote.id);
-      showToast('Note signed successfully', 'success');
-    } else {
+  // Strip AI delimiters from SOAP content for the signed note
+  const stripAiDelimiters = useCallback((text: string) => {
+    return text.replace(new RegExp(`\\n?\\n?${AI_DELIMITER}\\n?`, 'g'), '\n\n');
+  }, []);
+
+  const performSign = useCallback((action: 'sign' | 'signAndClose') => {
+    if (!firstNote) {
       showToast('No note to sign. Save draft first.', 'info');
+      return;
     }
+    // Create a snapshot of the note for display (strip AI delimiters)
+    const snapshot: Partial<ClinicalNote> = {
+      subjective: stripAiDelimiters(soapForm.subjective || ''),
+      objective: stripAiDelimiters(soapForm.objective || ''),
+      assessment: stripAiDelimiters(soapForm.assessment || ''),
+      plan: stripAiDelimiters(soapForm.plan || ''),
+      icdCodes: soapForm.icdCodes,
+      aiGenerated: soapForm.aiGenerated,
+    };
+    // Save the draft with cleaned content first, then sign
+    saveDraftNote(firstNote.id, {
+      subjective: stripAiDelimiters(soapForm.subjective || ''),
+      objective: stripAiDelimiters(soapForm.objective || ''),
+      assessment: stripAiDelimiters(soapForm.assessment || ''),
+      plan: stripAiDelimiters(soapForm.plan || ''),
+    });
+    signNote(firstNote.id);
+    setSignedNoteSnapshot(snapshot);
+    setSignedTimestamp(new Date().toLocaleString());
+
+    if (action === 'signAndClose') {
+      if (currentPatient) completePatient(currentPatient.patientId);
+      showToast('Note signed — encounter closed', 'success');
+      setEncounterClosed(true);
+      setShowSignedNote(true);
+    } else {
+      showToast('Note signed successfully', 'success');
+      setShowSignedNote(true);
+    }
+    // Also stop recording if it's still going
+    if (isRecording) setIsRecording(false);
+  }, [firstNote, soapForm, signNote, saveDraftNote, currentPatient, completePatient, showToast, isRecording, stripAiDelimiters]);
+
+  const handleSignNote = () => {
+    if (!firstNote) {
+      showToast('No note to sign. Save draft first.', 'info');
+      return;
+    }
+    // Check for unreviewed CDSS alerts
+    if (activeAlerts.length > 0) {
+      setSignAction('sign');
+      setShowCdssConfirm(true);
+      return;
+    }
+    performSign('sign');
   };
 
   const handleQuickOrder = (name: string) => {
@@ -488,14 +553,17 @@ export const PatientEncounter = () => {
   };
 
   const handleSignAndClose = () => {
-    if (firstNote) {
-      signNote(firstNote.id);
-      if (currentPatient) completePatient(currentPatient.patientId);
-      showToast('Encounter closed — patient completed', 'success');
-      navigate('/doctor');
-    } else {
+    if (!firstNote) {
       showToast('No note to sign. Save draft first.', 'info');
+      return;
     }
+    // Check for unreviewed CDSS alerts
+    if (activeAlerts.length > 0) {
+      setSignAction('signAndClose');
+      setShowCdssConfirm(true);
+      return;
+    }
+    performSign('signAndClose');
   };
 
   const handleSaveDraft = () => {
@@ -636,135 +704,57 @@ export const PatientEncounter = () => {
     </div>
   );
 
-  const renderSoapPanel = () => (
-    <div style={styles.panel}>
-      {/* Recording banner inside SOAP — doctor can write while AI listens */}
-      {isRecording && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '8px 12px',
-            marginBottom: 14,
-            borderRadius: 8,
-            background: 'rgba(239, 68, 68, 0.06)',
-            border: '1px solid rgba(239, 68, 68, 0.15)',
-            fontSize: 12,
-          }}
-        >
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-error)', animation: 'pulse 1.5s infinite', flexShrink: 0 }} />
-          <span style={{ color: 'var(--color-error)', fontWeight: 600 }}>
-            AI transcribing — {formatTime(recordingSeconds)}
-          </span>
-          <span style={{ color: 'var(--color-text-muted)', fontSize: 11 }}>
-            · {transcriptLines.length} lines · You can write notes below while recording
-          </span>
-        </div>
-      )}
-      {/* AI append notification */}
-      {aiGenerated && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '8px 12px',
-            marginBottom: 14,
-            borderRadius: 8,
-            background: 'rgba(16, 185, 129, 0.06)',
-            border: '1px solid rgba(16, 185, 129, 0.15)',
-            fontSize: 12,
-          }}
-        >
-          <Sparkles size={14} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
-          <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>
-            AI notes appended below your manual entries
-          </span>
-          <span style={{ color: 'var(--color-text-muted)', fontSize: 11 }}>
-            — look for "--- AI Generated ---" markers
-          </span>
-        </div>
-      )}
+  const handleViewSignedCopy = () => {
+    if (!signedNoteSnapshot) {
+      setSignedNoteSnapshot({
+        subjective: stripAiDelimiters(soapForm.subjective || ''),
+        objective: stripAiDelimiters(soapForm.objective || ''),
+        assessment: stripAiDelimiters(soapForm.assessment || ''),
+        plan: stripAiDelimiters(soapForm.plan || ''),
+        icdCodes: soapForm.icdCodes,
+        aiGenerated: soapForm.aiGenerated,
+      });
+      setSignedTimestamp(new Date().toLocaleString());
+    }
+    setShowSignedNote(true);
+  };
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <span style={{ fontSize: 15, fontWeight: 700 }}>SOAP Note</span>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {soapForm.aiGenerated && (
-            <span style={styles.aiBadge}>
-              <Sparkles size={8} /> AI Assisted
-            </span>
-          )}
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              padding: '4px 8px',
-              borderRadius: 6,
-              background: 'var(--color-background)',
-              color: 'var(--color-text-muted)',
-              textTransform: 'uppercase',
-            }}
-          >
-            {soapForm.status ?? 'Draft'}
-          </span>
-        </div>
-      </div>
-      {(['S', 'O', 'A', 'P'] as SoapSection[]).map((letter) => {
-        const labels = { S: 'Subjective', O: 'Objective', A: 'Assessment', P: 'Plan' };
-        const fields = { S: 'subjective', O: 'objective', A: 'assessment', P: 'plan' } as const;
-        const isExpanded = expandedSections[letter];
-        const value = soapForm[fields[letter]] ?? '';
-        const hasAiContent = value.includes('--- AI Generated ---');
-        return (
-          <div key={letter} style={styles.soapCard}>
-            <div style={styles.soapCardHeader} onClick={() => toggleSection(letter)}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={styles[`soapLetter${letter}` as keyof typeof styles] as React.CSSProperties}>{letter}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>
-                  {labels[letter]}
-                </span>
-                {hasAiContent && (
-                  <Sparkles size={10} style={{ color: 'var(--color-primary)', opacity: 0.6 }} />
-                )}
-              </div>
-              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </div>
-            {isExpanded && (
-              <div style={{ padding: '12px 14px' }}>
-                <textarea
-                  style={styles.textarea}
-                  value={value}
-                  onChange={(e) => updateSoapField(fields[letter], e.target.value)}
-                  rows={letter === 'P' ? 6 : 4}
-                />
-              </div>
-            )}
-          </div>
-        );
-      })}
-      {(soapForm.icdCodes?.length ?? 0) > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>ICD-10 Codes</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {soapForm.icdCodes!.map((code) => (
-              <span key={code} style={styles.icdChip}>
-                {code}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-      <button style={{ ...styles.btnPrimary, width: '100%' }} onClick={handleSignNote}>
-        <FileSignature size={16} /> Sign Note
-      </button>
-    </div>
+  const renderSoapPanel = () => (
+    <SoapNotePanel
+      compact={false}
+      soapData={{
+        subjective: soapForm.subjective ?? '',
+        objective: soapForm.objective ?? '',
+        assessment: soapForm.assessment ?? '',
+        plan: soapForm.plan ?? '',
+      }}
+      onSoapChange={(field, value) => updateSoapField(field, value)}
+      status={soapForm.status ?? 'Draft'}
+      icdCodes={soapForm.icdCodes}
+      aiAssisted={soapForm.aiGenerated}
+      hasAI={hasAI}
+      aiGenerated={aiGenerated}
+      aiProcessing={aiProcessing}
+      isRecording={isRecording}
+      recordingSeconds={recordingSeconds}
+      transcriptLinesCount={transcriptLines.length}
+      onGenerateSoap={handleGenerateSoap}
+      onSaveDraft={handleSaveDraft}
+      onSignNote={handleSignNote}
+      onViewSignedCopy={handleViewSignedCopy}
+      activeAlertsCount={activeAlerts.length}
+      formatTime={formatTime}
+    />
   );
 
   const handleGenerateSoap = () => {
     if (transcriptLines.length === 0) {
       showToast('Record a conversation first to generate SOAP notes', 'info');
       return;
+    }
+    // Stop recording when generating SOAP
+    if (isRecording) {
+      setIsRecording(false);
     }
     setAiProcessing(true);
     // Simulate AI processing time
@@ -1321,54 +1311,58 @@ export const PatientEncounter = () => {
     <div style={styles.panel}>
       <div
         style={{
-          padding: 12,
+          padding: '14px 16px',
           background: 'rgba(245, 158, 11, 0.1)',
-          borderRadius: 8,
-          marginBottom: 20,
-          fontSize: 13,
+          borderRadius: 10,
+          marginBottom: 24,
+          fontSize: 14,
           color: '#92400e',
+          lineHeight: 1.5,
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 10,
         }}
       >
-        <ShieldAlert size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />
-        Drug interaction warning: Metformin + contrast dye. Hold Metformin 48h before/after imaging.
+        <ShieldAlert size={18} style={{ flexShrink: 0, marginTop: 1 }} />
+        <span>Drug interaction warning: Metformin + contrast dye. Hold Metformin 48h before/after imaging.</span>
       </div>
 
       {/* Active prescriptions */}
-      <div style={{ marginBottom: 20 }}>
-        <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>
+      <div style={{ marginBottom: 28 }}>
+        <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>
           Active Prescriptions ({patientPrescriptions.length})
         </h4>
         {patientPrescriptions.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>None</div>
+          <div style={{ fontSize: 14, color: 'var(--color-text-muted)' }}>None</div>
         ) : (
           patientPrescriptions.map((rx) => (
             <div
               key={rx.id}
               style={{
-                padding: 12,
+                padding: '14px 16px',
                 border: '1px solid var(--color-border)',
-                borderRadius: 8,
-                marginBottom: 8,
+                borderRadius: 12,
+                marginBottom: 10,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 flexWrap: 'wrap',
-                gap: 8,
+                gap: 10,
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>{rx.medication} {rx.dosage}</div>
-                <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                <div style={{ fontWeight: 600, fontSize: 15 }}>{rx.medication} {rx.dosage}</div>
+                <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 3 }}>
                   {rx.frequency} · {rx.duration} · Qty: {rx.quantity}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4 }}>
                   {rx.prescribedDate} · {rx.status}
                   {rx.notes && <> · {rx.notes}</>}
                 </div>
               </div>
               {rx.status === 'Pending Approval' && (
                 <button
-                  style={{ ...styles.btnPrimary, padding: '6px 12px', flexShrink: 0 }}
+                  style={{ ...styles.btnPrimary, padding: '10px 20px', flexShrink: 0, borderRadius: 10, fontSize: 14 }}
                   onClick={() => approvePrescription(rx.id)}
                 >
                   Approve
@@ -1381,8 +1375,53 @@ export const PatientEncounter = () => {
 
       {/* New prescription form */}
       <div>
-        <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>New Prescription</h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>New Prescription</h4>
+
+        {/* Favorite / frequent prescriptions */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Star size={12} /> Frequent Prescriptions
+          </div>
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
+            {[
+              { name: 'Amlodipine 5mg', dose: '5mg', freq: 'Once daily' },
+              { name: 'Metformin 500mg', dose: '500mg', freq: 'Twice daily' },
+              { name: 'Losartan 50mg', dose: '50mg', freq: 'Once daily' },
+              { name: 'Atorvastatin 20mg', dose: '20mg', freq: 'Once daily' },
+              { name: 'Aspirin 81mg', dose: '81mg', freq: 'Once daily' },
+              { name: 'Metoprolol 50mg', dose: '50mg', freq: 'Once daily' },
+            ].map((fav) => (
+              <button
+                key={fav.name}
+                onClick={() => {
+                  const found = pharmacyItems.find(m => m.name.toLowerCase().includes(fav.name.split(' ')[0].toLowerCase()));
+                  if (found) {
+                    handleSelectMed(found);
+                    setRxDosage(fav.dose);
+                    setRxFrequency(fav.freq);
+                  } else {
+                    setRxSearch(fav.name);
+                    setRxDosage(fav.dose);
+                    setRxFrequency(fav.freq);
+                  }
+                }}
+                style={{
+                  padding: '6px 12px', borderRadius: 8, border: '1px solid var(--color-border)',
+                  background: 'var(--color-surface)', cursor: 'pointer', whiteSpace: 'nowrap',
+                  fontSize: 12, fontWeight: 600, color: 'var(--color-text)',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { (e.currentTarget).style.borderColor = 'var(--color-primary)'; (e.currentTarget).style.color = 'var(--color-primary)'; }}
+                onMouseLeave={e => { (e.currentTarget).style.borderColor = 'var(--color-border)'; (e.currentTarget).style.color = 'var(--color-text)'; }}
+              >
+                <Pill size={11} /> {fav.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Medication search with autocomplete */}
           <div ref={rxSearchRef} style={{ position: 'relative' }}>
             <input
@@ -1501,13 +1540,13 @@ export const PatientEncounter = () => {
           {/* Dosage and frequency */}
           <div style={{ display: 'flex', gap: 12 }}>
             <input
-              style={{ ...styles.textarea, minHeight: 40, flex: 1 }}
+              style={{ ...styles.textarea, minHeight: 46, flex: 1 }}
               placeholder="Dosage (e.g. 20mg)"
               value={rxDosage}
               onChange={(e) => setRxDosage(e.target.value)}
             />
             <select
-              style={{ ...styles.textarea, minHeight: 40, flex: 1 }}
+              style={{ ...styles.textarea, minHeight: 46, flex: 1 }}
               value={rxFrequency}
               onChange={(e) => setRxFrequency(e.target.value)}
             >
@@ -1521,13 +1560,13 @@ export const PatientEncounter = () => {
           {/* Duration and quantity */}
           <div style={{ display: 'flex', gap: 12 }}>
             <input
-              style={{ ...styles.textarea, flex: 1, minHeight: 40 }}
+              style={{ ...styles.textarea, flex: 1, minHeight: 46 }}
               placeholder="Duration (e.g. 30 days)"
               value={rxDuration}
               onChange={(e) => setRxDuration(e.target.value)}
             />
             <input
-              style={{ ...styles.textarea, flex: 1, minHeight: 40 }}
+              style={{ ...styles.textarea, flex: 1, minHeight: 46 }}
               placeholder="Quantity"
               type="number"
               value={rxQuantity}
@@ -1537,18 +1576,21 @@ export const PatientEncounter = () => {
 
           {/* Notes */}
           <textarea
-            style={{ ...styles.textarea, minHeight: 60, resize: 'vertical' }}
+            style={{ ...styles.textarea, minHeight: 80, resize: 'vertical' }}
             placeholder="Notes (optional) — e.g. Take with food, avoid alcohol..."
             value={rxNotes}
             onChange={(e) => setRxNotes(e.target.value)}
           />
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
             <button
               style={{
                 ...styles.btnPrimary,
                 flex: 1,
+                padding: '14px 16px',
+                borderRadius: 12,
+                fontSize: 15,
                 opacity: !rxSelectedMed || !rxDosage || !rxFrequency ? 0.5 : 1,
               }}
               onClick={handleSubmitRx}
@@ -1557,7 +1599,7 @@ export const PatientEncounter = () => {
             </button>
             {(rxSearch || rxDosage || rxFrequency || rxDuration || rxQuantity || rxNotes) && (
               <button
-                style={{ ...styles.btnSecondary, padding: '8px 14px' }}
+                style={{ ...styles.btnSecondary, padding: '14px 16px', borderRadius: 12, fontSize: 14 }}
                 onClick={handleClearRxForm}
               >
                 Clear
@@ -1571,10 +1613,10 @@ export const PatientEncounter = () => {
 
   const renderChartPanel = () => (
     <div style={styles.panel}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div>
-          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Demographics</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13 }}>
+          <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Demographics</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 14 }}>
             <span style={{ color: 'var(--color-text-muted)' }}>Name</span>
             <span style={{ fontWeight: 600 }}>{currentPatient.patientName}</span>
             <span style={{ color: 'var(--color-text-muted)' }}>DOB</span>
@@ -1588,7 +1630,7 @@ export const PatientEncounter = () => {
           </div>
         </div>
         <div>
-          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Allergies</h4>
+          <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Allergies</h4>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {['Penicillin', 'Sulfa'].map((a) => (
               <span key={a} style={styles.allergyBadge}>
@@ -1598,8 +1640,8 @@ export const PatientEncounter = () => {
           </div>
         </div>
         <div>
-          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Active Medications</h4>
-          <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13 }}>
+          <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Active Medications</h4>
+          <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.8 }}>
             {['Rosuvastatin 20mg', 'Clopidogrel 75mg', 'Losartan 50mg'].map((m) => (
               <li key={m} style={{ marginBottom: 4 }}>{m}</li>
             ))}
@@ -1704,7 +1746,17 @@ export const PatientEncounter = () => {
               {tenant.features.philHealth && ' · PhilHealth Active'}
             </div>
           </div>
-          <span style={styles.badge}>In Session</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={styles.badge}>In Session</span>
+            <span style={{
+              fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 8,
+              background: encounterElapsed > 1200 ? 'rgba(239,68,68,0.08)' : 'var(--color-background)',
+              color: encounterElapsed > 1200 ? 'var(--color-error)' : 'var(--color-text-muted)',
+              fontVariantNumeric: 'tabular-nums', display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              <Clock size={12} /> {formatElapsed(encounterElapsed)}
+            </span>
+          </div>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           <span style={styles.allergyBadge}>Penicillin</span>
@@ -1729,12 +1781,12 @@ export const PatientEncounter = () => {
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: 20,
+            gap: 24,
             flex: 1,
             alignItems: 'start',
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {tabList}
             {contentByTab[effectiveTab]()}
           </div>
@@ -1742,32 +1794,32 @@ export const PatientEncounter = () => {
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: 16,
+              gap: 20,
               position: 'sticky',
               top: 24,
             }}
           >
             {hasCDSS && effectiveTab !== 'cdss' && activeAlerts.length > 0 && (
               <div style={styles.panel}>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>
                   Alerts ({activeAlerts.length})
                 </div>
                 {activeAlerts.slice(0, 2).map((a) => (
                   <div
                     key={a.id}
                     style={{
-                      padding: 10,
-                      borderRadius: 6,
-                      marginBottom: 6,
+                      padding: 12,
+                      borderRadius: 8,
+                      marginBottom: 8,
                       borderLeft: `3px solid ${getSeverityStyle(a.severity)}`,
                       background: 'var(--color-background)',
-                      fontSize: 12,
+                      fontSize: 13,
                     }}
                   >
                     <div style={{ fontWeight: 600 }}>{a.title}</div>
-                    <div style={{ color: 'var(--color-text-muted)', marginTop: 2 }}>{a.message}</div>
+                    <div style={{ color: 'var(--color-text-muted)', marginTop: 3 }}>{a.message}</div>
                     <button
-                      style={{ marginTop: 6, fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)' }}
+                      style={{ marginTop: 8, fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)' }}
                       onClick={() => dismissAlert(a.id)}
                     >
                       Dismiss
@@ -1777,8 +1829,8 @@ export const PatientEncounter = () => {
               </div>
             )}
             <div style={styles.panel}>
-              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 12 }}>Quick Actions</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Quick Actions</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <button style={styles.btnPrimary} onClick={handleSignAndClose}>
                   <CheckCircle2 size={16} /> Sign & Close
                 </button>
@@ -1806,6 +1858,252 @@ export const PatientEncounter = () => {
           <div style={{ flex: 1 }}>{contentByTab[effectiveTab]()}</div>
           {actionBar}
         </>
+      )}
+
+      {/* ═══ CDSS Warning Confirmation Modal ═══ */}
+      {showCdssConfirm && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.5)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', padding: 20,
+          }}
+          onClick={() => setShowCdssConfirm(false)}
+        >
+          <div
+            style={{
+              background: 'var(--color-surface)', borderRadius: 16, maxWidth: 480, width: '100%',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+              animation: 'fadeInUp 0.2s ease',
+              overflow: 'hidden',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{
+              padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 12,
+              background: 'rgba(245, 158, 11, 0.08)',
+              borderBottom: '1px solid rgba(245, 158, 11, 0.15)',
+            }}>
+              <AlertTriangle size={22} style={{ color: '#d97706', flexShrink: 0 }} />
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 16, color: '#92400e' }}>
+                  Unreviewed CDSS Alerts
+                </div>
+                <div style={{ fontSize: 13, color: '#b45309', marginTop: 2 }}>
+                  {activeAlerts.length} alert{activeAlerts.length !== 1 ? 's' : ''} require{activeAlerts.length === 1 ? 's' : ''} your attention
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCdssConfirm(false)}
+                style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+              >
+                <X size={18} style={{ color: 'var(--color-text-muted)' }} />
+              </button>
+            </div>
+
+            {/* Alert summary */}
+            <div style={{ padding: '16px 20px', maxHeight: 220, overflowY: 'auto' }}>
+              {activeAlerts.map((a) => (
+                <div key={a.id} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                  padding: '10px 12px', borderRadius: 8, marginBottom: 6,
+                  borderLeft: `3px solid ${getSeverityStyle(a.severity)}`,
+                  background: 'var(--color-background)',
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ ...getSeverityBadgeStyle(a.severity), whiteSpace: 'nowrap' }}>{a.severity}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{a.title}</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 3 }}>{a.message}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div style={{ padding: '14px 20px', borderTop: '1px solid var(--color-border)', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                style={{
+                  ...styles.btnSecondary, flex: 1, justifyContent: 'center',
+                  minWidth: 140,
+                }}
+                onClick={() => {
+                  setShowCdssConfirm(false);
+                  setActiveTab('cdss');
+                }}
+              >
+                <AlertTriangle size={14} /> Review Alerts
+              </button>
+              <button
+                style={{
+                  ...styles.btnPrimary, flex: 1, justifyContent: 'center',
+                  background: '#d97706', minWidth: 140,
+                }}
+                onClick={() => {
+                  setShowCdssConfirm(false);
+                  if (signAction) performSign(signAction);
+                  setSignAction(null);
+                }}
+              >
+                <FileSignature size={14} /> Sign Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ Signed Note View Modal ═══ */}
+      {showSignedNote && signedNoteSnapshot && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.5)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', padding: 20,
+          }}
+          onClick={() => setShowSignedNote(false)}
+        >
+          <div
+            style={{
+              background: 'var(--color-surface)', borderRadius: 16, maxWidth: 600, width: '100%',
+              maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+              animation: 'fadeInUp 0.2s ease',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{
+              padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              borderBottom: '1px solid var(--color-border)', flexShrink: 0,
+            }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <CheckCircle2 size={18} style={{ color: 'var(--color-success)' }} />
+                  Signed Clinical Note
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                  {currentPatient?.patientName} · {signedTimestamp}
+                  {signedNoteSnapshot.aiGenerated && (
+                    <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: 'rgba(139,92,246,0.1)', color: '#7c3aed' }}>
+                      AI-Assisted
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  style={{ ...styles.btnSecondary, padding: '8px 12px', fontSize: 12 }}
+                  onClick={() => {
+                    const text = `SOAP Note — ${currentPatient?.patientName}\nSigned: ${signedTimestamp}\n\n` +
+                      `SUBJECTIVE:\n${signedNoteSnapshot.subjective?.trim()}\n\n` +
+                      `OBJECTIVE:\n${signedNoteSnapshot.objective?.trim()}\n\n` +
+                      `ASSESSMENT:\n${signedNoteSnapshot.assessment?.trim()}\n\n` +
+                      `PLAN:\n${signedNoteSnapshot.plan?.trim()}` +
+                      (signedNoteSnapshot.icdCodes?.length ? `\n\nICD-10: ${signedNoteSnapshot.icdCodes.join(', ')}` : '');
+                    navigator.clipboard.writeText(text);
+                    showToast('Signed note copied to clipboard', 'success');
+                  }}
+                >
+                  <Copy size={14} /> Copy
+                </button>
+                <button
+                  onClick={() => setShowSignedNote(false)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                >
+                  <X size={18} style={{ color: 'var(--color-text-muted)' }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Note body */}
+            <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
+              {/* CDSS alerts that were active at signing time */}
+              {activeAlerts.length > 0 && (
+                <div style={{
+                  padding: '10px 14px', borderRadius: 8, marginBottom: 16,
+                  background: 'rgba(245, 158, 11, 0.08)',
+                  border: '1px solid rgba(245, 158, 11, 0.2)',
+                  fontSize: 12, color: '#92400e',
+                }}>
+                  <div style={{ fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <AlertTriangle size={14} /> Note: {activeAlerts.length} CDSS alert{activeAlerts.length !== 1 ? 's were' : ' was'} active at signing
+                  </div>
+                  {activeAlerts.map((a) => (
+                    <div key={a.id} style={{ marginTop: 4, paddingLeft: 20 }}>
+                      • <strong>{a.severity.toUpperCase()}</strong>: {a.title}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {(['S', 'O', 'A', 'P'] as SoapSection[]).map((letter) => {
+                const labels = { S: 'Subjective', O: 'Objective', A: 'Assessment', P: 'Plan' };
+                const fields = { S: 'subjective', O: 'objective', A: 'assessment', P: 'plan' } as const;
+                const content = signedNoteSnapshot[fields[letter]] as string || '';
+                return (
+                  <div key={letter} style={{ marginBottom: 18 }}>
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6,
+                    }}>
+                      <span style={{
+                        ...(styles[`soapLetter${letter}` as keyof typeof styles] as React.CSSProperties),
+                        width: 22, height: 22, fontSize: 11,
+                      }}>
+                        {letter}
+                      </span>
+                      <span style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-text)' }}>
+                        {labels[letter]}
+                      </span>
+                    </div>
+                    <div style={{
+                      fontSize: 13, lineHeight: 1.7, color: 'var(--color-text)',
+                      whiteSpace: 'pre-wrap', padding: '10px 14px',
+                      background: 'var(--color-background)', borderRadius: 8,
+                      border: '1px solid var(--color-border)',
+                    }}>
+                      {content.trim() || '(empty)'}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {(signedNoteSnapshot.icdCodes?.length ?? 0) > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>ICD-10 Codes</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {signedNoteSnapshot.icdCodes!.map((code) => (
+                      <span key={code} style={styles.icdChip}>{code}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div style={{
+                textAlign: 'center', padding: 12, borderRadius: 8,
+                background: 'rgba(16, 185, 129, 0.06)',
+                border: '1px solid rgba(16, 185, 129, 0.15)',
+                color: 'var(--color-success)', fontSize: 12, fontWeight: 600,
+              }}>
+                Electronically signed by {currentStaff?.name ?? 'Provider'} · {signedTimestamp}
+              </div>
+
+              {/* Return to dashboard if encounter was closed */}
+              {encounterClosed && (
+                <button
+                  style={{
+                    ...styles.btnPrimary, width: '100%', marginTop: 16,
+                    justifyContent: 'center', borderRadius: 12,
+                  }}
+                  onClick={() => navigate('/doctor')}
+                >
+                  <ArrowLeft size={16} /> Return to Dashboard
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

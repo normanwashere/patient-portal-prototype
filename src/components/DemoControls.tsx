@@ -2,8 +2,9 @@ import React, { useState, useCallback } from 'react';
 import {
     Settings, Play, Square, RotateCcw, LayoutGrid, List,
     X, Clock, UserCircle, Plus, Trash2, ChevronDown, ChevronUp,
-    Check, Sparkles
+    Check, Sparkles, Clapperboard,
 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { useTheme } from '../theme/ThemeContext';
 import { useData } from '../context/DataContext';
 import type { TenantConfig, TenantFeatures, VisitFeatures } from '../types/tenant';
@@ -95,6 +96,9 @@ const VISIT_LABELS: { key: keyof VisitFeatures; label: string; parent?: keyof Vi
 export const DemoControls: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [showPill, setShowPill] = useState(false);
+    const location = useLocation();
+    const isDoctorPortal = location.pathname.startsWith('/doctor');
+    const isDoctorSimRunning = isDoctorPortal && !!(window as any).__doctorSimulationRunning;
     const { tenant, setTenantId, availableTenants, addTenant, removeTenant, updateTenantFeatures } = useTheme();
     const {
         toggleSimulation, isSimulating, queueMode, toggleQueueMode,
@@ -201,6 +205,9 @@ export const DemoControls: React.FC = () => {
         setNewTenantName('');
         setNewTenantTagline('');
     }, [newTenantName, newTenantTagline, selectedColorIdx, customFeatures, addTenant, setTenantId]);
+
+    // Hide entirely when doctor simulation is running
+    if (isDoctorSimRunning) return null;
 
     return (
         <div className="demo-controls-wrapper">
@@ -443,20 +450,36 @@ export const DemoControls: React.FC = () => {
                                 )}
                             </div>
 
-                            {/* Queue Mode Toggle */}
+                            {/* Doctor Simulation / Experience Mode */}
                             <div className="demo-section">
-                                <span className="demo-label">Experience Mode</span>
-                                <div className="demo-control-row" onClick={toggleQueueMode} style={{ cursor: 'pointer' }}>
-                                    <div className="demo-control-info">
-                                        <span className="demo-control-name">
-                                            {queueMode === 'LINEAR' ? 'Linear Journey' : 'Multi-Stream'}
-                                        </span>
-                                        <span className="demo-control-desc">
-                                            {queueMode === 'LINEAR' ? 'Step-by-step flow' : 'Simultaneous queues'}
-                                        </span>
+                                <span className="demo-label">{isDoctorPortal ? 'Guided Simulation' : 'Experience Mode'}</span>
+                                {isDoctorPortal ? (
+                                    <button
+                                        className="sim-button start"
+                                        onClick={() => {
+                                            if ((window as any).__startDoctorSimulation) {
+                                                (window as any).__startDoctorSimulation();
+                                            }
+                                            setIsOpen(false);
+                                        }}
+                                        style={{ width: '100%' }}
+                                    >
+                                        <Clapperboard size={16} />
+                                        <span>Run Doctor Simulation</span>
+                                    </button>
+                                ) : (
+                                    <div className="demo-control-row" onClick={toggleQueueMode} style={{ cursor: 'pointer' }}>
+                                        <div className="demo-control-info">
+                                            <span className="demo-control-name">
+                                                {queueMode === 'LINEAR' ? 'Linear Journey' : 'Multi-Stream'}
+                                            </span>
+                                            <span className="demo-control-desc">
+                                                {queueMode === 'LINEAR' ? 'Step-by-step flow' : 'Simultaneous queues'}
+                                            </span>
+                                        </div>
+                                        {queueMode === 'LINEAR' ? <List size={20} color="#3b82f6" /> : <LayoutGrid size={20} color="#10b981" />}
                                     </div>
-                                    {queueMode === 'LINEAR' ? <List size={20} color="#3b82f6" /> : <LayoutGrid size={20} color="#10b981" />}
-                                </div>
+                                )}
                             </div>
 
                             {/* Simulation Controls */}

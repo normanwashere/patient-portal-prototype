@@ -40,6 +40,11 @@ export interface Appointment {
     status: 'Upcoming' | 'Completed' | 'Cancelled';
     type?: string;
     location?: string;
+    /** Doctor-side fields */
+    patientName?: string;
+    patientId?: string;
+    chiefComplaint?: string;
+    notes?: string;
 }
 
 export interface Medication {
