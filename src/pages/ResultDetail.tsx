@@ -1,33 +1,91 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
-import { Download, Share2, TrendingUp, TrendingDown, Minus, Calendar, User, MapPin, AlertTriangle } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Download, Share2, TrendingUp, TrendingDown, Minus, Calendar, User, MapPin, AlertTriangle, FileText } from 'lucide-react';
 import { BackButton } from '../components/Common/BackButton';
+import { useData } from '../context/DataContext';
 import './ResultDetail.css';
+
+interface LabValue {
+    name: string;
+    value: number;
+    unit: string;
+    refLow: number;
+    refHigh: number;
+    trend: string;
+    flag?: string;
+}
+
+// Default lab values (fallback when matched result has no structured values)
+const DEFAULT_VALUES: LabValue[] = [
+    { name: 'Hemoglobin', value: 14.2, unit: 'g/dL', refLow: 12.0, refHigh: 16.0, trend: 'stable' },
+    { name: 'Hematocrit', value: 42.5, unit: '%', refLow: 36.0, refHigh: 48.0, trend: 'up' },
+    { name: 'Red Blood Cells', value: 4.8, unit: 'M/uL', refLow: 4.0, refHigh: 5.5, trend: 'stable' },
+    { name: 'White Blood Cells', value: 11.2, unit: 'K/uL', refLow: 4.5, refHigh: 11.0, trend: 'up', flag: 'high' as const },
+    { name: 'Platelets', value: 245, unit: 'K/uL', refLow: 150, refHigh: 400, trend: 'stable' },
+    { name: 'MCV', value: 88.5, unit: 'fL', refLow: 80, refHigh: 100, trend: 'stable' },
+    { name: 'MCH', value: 29.6, unit: 'pg', refLow: 27, refHigh: 33, trend: 'stable' },
+    { name: 'MCHC', value: 33.4, unit: 'g/dL', refLow: 32, refHigh: 36, trend: 'down' },
+];
 
 export const ResultDetail: React.FC = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
+    const { results } = useData();
 
-    // Mock result data
-    const result = {
-        id: '1',
-        testName: 'Complete Blood Count (CBC)',
-        category: 'Laboratory',
-        date: 'February 10, 2024',
-        provider: 'MediLab Diagnostics',
-        doctor: 'Dr. Jen Diaz',
-        status: 'Final',
-        isCritical: false,
-        values: [
-            { name: 'Hemoglobin', value: 14.2, unit: 'g/dL', refLow: 12.0, refHigh: 16.0, trend: 'stable' },
-            { name: 'Hematocrit', value: 42.5, unit: '%', refLow: 36.0, refHigh: 48.0, trend: 'up' },
-            { name: 'Red Blood Cells', value: 4.8, unit: 'M/uL', refLow: 4.0, refHigh: 5.5, trend: 'stable' },
-            { name: 'White Blood Cells', value: 11.2, unit: 'K/uL', refLow: 4.5, refHigh: 11.0, trend: 'up', flag: 'high' },
-            { name: 'Platelets', value: 245, unit: 'K/uL', refLow: 150, refHigh: 400, trend: 'stable' },
-            { name: 'MCV', value: 88.5, unit: 'fL', refLow: 80, refHigh: 100, trend: 'stable' },
-            { name: 'MCH', value: 29.6, unit: 'pg', refLow: 27, refHigh: 33, trend: 'stable' },
-            { name: 'MCHC', value: 33.4, unit: 'g/dL', refLow: 32, refHigh: 36, trend: 'down' },
-        ]
-    };
+    // Try to find the result from context by matching id
+    const matched = results.find((r: any) => r.id === id);
+
+    const result: {
+        id: string; testName: string; category: string; date: string;
+        provider: string; doctor: string; status: string; isCritical: boolean;
+        values: LabValue[];
+    } = matched
+        ? {
+            id: matched.id,
+            testName: matched.title ?? 'Lab Result',
+            category: matched.type ?? 'Laboratory',
+            date: matched.date ?? '',
+            provider: 'MediLab Diagnostics',
+            doctor: matched.doctor ?? 'Unknown',
+            status: 'Final',
+            isCritical: !!matched.isCritical,
+            values: (matched as any).values ?? DEFAULT_VALUES,
+        }
+        : {
+            id: id ?? '1',
+            testName: 'Complete Blood Count (CBC)',
+            category: 'Laboratory',
+            date: 'February 10, 2024',
+            provider: 'MediLab Diagnostics',
+            doctor: 'Dr. Jen Diaz',
+            status: 'Final',
+            isCritical: false,
+            values: DEFAULT_VALUES,
+        };
+
+    if (!matched && results.length > 0) {
+        // Result not found in data
+        return (
+            <div className="result-detail-container">
+                <header className="page-header">
+                    <BackButton to="/results" />
+                    <div className="header-text" style={{ flex: 1 }}>
+                        <h2>Result Not Found</h2>
+                    </div>
+                </header>
+                <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--color-text-muted)' }}>
+                    <FileText size={48} style={{ marginBottom: 12, opacity: 0.3 }} />
+                    <p style={{ marginBottom: 16 }}>The requested result could not be found.</p>
+                    <button
+                        onClick={() => navigate('/results')}
+                        style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                        Back to Results
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     const getTrendIcon = (trend: string) => {
         switch (trend) {

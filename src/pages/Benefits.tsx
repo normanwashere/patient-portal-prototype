@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { FileText, Plus, X, CreditCard, Shield, QrCode, ClipboardList, Wallet, Receipt, ChevronRight, Info } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
+import { useTheme } from '../theme/ThemeContext';
 import { BackButton } from '../components/Common/BackButton';
 import './Benefits.css';
 
@@ -34,10 +35,14 @@ const PHILHEALTH_SERVICES: ServiceType[] = [
 
 
 export const Benefits: React.FC = () => {
+    const { tenant } = useTheme();
     const { loaRequests, requestLOA, userProfile, claims, fileClaim } = useData();
     const { showToast } = useToast();
     const location = useLocation();
     const navigate = useNavigate();
+
+    // Redirect if HMO feature is not enabled
+    if (!tenant.features.hmo) return <Navigate to="/coverage" replace />;
     const queryParams = new URLSearchParams(location.search);
     const hmoIdParam = queryParams.get('id');
     const [activeTab, setActiveTab] = useState<'overview' | 'claims'>('overview');
@@ -131,8 +136,10 @@ export const Benefits: React.FC = () => {
 
     const handleFileClaim = () => {
         const type = 'Medical Reimbursement';
+        const activeProvider = [...hmos, ...(ph ? [{ id: 'philhealth', provider: 'PhilHealth' }] : [])].find(h => h.id === activeProviderId);
+        const providerLabel = (activeProvider as any)?.provider || activeProvider?.id || 'Medical Center';
         fileClaim({
-            provider: 'St. Luke\'s Medical Center',
+            provider: providerLabel,
             type,
             date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
             amount: '₱ 4,500.00'

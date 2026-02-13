@@ -59,7 +59,7 @@ export const PaymentSuccess: React.FC = () => {
                 </div>
 
                 <div className="success-footer-actions">
-                    <Link to="/" className="success-btn primary">
+                    <Link to="/dashboard" className="success-btn primary">
                         <Home size={18} />
                         <span>Back to Dashboard</span>
                     </Link>

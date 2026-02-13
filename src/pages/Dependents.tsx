@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useData, type Dependent } from '../context/DataContext';
 import { BackButton } from '../components/Common/BackButton';
 import { UserPlus, Shield, ChevronRight, User, Heart, UserCircle, X } from 'lucide-react';

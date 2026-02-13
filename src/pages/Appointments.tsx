@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BackButton } from '../components/Common/BackButton';
 import { Clock, User, CheckCircle } from 'lucide-react';
+import { useTheme } from '../theme/ThemeContext';
 
 const SERVICES = ['General Consultation', 'Cardiology', 'Pediatrics', 'Dental'];
 const DOCTORS = [
@@ -13,6 +14,7 @@ const DOCTORS = [
 import './Appointments.css';
 
 export const Appointments: React.FC = () => {
+    const { tenant } = useTheme();
     const navigate = useNavigate();
     const [step, setStep] = React.useState(1);
     const [selectedService, setSelectedService] = React.useState('');

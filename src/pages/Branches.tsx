@@ -1,13 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import { BackButton } from '../components/Common/BackButton';
-import {
-    METRO_GENERAL_BRANCHES,
-    MERALCO_WELLNESS_BRANCHES,
-    HEALTH_FIRST_BRANCHES
-} from '../data/mockBranches';
+import { getTenantBranches } from '../data/mockBranches';
 import { BranchCard } from '../components/BranchCard/BranchCard';
 import './Branches.css';
 
@@ -24,14 +20,7 @@ export const Branches: React.FC = () => {
     }, [highlightId]);
 
     // Select branches based on tenant
-    let branches: any[] = [];
-    if (tenant.id === 'metroGeneral') {
-        branches = METRO_GENERAL_BRANCHES;
-    } else if (tenant.id === 'meralcoWellness') {
-        branches = MERALCO_WELLNESS_BRANCHES;
-    } else if (tenant.id === 'healthFirst') {
-        branches = HEALTH_FIRST_BRANCHES;
-    }
+    const branches = getTenantBranches(tenant.id, tenant.name);
 
     const hospitals = branches.filter(b => b.type === 'hospital' || b.type === 'lying-in');
     const clinics = branches.filter(b => b.type === 'clinic');
@@ -39,7 +28,7 @@ export const Branches: React.FC = () => {
     return (
         <div className="branches-container container">
             <header className="page-header-standard">
-                <BackButton label="Back" />
+                <BackButton />
                 <h2 className="title-standard">Our Locations</h2>
                 <p className="subtitle-standard">{tenant.tagline || 'Find a branch near you'}</p>
             </header>

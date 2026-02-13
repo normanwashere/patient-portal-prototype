@@ -5,7 +5,8 @@ import { BackButton } from '../components/Common/BackButton';
 import { useToast } from '../context/ToastContext';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../theme/ThemeContext';
-import { DOCTORS, SPECIALTIES, ALL_BRANCHES } from '../data/mockAppointmentData';
+import { DOCTORS, SPECIALTIES } from '../data/mockAppointmentData';
+import { getTenantBranches } from '../data/mockBranches';
 import type { Doctor, Specialty } from '../data/mockAppointmentData';
 import type { Branch } from '../data/mockBranches';
 import { IntakeForm } from '../components/IntakeForm';
@@ -33,6 +34,11 @@ export const AppointmentBooking: React.FC = () => {
     const { tenant } = useTheme();
     const visits = tenant.features.visits;
 
+    // Tenant-scoped branches and doctors
+    const tenantBranches = getTenantBranches(tenant.id, tenant.name);
+    const tenantBranchIds = new Set(tenantBranches.map(b => b.id));
+    const tenantDoctors = DOCTORS.filter(d => d.locationIds.some(lid => tenantBranchIds.has(lid)));
+
     // State
     // State - Lazy Initialize from location.state to avoid flicker
     const [bookingType, setBookingType] = useState<AppointmentType | null>(() => {
@@ -59,12 +65,12 @@ export const AppointmentBooking: React.FC = () => {
     // Handle Location ID pre-selection side-effects (finding the branch object)
     useEffect(() => {
         if (location.state?.locationId && !selectedBranch) {
-            const branch = ALL_BRANCHES.find(b => b.id === location.state.locationId);
+            const branch = tenantBranches.find(b => b.id === location.state.locationId);
             if (branch) {
                 setSelectedBranch(branch);
             }
         }
-    }, [location.state]);
+    }, [location.state, tenantBranches]);
 
     // Helpers
     const getPageTitle = () => {
@@ -91,32 +97,33 @@ export const AppointmentBooking: React.FC = () => {
         }
     };
 
-    // Derived Data for Lists
+    // Derived Data for Lists (all scoped to current tenant)
     const getBranches = () => {
         if (selectedSpecialty) {
-            // Filter branches that have doctors with this specialty
-            const docLocIds = DOCTORS
+            // Filter tenant branches that have doctors with this specialty
+            const docLocIds = tenantDoctors
                 .filter(d => d.specialtyId === selectedSpecialty.id)
                 .flatMap(d => d.locationIds);
-            return ALL_BRANCHES.filter(b => docLocIds.includes(b.id));
+            return tenantBranches.filter(b => docLocIds.includes(b.id));
         }
-        return ALL_BRANCHES;
+        return tenantBranches;
     };
 
     const getSpecialties = () => {
         if (selectedBranch) {
-            // Filter specialties available at this branch
-            const branchSpecs = DOCTORS
+            // Filter specialties available at this branch (from tenant doctors only)
+            const branchSpecs = tenantDoctors
                 .filter(d => d.locationIds.includes(selectedBranch.id))
                 .map(d => d.specialtyId);
             return SPECIALTIES.filter(s => branchSpecs.includes(s.id));
         }
-        // For Teleconsult, we show all specialties (or could filter by those offering teleconsult if data existed)
-        return SPECIALTIES;
+        // Show specialties that tenant doctors offer
+        const tenantSpecIds = new Set(tenantDoctors.map(d => d.specialtyId));
+        return SPECIALTIES.filter(s => tenantSpecIds.has(s.id));
     };
 
     const getDoctors = () => {
-        let docs = DOCTORS;
+        let docs = tenantDoctors;
         if (selectedBranch) {
             docs = docs.filter(d => d.locationIds.includes(selectedBranch.id));
         }

@@ -16,9 +16,7 @@ import { BannerCarousel } from '../components/BannerCarousel';
 import { CheckInCard } from '../components/CheckInCard';
 import { HospitalWidget } from '../components/HospitalWidget/HospitalWidget';
 import {
-    METRO_GENERAL_BRANCHES,
-    MERALCO_WELLNESS_BRANCHES,
-    HEALTH_FIRST_BRANCHES,
+    getTenantBranches,
     type Branch
 } from '../data/mockBranches';
 import './Dashboard.css';
@@ -94,7 +92,7 @@ export const Dashboard: React.FC = () => {
                     </button>
 
                     {/* 5. Benefits (HMO) */}
-                    {tenant.features.loa && (
+                    {tenant.features.hmo && (
                         <button className="quick-action-btn" onClick={() => navigate('/benefits')}>
                             <Heart size={20} />
                             <span>HMO Benefits</span>
@@ -120,14 +118,7 @@ export const Dashboard: React.FC = () => {
 
                 <div className="hospitals-grid">
                     {(() => {
-                        let branches: Branch[] = [];
-                        if (tenant.id === 'metroGeneral') {
-                            branches = METRO_GENERAL_BRANCHES;
-                        } else if (tenant.id === 'meralcoWellness') {
-                            branches = MERALCO_WELLNESS_BRANCHES;
-                        } else if (tenant.id === 'healthFirst') {
-                            branches = HEALTH_FIRST_BRANCHES;
-                        }
+                        const branches: Branch[] = getTenantBranches(tenant.id, tenant.name);
 
                         const displayBranches = getTopBranches(branches);
 

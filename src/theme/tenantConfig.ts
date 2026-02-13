@@ -21,10 +21,14 @@ export const tenants: Record<string, TenantConfig> = {
         features: {
             sso: true,
             loa: true,
+            hmo: true,
+            philHealth: true,
             queue: true,
             appointments: true,
             multiLocation: true,
             admissions: true,
+            cdss: true,
+            aiAssistant: true,
             visits: {
                 teleconsultEnabled: true,
                 teleconsultNowEnabled: true,
@@ -55,11 +59,15 @@ export const tenants: Record<string, TenantConfig> = {
         },
         features: {
             sso: true,
-            loa: false, // Internal wellness might not need complex loa
+            loa: false,
+            hmo: true,           // Corporate HMO cards
+            philHealth: false,   // No PhilHealth integration
             queue: true,
             appointments: true,
             multiLocation: false,
             admissions: false,
+            cdss: true,
+            aiAssistant: false,
             visits: {
                 teleconsultEnabled: true, // Can schedule
                 teleconsultNowEnabled: false, // NO NOW
@@ -91,10 +99,14 @@ export const tenants: Record<string, TenantConfig> = {
         features: {
             sso: false,
             loa: false,
+            hmo: false,          // No HMO integration
+            philHealth: true,    // PhilHealth / Konsulta only
             queue: true,
             appointments: true,
-            multiLocation: true, // Network of basic clinics
+            multiLocation: true,
             admissions: false,
+            cdss: false,
+            aiAssistant: false,
             visits: {
                 teleconsultEnabled: false, // NO TELECONSULT
                 teleconsultNowEnabled: false,

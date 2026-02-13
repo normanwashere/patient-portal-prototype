@@ -1,11 +1,20 @@
 import React from 'react';
 import { useData } from '../context/DataContext';
+import { useToast } from '../context/ToastContext';
+import { useTheme } from '../theme/ThemeContext';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Shield, ExternalLink, Info, Calendar, CheckCircle, Hospital, ClipboardList, Pill } from 'lucide-react';
 import { BackButton } from '../components/Common/BackButton';
 import './Profile.css';
 
 export const PhilHealthDetail: React.FC = () => {
+    const { tenant } = useTheme();
     const { userProfile } = useData();
+    const { showToast } = useToast();
+    const navigate = useNavigate();
+
+    // Redirect if PhilHealth feature is not enabled
+    if (!tenant.features.philHealth) return <Navigate to="/coverage" replace />;
     const ph = userProfile?.philHealth;
 
     // UHC / Konsulta Benefits Data
@@ -143,21 +152,21 @@ export const PhilHealthDetail: React.FC = () => {
                     <h3>Actions</h3>
                 </div>
                 <div className="menu-list-v2">
-                    <button className="menu-item-v2">
+                    <button className="menu-item-v2" onClick={() => navigate('/appointments/book')}>
                         <div className="icon-v2"><Calendar size={18} /></div>
                         <div className="menu-text">
                             <span className="menu-title">Book PC Consultation</span>
                             <span className="menu-desc">Schedule your First Patient Encounter (FPE)</span>
                         </div>
                     </button>
-                    <button className="menu-item-v2">
+                    <button className="menu-item-v2" onClick={() => showToast('Konsulta User Guide will open in a new tab', 'info')}>
                         <div className="icon-v2"><Info size={18} /></div>
                         <div className="menu-text">
                             <span className="menu-title">Konsulta User Guide</span>
                             <span className="menu-desc">How to avail free diagnostic and lab tests</span>
                         </div>
                     </button>
-                    <button className="menu-item-v2">
+                    <button className="menu-item-v2" onClick={() => showToast('Redirecting to PhilHealth Member Portal...', 'info')}>
                         <div className="icon-v2"><ExternalLink size={18} /></div>
                         <div className="menu-text">
                             <span className="menu-title">PhilHealth Member Portal</span>

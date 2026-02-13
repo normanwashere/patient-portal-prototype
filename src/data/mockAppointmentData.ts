@@ -1,12 +1,13 @@
 import {
     METRO_GENERAL_BRANCHES,
     MERALCO_WELLNESS_BRANCHES,
-    HEALTH_FIRST_BRANCHES
+    HEALTH_FIRST_BRANCHES,
+    getTenantBranches,
 } from './mockBranches';
 
-// ... (other interfaces)
+export { getTenantBranches };
 
-// Combine all branches for lookup
+// Combine all branches for lookup (used only for doctor matching)
 export const ALL_BRANCHES = [
     ...METRO_GENERAL_BRANCHES,
     ...MERALCO_WELLNESS_BRANCHES,
@@ -105,48 +106,102 @@ export const APPOINTMENTS = [
 ];
 
 export const DOCTORS: Doctor[] = [
+    // ── Metro General Doctors ──
     {
         id: 'd1', name: 'Dr. Jen Diaz', specialtyId: 'gen-med', specialtyName: 'General Medicine',
-        locationIds: ['main', 'north', 'wellness-makati'],
+        locationIds: ['metro-hosp-main', 'metro-hosp-north', 'metro-clinic-makati'],
         image: 'https://randomuser.me/api/portraits/women/44.jpg', rating: 4.9, fee: 800,
         bio: 'Dr. Diaz has over 10 years of experience in primary care and preventive medicine. She advocates for holistic wellness and patient education.',
         available: availability7Days
     },
     {
         id: 'd2', name: 'Dr. Juan Reyes', specialtyId: 'cardio', specialtyName: 'Cardiology',
-        locationIds: ['main', 'north'],
+        locationIds: ['metro-hosp-main', 'metro-hosp-north'],
         image: 'https://randomuser.me/api/portraits/men/32.jpg', rating: 4.8, fee: 1500,
         bio: 'Specializing in interventional cardiology, Dr. Reyes is committed to heart health and innovative treatments for cardiovascular diseases.',
         available: availability7Days
     },
     {
         id: 'd3', name: 'Dr. Ana Cruz', specialtyId: 'peds', specialtyName: 'Pediatrics',
-        locationIds: ['main', 'wellness-bgc', 'south-clinic'],
+        locationIds: ['metro-hosp-main', 'metro-hosp-south', 'metro-clinic-bgc'],
         image: 'https://randomuser.me/api/portraits/women/68.jpg', rating: 4.7, fee: 1000,
         bio: 'Dr. Cruz loves working with children and ensuring their healthy development from infancy through adolescence.',
         available: availability7Days
     },
     {
         id: 'd4', name: 'Dr. Roberto Go', specialtyId: 'ortho', specialtyName: 'Orthopedics',
-        locationIds: ['main', 'north'],
+        locationIds: ['metro-hosp-main', 'metro-hosp-north', 'metro-hosp-east'],
         image: 'https://randomuser.me/api/portraits/men/45.jpg', rating: 4.9, fee: 1800,
         bio: 'Expert in sports medicine and joint replacement, Dr. Go helps patients regain mobility and live pain-free.',
         available: availability7Days
     },
     {
         id: 'd5', name: 'Dr. Lisa Chen', specialtyId: 'derma', specialtyName: 'Dermatology',
-        locationIds: ['wellness-makati', 'wellness-bgc', 'wellness-ortigas'],
+        locationIds: ['metro-clinic-makati', 'metro-clinic-bgc', 'metro-clinic-ortigas'],
         image: 'https://randomuser.me/api/portraits/women/22.jpg', rating: 4.6, fee: 1200,
         bio: 'Dr. Chen specializes in clinical and cosmetic dermatology, helping patients feel confident in their own skin.',
         available: availability7Days
     },
     {
         id: 'd6', name: 'Dr. Mark Lee', specialtyId: 'ent', specialtyName: 'ENT',
-        locationIds: ['main', 'east-clinic'],
+        locationIds: ['metro-hosp-main', 'metro-hosp-east', 'metro-clinic-mandaluyong'],
         image: 'https://randomuser.me/api/portraits/men/11.jpg', rating: 4.8, fee: 1100,
         bio: 'Treating a wide range of ear, nose, and throat conditions with a patient-centered approach.',
         available: availability7Days
-    }
+    },
+
+    // ── Meralco Wellness Doctors ──
+    {
+        id: 'd7', name: 'Dr. Luis Gomez', specialtyId: 'gen-med', specialtyName: 'General Medicine',
+        locationIds: ['meralco-med-center', 'meralco-clinic-site1', 'meralco-clinic-site2'],
+        image: 'https://randomuser.me/api/portraits/men/52.jpg', rating: 4.7, fee: 700,
+        bio: 'Occupational health specialist dedicated to workplace wellness and preventive care for corporate employees.',
+        available: availability7Days
+    },
+    {
+        id: 'd8', name: 'Dr. Sarah Lee', specialtyId: 'gen-med', specialtyName: 'General Medicine',
+        locationIds: ['meralco-clinic-site1', 'meralco-clinic-makati'],
+        image: 'https://randomuser.me/api/portraits/women/33.jpg', rating: 4.8, fee: 750,
+        bio: 'Primary care physician with a focus on chronic disease management and patient education.',
+        available: availability7Days
+    },
+    {
+        id: 'd9', name: 'Dr. Carlo Mendoza', specialtyId: 'cardio', specialtyName: 'Cardiology',
+        locationIds: ['meralco-med-center', 'meralco-clinic-makati'],
+        image: 'https://randomuser.me/api/portraits/men/29.jpg', rating: 4.9, fee: 1400,
+        bio: 'Corporate cardiovascular specialist focusing on executive health screening and heart disease prevention.',
+        available: availability7Days
+    },
+    {
+        id: 'd10', name: 'Dr. Patricia Reyes', specialtyId: 'eyes', specialtyName: 'Ophthalmology',
+        locationIds: ['meralco-clinic-taguig', 'meralco-med-center'],
+        image: 'https://randomuser.me/api/portraits/women/56.jpg', rating: 4.6, fee: 1000,
+        bio: 'Comprehensive eye care from routine exams to specialized treatments.',
+        available: availability7Days
+    },
+
+    // ── HealthFirst Clinic Doctors ──
+    {
+        id: 'd11', name: 'Dr. Anna Santos', specialtyId: 'gen-med', specialtyName: 'General Medicine',
+        locationIds: ['healthfirst-main', 'healthfirst-pasay'],
+        image: 'https://randomuser.me/api/portraits/women/41.jpg', rating: 4.8, fee: 500,
+        bio: 'Community-focused physician providing affordable primary care and Konsulta services.',
+        available: availability7Days
+    },
+    {
+        id: 'd12', name: 'Dr. Benjie Tan', specialtyId: 'gen-med', specialtyName: 'General Medicine',
+        locationIds: ['healthfirst-main', 'healthfirst-qc'],
+        image: 'https://randomuser.me/api/portraits/men/61.jpg', rating: 4.7, fee: 500,
+        bio: 'Experienced family doctor with a passion for accessible healthcare in underserved communities.',
+        available: availability7Days
+    },
+    {
+        id: 'd13', name: 'Dr. Teresa Lim', specialtyId: 'peds', specialtyName: 'Pediatrics',
+        locationIds: ['healthfirst-main', 'healthfirst-pasay'],
+        image: 'https://randomuser.me/api/portraits/women/72.jpg', rating: 4.9, fee: 600,
+        bio: 'Pediatrician specializing in newborn care and childhood immunizations.',
+        available: availability7Days
+    },
 ];
 
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, CloudOff, CheckCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { BackButton } from '../components/Common/BackButton';
 import './Forms.css';
 
@@ -43,7 +42,6 @@ const FormStatusBadge = ({ status }: { status: string }) => {
 };
 
 export const Forms: React.FC = () => {
-    const navigate = useNavigate();
     const [forms, setForms] = useState<FormSubmission[]>([]);
     const [view, setView] = useState<'list' | 'new'>('list');
 

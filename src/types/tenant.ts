@@ -25,9 +25,17 @@ export interface TenantFeatures {
   queue: boolean;
   appointments: boolean;
 
+  // V11: Insurance / Coverage integration flags
+  hmo?: boolean;            // HMO card integration (benefits, LOA requests, claims)
+  philHealth?: boolean;     // PhilHealth integration (Konsulta, member profile, UHC)
+
   // V9: Facility capabilities
   multiLocation?: boolean;  // Has multiple branches/facilities
   admissions?: boolean;     // Can admit patients (hospital/lying-in)
+
+  // V10: Clinical intelligence flags
+  cdss?: boolean;           // Clinical Decision Support System (drug checks, alerts, guidelines)
+  aiAssistant?: boolean;    // AI-powered features (transcriber, SOAP generation, smart suggestions)
 
   // V8: Granular visit configuration
   visits: VisitFeatures;

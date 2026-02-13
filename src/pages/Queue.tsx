@@ -149,7 +149,7 @@ export const Queue: React.FC = () => {
                         <button className="action-btn secondary" onClick={() => handleAction('Downloading medical summary...')}>
                             <Download size={18} style={{ marginRight: '8px', display: 'inline' }} /> Download Summary
                         </button>
-                        <Link to="/" className="action-btn primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+                        <Link to="/dashboard" className="action-btn primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
                             <Home size={18} style={{ marginRight: '8px' }} /> Return Home
                         </Link>
                     </div>

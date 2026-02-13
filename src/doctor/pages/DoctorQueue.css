@@ -1,0 +1,457 @@
+/* Doctor Queue Page — Mobile-First */
+
+.doctor-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ===== Page Header ===== */
+.queue-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.queue-page-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.queue-mode-toggle {
+  display: flex;
+  background: var(--color-background);
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+}
+
+.queue-mode-btn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.queue-mode-btn.active {
+  background: white;
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ===== Queue Summary Strip ===== */
+.queue-summary-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.queue-summary-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.queue-summary-chip.in-session {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
+}
+
+.queue-summary-chip.ready {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.queue-summary-chip.queued {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-info);
+}
+
+.queue-summary-chip.completed {
+  background: rgba(100, 116, 139, 0.1);
+  color: var(--color-text-muted);
+}
+
+/* ===== LINEAR Queue View ===== */
+.linear-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.queue-patient-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  border-left: 4px solid transparent;
+  position: relative;
+}
+
+.queue-patient-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.queue-patient-card:active {
+  transform: scale(0.99);
+}
+
+.queue-patient-card.IN_SESSION {
+  border-left-color: var(--color-success);
+  background: rgba(16, 185, 129, 0.04);
+}
+
+.queue-patient-card.READY {
+  border-left-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.queue-patient-card.QUEUED {
+  border-left-color: var(--color-info);
+}
+
+.queue-patient-card.COMPLETED {
+  border-left-color: var(--color-text-muted);
+  opacity: 0.5;
+}
+
+.queue-card-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 48px;
+}
+
+.queue-ticket {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.queue-wait {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.queue-card-center {
+  flex: 1;
+  min-width: 0;
+}
+
+.queue-patient-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.queue-priority-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.queue-priority-badge.senior {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--color-warning);
+}
+
+.queue-priority-badge.pwd {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--color-info);
+}
+
+.queue-priority-badge.emergency {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--color-error);
+}
+
+.queue-patient-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.queue-patient-complaint {
+  font-size: 12px;
+  color: var(--color-text);
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.queue-patient-vitals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.vital-chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--color-background);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.vital-chip.alert {
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+.queue-patient-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.queue-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--color-background);
+  color: var(--color-text-muted);
+}
+
+.queue-tag.allergy {
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--color-error);
+}
+
+.queue-card-right {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.queue-action-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.queue-action-btn.call {
+  background: var(--color-primary);
+  color: white;
+}
+
+.queue-action-btn.call:hover {
+  background: var(--color-primary-dark);
+}
+
+.queue-action-btn.start {
+  background: var(--color-success);
+  color: white;
+}
+
+.queue-action-btn.start:hover {
+  background: #059669;
+}
+
+.queue-action-btn.complete {
+  background: var(--color-primary);
+  color: white;
+}
+
+.queue-action-btn.skip {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.queue-action-btn.skip:hover {
+  background: var(--color-background);
+}
+
+.queue-status-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.queue-status-label.IN_SESSION {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
+}
+
+.queue-status-label.COMPLETED {
+  background: rgba(100, 116, 139, 0.1);
+  color: var(--color-text-muted);
+}
+
+/* ===== MULTI-STREAM View ===== */
+.multi-stream-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stream-section {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: visible;
+}
+
+.stream-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.stream-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stream-count {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.stream-patients {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stream-patient-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--color-background);
+}
+
+.stream-patient-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.stream-patient-ticket {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.stream-patient-wait {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.stream-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* ===== Small Mobile ===== */
+@media (max-width: 414px) {
+  .queue-action-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .queue-patient-name {
+    font-size: 13px;
+  }
+
+  .queue-card-left {
+    min-width: 40px;
+  }
+
+  .queue-ticket {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  .queue-summary-chip {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .queue-mode-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+}
+
+.queue-action-btn:active {
+  transform: scale(0.96);
+}
+
+/* ===== Desktop: Multi-Stream as columns ===== */
+@media (min-width: 1024px) {
+  .multi-stream-queue {
+    flex-direction: row;
+    gap: 16px;
+  }
+
+  .stream-section {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .linear-queue {
+    max-width: 680px;
+  }
+}

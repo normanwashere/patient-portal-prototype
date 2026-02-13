@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, MapPin, Clock, Users, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { BackButton } from '../components/Common/BackButton';
 import { EVENTS_DATA } from '../data/events';
 import './Events.css';
 
@@ -28,7 +29,11 @@ export const Events: React.FC = () => {
     return (
         <div className="events-container">
             <header className="page-header">
-                <h2>Events & Activities</h2>
+                <BackButton />
+                <div className="header-text">
+                    <h2>Events & Activities</h2>
+                    <p className="page-subtitle">Discover health events and community programs</p>
+                </div>
             </header>
 
             {/* Featured Events Carousel */}

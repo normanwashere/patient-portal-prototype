@@ -342,8 +342,37 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 tenantData = HEALTHFIRST_DATA;
                 break;
             case 'metroGeneral':
-            default:
                 tenantData = METRO_DATA;
+                break;
+            default:
+                // Custom / dynamic tenants get a demo patient seeded
+                tenantData = {
+                    patients: [{
+                        userProfile: {
+                            id: 'p-custom',
+                            name: 'Demo Patient',
+                            memberId: '0000000001',
+                            company: tenant.name.toUpperCase(),
+                            validity: '01/2026 - 12/2026',
+                            membershipType: 'Standard Member',
+                            emergencyContact: { name: 'Emergency Contact', relation: 'Relative', phone: '0900-000-0000' },
+                            philHealth: { membershipNumber: '00-000000000-0', category: 'Direct Contributor', status: 'Active', konsultaProvider: tenant.name, fpeStatus: 'Pending' },
+                            hmoCards: [],
+                            wellnessBenefits: []
+                        },
+                        dependents: [],
+                        appointments: tenant.features.appointments ? [
+                            { id: 'a-demo', doctor: 'Dr. Demo', specialty: 'General', date: 'Mar 1, 2026', time: '09:00 AM', status: 'Upcoming', location: tenant.name }
+                        ] : [],
+                        medications: [],
+                        results: [],
+                        notifications: [{ id: 'n-demo-1', title: 'Welcome', message: `Your ${tenant.name} portal is ready.`, date: 'Just now', read: false, type: 'success' }],
+                        invoices: [],
+                        procedures: [],
+                        loaRequests: [],
+                        claims: []
+                    }]
+                };
                 break;
         }
 

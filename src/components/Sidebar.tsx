@@ -93,7 +93,7 @@ export const Sidebar: React.FC = () => {
 
             <nav className="sidebar-nav">
                 {/* 1. Home Pillar */}
-                <Link to="/" className={clsx('sidebar-item', location.pathname === '/' && 'active')}>
+                <Link to="/dashboard" className={clsx('sidebar-item', location.pathname === '/dashboard' && 'active')}>
                     <Home size={20} />
                     <span>Home</span>
                 </Link>
@@ -144,11 +144,13 @@ export const Sidebar: React.FC = () => {
                     <NavItem to="/immunization" icon={Syringe} label="Immunizations" badge={newImmunizationsCount} />
                 </NavGroup>
 
-                {/* 3. Coverage Pillar */}
-                <NavGroup id="coverage" label="Coverage & Claims" icon={CreditCard} to="/coverage" badge={financeBadge}>
-                    <NavItem to="/benefits" icon={Heart} label="LOA & Benefits" />
-                    <NavItem to="/billing" icon={Receipt} label="Billing History" badge={financeBadge} />
-                </NavGroup>
+                {/* 3. Coverage Pillar - visible if HMO or PhilHealth enabled */}
+                {(tenant.features.hmo || tenant.features.philHealth) && (
+                    <NavGroup id="coverage" label="Coverage & Claims" icon={CreditCard} to="/coverage" badge={financeBadge}>
+                        {tenant.features.hmo && <NavItem to="/benefits" icon={Heart} label="LOA & Benefits" />}
+                        <NavItem to="/billing" icon={Receipt} label="Billing History" badge={financeBadge} />
+                    </NavGroup>
+                )}
 
                 {/* 6. Users Pillar -> /profile */}
                 <NavGroup id="users" label="Users" icon={User} to="/profile" badge={unreadNotificationsCount}>
@@ -158,7 +160,7 @@ export const Sidebar: React.FC = () => {
             </nav>
 
             <div className="sidebar-footer">
-                <button className="sidebar-item logout-btn" onClick={() => navigate('/login')}>
+                <button className="sidebar-item logout-btn" onClick={() => navigate('/apps')}>
                     <LogOut size={20} />
                     <span>Sign Out</span>
                 </button>

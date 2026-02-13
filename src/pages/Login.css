@@ -223,3 +223,106 @@
     align-items: center;
     gap: 2rem;
 }
+
+/* =============================================
+   Role Selection Step
+   ============================================= */
+
+/* Back Button */
+.role-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 100px;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.45rem 1rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 0.75rem;
+    backdrop-filter: blur(10px);
+}
+
+.role-back-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    transform: translateX(-2px);
+}
+
+/* Selected Org Badge */
+.selected-org-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 100px;
+    padding: 0.35rem 1rem 0.35rem 0.35rem;
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.selected-org-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.selected-org-icon svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Role Grid */
+.role-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+@media (min-width: 640px) {
+    .role-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 900px) {
+    .role-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Role Card overrides */
+.role-card .org-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+}
+
+/* Role Access Badge */
+.role-access-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+    border: 1px solid;
+    margin-top: 0.25rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+/* Wider content wrapper for role selection */
+.login-page.org-select .login-content-wrapper:has(.role-grid) {
+    max-width: 860px;
+}

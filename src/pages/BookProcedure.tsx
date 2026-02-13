@@ -14,7 +14,8 @@ import {
 import { BackButton } from '../components/Common/BackButton';
 import { useToast } from '../context/ToastContext';
 import { useData } from '../context/DataContext';
-import { ALL_BRANCHES } from '../data/mockAppointmentData';
+import { useTheme } from '../theme/ThemeContext';
+import { getTenantBranches } from '../data/mockBranches';
 import type { Branch } from '../data/mockBranches';
 import './BookProcedure.css';
 
@@ -61,6 +62,8 @@ export const BookProcedure: React.FC = () => {
     const navigate = useNavigate();
     const { showToast } = useToast();
     const { bookProcedure } = useData();
+    const { tenant } = useTheme();
+    const tenantBranches = getTenantBranches(tenant.id, tenant.name);
 
     const [step, setStep] = React.useState<number>(1);
     const [bookingMode, setBookingMode] = React.useState<'location' | 'procedure' | null>(null);
@@ -134,7 +137,7 @@ export const BookProcedure: React.FC = () => {
                             <>
                                 <h3 className="step-instruction">Select a Location</h3>
                                 <div className="list-grid">
-                                    {ALL_BRANCHES.map(b => (
+                                    {tenantBranches.map(b => (
                                         <button key={b.id} className="selection-card" onClick={() => { setSelectedBranch(b); setStep(3); }}>
                                             <MapPin size={24} className="icon-muted" />
                                             <div className="card-info">
@@ -234,7 +237,7 @@ export const BookProcedure: React.FC = () => {
                                 </div>
                                 <h3 className="step-instruction">Select a Location</h3>
                                 <div className="list-grid">
-                                    {ALL_BRANCHES.map(b => (
+                                    {tenantBranches.map(b => (
                                         <button key={b.id} className="selection-card" onClick={() => { setSelectedBranch(b); setStep(5); }}>
                                             <MapPin size={24} className="icon-muted" />
                                             <div className="card-info">
@@ -331,7 +334,9 @@ export const BookProcedure: React.FC = () => {
 
                         <div className="success-actions">
                             <button className="btn-primary" onClick={() => navigate('/appointments')}>View Appointments</button>
-                            <button className="btn-secondary" onClick={() => navigate('/benefits')}>Request LOA for this Procedure</button>
+                            {tenant.features.hmo && (
+                                <button className="btn-secondary" onClick={() => navigate('/benefits')}>Request LOA for this Procedure</button>
+                            )}
                             <button className="btn-text" onClick={() => navigate('/')}>Back to Home</button>
                         </div>
                     </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CreditCard, Shield, Gift, Activity, Plus } from 'lucide-react';
 import { BackButton } from '../components/Common/BackButton';
 import { useData } from '../context/DataContext';
+import { useTheme } from '../theme/ThemeContext';
 import { ServiceCard } from '../components/ServiceCard/ServiceCard';
 import { useBadges } from '../hooks/useBadges';
 import './HubPage.css';
@@ -11,7 +12,10 @@ import './Profile.css'; // Reuse some ID card styles
 export const Financial: React.FC = () => {
     const navigate = useNavigate();
     const { userProfile, addHMOCard } = useData();
+    const { tenant } = useTheme();
     const { financeBadge } = useBadges();
+    const hasHmo = tenant.features.hmo ?? false;
+    const hasPhilHealth = tenant.features.philHealth ?? false;
     const [showAddModal, setShowAddModal] = React.useState(false);
     const [newProvider, setNewProvider] = React.useState('');
     const [accountName, setAccountName] = React.useState('');
@@ -45,69 +49,80 @@ export const Financial: React.FC = () => {
                 <BackButton />
                 <div className="header-text">
                     <h2>Coverage & Claims</h2>
-                    <p className="page-subtitle">Manage your HMO, PhilHealth and authorizations</p>
+                    <p className="page-subtitle">
+                        {hasHmo && hasPhilHealth ? 'Manage your HMO, PhilHealth and authorizations' :
+                         hasHmo ? 'Manage your HMO coverage and authorizations' :
+                         hasPhilHealth ? 'Manage your PhilHealth coverage' :
+                         'Manage your billing and payments'}
+                    </p>
                 </div>
             </header>
 
-            <section className="finance-section">
-                <div className="section-header-v2">
-                    <h3>Your Coverage</h3>
-                    <span className="badge-uhc">{hmos.length + (ph ? 1 : 0)} Active Plans</span>
-                </div>
-
-                <div className="coverage-scroll-container">
-                    {/* PhilHealth Card */}
-                    <div className="mini-hmo-card ph-mini" onClick={() => navigate('/coverage/philhealth')}>
-                        <div className="mini-card-header">
-                            <Shield size={16} />
-                            <span>PhilHealth UHC</span>
-                        </div>
-                        <div className="mini-card-body">
-                            <div className="mini-benefit-summary">
-                                <span className="label">MBL: {ph?.mbl || '₱ 0.00'}</span>
-                                <div className="mini-progress-bar">
-                                    <div className="fill" style={{ width: ph?.mbl && ph?.mblUsed ? `${(parseFloat(ph.mblUsed.replace(/[^\d.]/g, '')) / parseFloat(ph.mbl.replace(/[^\d.]/g, ''))) * 100}%` : '0%' }}></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mini-card-footer">
-                            <span className={`status-dot ${ph?.status === 'Active' ? 'active' : ''}`}></span>
-                            <span>{ph?.status || 'Active'}</span>
-                        </div>
+            {(hasHmo || hasPhilHealth) && (
+                <section className="finance-section">
+                    <div className="section-header-v2">
+                        <h3>Your Coverage</h3>
+                        <span className="badge-uhc">{(hasHmo ? hmos.length : 0) + (hasPhilHealth && ph ? 1 : 0)} Active Plans</span>
                     </div>
 
-                    {/* HMO Cards */}
-                    {hmos.map(hmo => (
-                        <div key={hmo.id} className={`mini-hmo-card hmo-accent ${hmo.status === 'Pending' ? 'pending' : ''}`} onClick={() => hmo.status === 'Active' ? navigate(`/benefits?id=${hmo.id}`) : null}>
-                            <div className="mini-card-header">
-                                <CreditCard size={16} />
-                                <span>{hmo.provider}</span>
-                                {hmo.status === 'Pending' && <span className="pending-badge">Pending</span>}
-                            </div>
-                            <div className="mini-card-body">
-                                <div className="mini-benefit-summary">
-                                    <span className="label">MBL: {hmo.mbl}</span>
-                                    <div className="mini-progress-bar">
-                                        <div className="fill" style={{ width: hmo.mbl && hmo.mblUsed ? `${(parseFloat(hmo.mblUsed.replace(/[^\d.]/g, '')) / parseFloat(hmo.mbl.replace(/[^\d.]/g, ''))) * 100}%` : '0%' }}></div>
+                    <div className="coverage-scroll-container">
+                        {/* PhilHealth Card */}
+                        {hasPhilHealth && (
+                            <div className="mini-hmo-card ph-mini" onClick={() => navigate('/coverage/philhealth')}>
+                                <div className="mini-card-header">
+                                    <Shield size={16} />
+                                    <span>PhilHealth UHC</span>
+                                </div>
+                                <div className="mini-card-body">
+                                    <div className="mini-benefit-summary">
+                                        <span className="label">MBL: {ph?.mbl || '₱ 0.00'}</span>
+                                        <div className="mini-progress-bar">
+                                            <div className="fill" style={{ width: ph?.mbl && ph?.mblUsed ? `${(parseFloat(ph.mblUsed.replace(/[^\d.]/g, '')) / parseFloat(ph.mbl.replace(/[^\d.]/g, ''))) * 100}%` : '0%' }}></div>
+                                        </div>
                                     </div>
                                 </div>
+                                <div className="mini-card-footer">
+                                    <span className={`status-dot ${ph?.status === 'Active' ? 'active' : ''}`}></span>
+                                    <span>{ph?.status || 'Active'}</span>
+                                </div>
                             </div>
-                            <div className="mini-card-footer">
-                                <Activity size={12} />
-                                <span>{hmo.status === 'Pending' ? 'Awaiting Approval' : hmo.planType}</span>
-                            </div>
-                        </div>
-                    ))}
+                        )}
 
-                    {/* Add HMO Action */}
-                    <div className="mini-hmo-card add-hmo-card" onClick={() => setShowAddModal(true)}>
-                        <div className="add-hmo-content">
-                            <Plus size={24} />
-                            <span>Link New Provider</span>
-                        </div>
+                        {/* HMO Cards */}
+                        {hasHmo && hmos.map(hmo => (
+                            <div key={hmo.id} className={`mini-hmo-card hmo-accent ${hmo.status === 'Pending' ? 'pending' : ''}`} onClick={() => hmo.status === 'Active' ? navigate(`/benefits?id=${hmo.id}`) : null}>
+                                <div className="mini-card-header">
+                                    <CreditCard size={16} />
+                                    <span>{hmo.provider}</span>
+                                    {hmo.status === 'Pending' && <span className="pending-badge">Pending</span>}
+                                </div>
+                                <div className="mini-card-body">
+                                    <div className="mini-benefit-summary">
+                                        <span className="label">MBL: {hmo.mbl}</span>
+                                        <div className="mini-progress-bar">
+                                            <div className="fill" style={{ width: hmo.mbl && hmo.mblUsed ? `${(parseFloat(hmo.mblUsed.replace(/[^\d.]/g, '')) / parseFloat(hmo.mbl.replace(/[^\d.]/g, ''))) * 100}%` : '0%' }}></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mini-card-footer">
+                                    <Activity size={12} />
+                                    <span>{hmo.status === 'Pending' ? 'Awaiting Approval' : hmo.planType}</span>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* Add HMO Action - only if HMO feature is enabled */}
+                        {hasHmo && (
+                            <div className="mini-hmo-card add-hmo-card" onClick={() => setShowAddModal(true)}>
+                                <div className="add-hmo-content">
+                                    <Plus size={24} />
+                                    <span>Link New Provider</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             {showAddModal && (
                 <div className="modal-overlay" onClick={() => setShowAddModal(false)}>

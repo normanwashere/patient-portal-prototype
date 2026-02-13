@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Video, Building2, Calendar, Clock, ChevronRight } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { BackButton } from '../components/Common/BackButton';
 import { AddToCalendar } from '../components/AddToCalendar';
 import './AppointmentHistory.css';
 
@@ -70,8 +71,11 @@ export const AppointmentHistory: React.FC = () => {
     return (
         <div className="appointment-history-container">
             <header className="page-header">
-                <h2>{viewMode === 'upcoming' ? 'Upcoming Appointments' : viewMode === 'past' ? 'Past Appointments' : 'Appointment History'}</h2>
-                <p className="page-subtitle">View your teleconsult and in-clinic appointments</p>
+                <BackButton />
+                <div className="header-text">
+                    <h2>{viewMode === 'upcoming' ? 'Upcoming Appointments' : viewMode === 'past' ? 'Past Appointments' : 'Appointment History'}</h2>
+                    <p className="page-subtitle">View your teleconsult and in-clinic appointments</p>
+                </div>
             </header>
 
             {/* Filter Tabs - Hide if specific view? Maybe keep for filtering type */}

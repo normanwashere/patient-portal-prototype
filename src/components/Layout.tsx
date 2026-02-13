@@ -41,7 +41,7 @@ export const Layout: React.FC = () => {
 
     const handleLogout = () => {
         setIsMenuOpen(false);
-        navigate('/login');
+        navigate('/apps');
     };
 
     return (
@@ -155,7 +155,7 @@ export const Layout: React.FC = () => {
                 <nav className="drawer-nav">
                     <div className="drawer-section">
                         <span className="drawer-section-title">Main</span>
-                        <Link to="/" className={clsx('drawer-item', isActive('/') && 'active')}>
+                        <Link to="/dashboard" className={clsx('drawer-item', isActive('/dashboard') && 'active')}>
                             <Home size={20} />
                             <span>Home</span>
                         </Link>
@@ -243,18 +243,22 @@ export const Layout: React.FC = () => {
                         </Link>
                     </div>
 
-                    <div className="drawer-section">
-                        <span className="drawer-section-title">Coverage & Claims</span>
-                        <Link to="/benefits" className={clsx('drawer-item', isActive('/benefits') && 'active')}>
-                            <Heart size={20} />
-                            <span>LOA / Benefits</span>
-                        </Link>
-                        <Link to="/billing" className={clsx('drawer-item', isActive('/billing') && 'active')}>
-                            <Receipt size={20} />
-                            <span>Billing</span>
-                            {financeBadge > 0 && <span className="drawer-badge">{financeBadge}</span>}
-                        </Link>
-                    </div>
+                    {(tenant.features.hmo || tenant.features.philHealth) && (
+                        <div className="drawer-section">
+                            <span className="drawer-section-title">Coverage & Claims</span>
+                            {tenant.features.hmo && (
+                                <Link to="/benefits" className={clsx('drawer-item', isActive('/benefits') && 'active')}>
+                                    <Heart size={20} />
+                                    <span>LOA / Benefits</span>
+                                </Link>
+                            )}
+                            <Link to="/billing" className={clsx('drawer-item', isActive('/billing') && 'active')}>
+                                <Receipt size={20} />
+                                <span>Billing</span>
+                                {financeBadge > 0 && <span className="drawer-badge">{financeBadge}</span>}
+                            </Link>
+                        </div>
+                    )}
                 </nav>
 
                 <div className="drawer-footer">
@@ -268,7 +272,7 @@ export const Layout: React.FC = () => {
             {/* Bottom Navigation (Mobile Only) - 5 Pillars */}
             <nav className="bottom-nav mobile-only">
                 {/* Pillar 1: Home */}
-                <Link to="/" className={clsx('nav-item', location.pathname === '/' && 'active')}>
+                <Link to="/dashboard" className={clsx('nav-item', location.pathname === '/dashboard' && 'active')}>
                     <Home size={22} />
                     <span>Home</span>
                 </Link>
@@ -302,14 +306,16 @@ export const Layout: React.FC = () => {
                     <span>Records</span>
                 </Link>
 
-                {/* Pillar 5: Coverage */}
-                <Link to="/coverage" className={clsx('nav-item', isActive('/coverage') && 'active')}>
-                    <div style={{ position: 'relative' }}>
-                        <CreditCard size={22} />
-                        {financeBadge > 0 && <span className="nav-badge-dot" />}
-                    </div>
-                    <span>Coverage</span>
-                </Link>
+                {/* Pillar 5: Coverage - only if HMO or PhilHealth */}
+                {(tenant.features.hmo || tenant.features.philHealth) && (
+                    <Link to="/coverage" className={clsx('nav-item', isActive('/coverage') && 'active')}>
+                        <div style={{ position: 'relative' }}>
+                            <CreditCard size={22} />
+                            {financeBadge > 0 && <span className="nav-badge-dot" />}
+                        </div>
+                        <span>Coverage</span>
+                    </Link>
+                )}
             </nav>
         </div>
     );

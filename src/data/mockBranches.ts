@@ -233,7 +233,7 @@ export const MERALCO_WELLNESS_BRANCHES: Branch[] = [
     },
 ];
 
-// HealthFirst: 1 Clinic
+// HealthFirst: 3 Clinics
 export const HEALTH_FIRST_BRANCHES: Branch[] = [
     {
         id: 'healthfirst-main',
@@ -250,4 +250,52 @@ export const HEALTH_FIRST_BRANCHES: Branch[] = [
             { name: 'Dr. Benjie Tan', title: 'Pathologist' }
         ]
     },
+    {
+        id: 'healthfirst-pasay',
+        name: 'HealthFirst Clinic - Pasay',
+        type: 'clinic',
+        address: 'Taft Ave, Pasay',
+        phone: '(02) 7777-8889',
+        hours: 'Mon-Sat 7AM-5PM',
+        services: ['Consult', 'Lab'],
+        distance: '4.2 km',
+        specializations: ['Primary Care'],
+        doctors: [
+            { name: 'Dr. Teresa Lim', title: 'General Physician' }
+        ]
+    },
+    {
+        id: 'healthfirst-qc',
+        name: 'HealthFirst Clinic - Quezon City',
+        type: 'clinic',
+        address: 'Katipunan Ave, Quezon City',
+        phone: '(02) 7777-8890',
+        hours: 'Mon-Fri 8AM-5PM',
+        services: ['Consult', 'Vaccines'],
+        distance: '9.8 km',
+    },
 ];
+
+/**
+ * Returns branches for the given tenant ID.
+ * Custom / unknown tenants get a generic branch using the tenant name.
+ */
+export function getTenantBranches(tenantId: string, tenantName?: string): Branch[] {
+    switch (tenantId) {
+        case 'metroGeneral': return METRO_GENERAL_BRANCHES;
+        case 'meralcoWellness': return MERALCO_WELLNESS_BRANCHES;
+        case 'healthFirst': return HEALTH_FIRST_BRANCHES;
+        default:
+            // Dynamic / custom tenants get one generic branch
+            return [{
+                id: `${tenantId}-main`,
+                name: `${tenantName || 'Main'} - Primary Location`,
+                type: 'clinic',
+                address: 'Demo Address',
+                phone: '(02) 0000-0000',
+                hours: 'Mon-Sat 8AM-5PM',
+                services: ['Consult'],
+                distance: '1.0 km',
+            }];
+    }
+}
