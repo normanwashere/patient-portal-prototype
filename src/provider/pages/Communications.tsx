@@ -12,15 +12,14 @@
 
 import { useState, useMemo, useRef, useEffect, type CSSProperties } from 'react';
 import {
-  MessageSquare, Send, Search, Plus, Hash, Users, User, ChevronRight,
-  Pin, Bell, Phone, Video, MoreVertical, Paperclip, AlertTriangle,
-  CheckCheck, Check, Circle, Building2, Pill, HeartPulse, Shield,
-  Microscope, Stethoscope, X, Star, Clock, Filter, Inbox, ChevronDown,
-  UserPlus, FileText, Zap, ArrowLeft,
+  MessageSquare, Send, Search, Plus, Hash, Users, User,
+  Pin, AlertTriangle,
+  CheckCheck, Check, Building2, Pill, HeartPulse, Shield,
+  Microscope, FileText, Zap, ArrowLeft,
 } from 'lucide-react';
 import { useProvider } from '../context/ProviderContext';
 import { useToast } from '../../context/ToastContext';
-import type { Conversation, ChatMessage, ConversationType } from '../types';
+import type { Conversation, ConversationType } from '../types';
 
 // ── Colors ──
 const V = {
@@ -155,7 +154,6 @@ export const Communications = () => {
     conversations, chatMessages, sendChatMessage, createConversation, markConversationRead,
     totalUnreadMessages, currentStaff, staff,
     // Keep old messaging for backward compat
-    internalMessages, markMessageRead, sendMessage, addAuditLog,
   } = useProvider();
   const { showToast } = useToast();
 
@@ -163,7 +161,7 @@ export const Communications = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [composeText, setComposeText] = useState('');
   const [newConvOpen, setNewConvOpen] = useState(false);
-  const [mobileShowChat, setMobileShowChat] = useState(false);
+  const [_mobileShowChat, setMobileShowChat] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'direct' | 'department' | 'group'>('all');
 
   // New conversation form

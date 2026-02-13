@@ -3,13 +3,11 @@ import {
   MessageSquare,
   Send,
   Search,
-  Star,
   Clock,
   AlertTriangle,
   ChevronLeft,
   Check,
   CheckCheck,
-  User,
 } from 'lucide-react';
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useToast } from '../../context/ToastContext';

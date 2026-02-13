@@ -16,7 +16,6 @@ import {
   Save,
   X,
   ArrowRight,
-  Check,
   Eye,
 } from 'lucide-react';
 import { useProvider } from '../../provider/context/ProviderContext';

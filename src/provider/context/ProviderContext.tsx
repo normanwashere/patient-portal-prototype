@@ -69,7 +69,6 @@ import type {
   TeleconsultDoctor,
   TeleconsultSessionStatus,
   DoctorTCStatus,
-  TeleconsultType,
   Conversation,
   ChatMessage,
   ConversationType,

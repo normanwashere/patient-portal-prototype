@@ -34,7 +34,7 @@ interface NavItem {
   to: string;
   icon: React.FC<{ size?: number; className?: string }>;
   label: string;
-  hasBadge?: 'queue' | 'results' | 'tasks' | 'teleconsult';
+  hasBadge?: 'queue' | 'results' | 'tasks' | 'teleconsult' | 'messages';
   badgeKey?: string;
   visible?: (f: TenantFeatures) => boolean;
 }
@@ -71,7 +71,7 @@ const SIDEBAR_SECTIONS: NavSection[] = [
   {
     label: 'Management',
     items: [
-      { to: `${PREFIX}/messages`, icon: MessageSquare, label: 'Messages', hasBadge: 'messages' as any },
+      { to: `${PREFIX}/messages`, icon: MessageSquare, label: 'Messages', hasBadge: 'messages' },
       { to: `${PREFIX}/tasks`, icon: ClipboardList, label: 'Tasks', hasBadge: 'tasks' },
       { to: `${PREFIX}/immunizations`, icon: Syringe, label: 'Immunizations' },
       { to: `${PREFIX}/loa`, icon: FileCheck, label: 'LOA Review', visible: (f) => f.loa },
@@ -100,7 +100,6 @@ export const DoctorLayout = () => {
   } = useProvider();
   const navigate = useNavigate();
   const { tenant } = useTheme();
-  const teleconsultEnabled = tenant.features.visits.teleconsultEnabled;
   const teleconsultNowEnabled = tenant.features.visits.teleconsultNowEnabled;
   // Live queue mode toggle only when teleconsult NOW is available
   const hasLiveQueue = teleconsultNowEnabled;
@@ -351,7 +350,7 @@ export const DoctorLayout = () => {
                       item.hasBadge === 'results' ? pendingResultCount :
                       item.hasBadge === 'tasks' ? taskBadgeCount :
                       item.hasBadge === 'teleconsult' ? teleconsultQueueCount :
-                      (item.hasBadge as string) === 'messages' ? messageCount :
+                      item.hasBadge === 'messages' ? messageCount :
                       0;
                     return (
                       <NavLink

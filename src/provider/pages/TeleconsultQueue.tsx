@@ -16,12 +16,12 @@
 
 import { useState, useMemo, type CSSProperties } from 'react';
 import {
-  Video, VideoOff, Phone, PhoneOff, Clock, User, UserCheck, Users, Activity,
-  Coffee, Stethoscope, Building2, Calendar, CalendarClock, Search, Filter,
+  Video, Phone, Clock, User, UserCheck, Activity,
+  Coffee, Stethoscope, Building2, Calendar, CalendarClock, Search,
   Play, CheckCircle, XCircle, AlertTriangle, ArrowRight, RefreshCw,
-  Wifi, WifiOff, Signal, Monitor, Plus, ChevronDown, ChevronUp, Eye,
-  Clipboard, Heart, MessageSquare, BarChart3, Timer, Zap, UserPlus,
-  Circle, PauseCircle, BellRing, ClipboardCheck, Pill, FileText, Loader, PhoneCall, Link2,
+  WifiOff, Signal, Plus, ChevronDown, ChevronUp,
+  Clipboard, MessageSquare, Timer, Zap, UserPlus,
+  BellRing, ClipboardCheck, FileText, Loader, PhoneCall,
 } from 'lucide-react';
 import { useProvider } from '../context/ProviderContext';
 import { useToast } from '../../context/ToastContext';
@@ -148,7 +148,7 @@ const DOCTOR_STATUS_CONFIG: Record<DoctorTCStatus, { label: string; bg: string; 
 };
 
 // ── Helpers ──
-function StatusBadge({ status, config }: { status: string; config: { label: string; bg: string; color: string; icon: typeof Clock } }) {
+function StatusBadge({ config }: { status: string; config: { label: string; bg: string; color: string; icon: typeof Clock } }) {
   const Icon = config.icon;
   return (
     <span style={{ ...S.badge, background: config.bg, color: config.color }}>
