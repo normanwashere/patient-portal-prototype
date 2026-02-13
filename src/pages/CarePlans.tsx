@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     ClipboardList, Target, CheckCircle2, Calendar,
-    ChevronDown, ChevronUp, User, Activity, Filter,
+    ChevronDown, ChevronUp, User, Activity,
 } from 'lucide-react';
 import { BackButton } from '../components/Common/BackButton';
 import './HubPage.css';
@@ -132,7 +132,7 @@ const styles = {
         marginBottom: '1.25rem',
         flexWrap: 'wrap' as const,
     } as React.CSSProperties,
-    statCard: (color: string) => ({
+    statCard: (_color: string) => ({
         flex: '1 1 0',
         minWidth: '100px',
         display: 'flex',

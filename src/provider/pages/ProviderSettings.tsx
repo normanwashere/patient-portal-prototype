@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Settings, Monitor, Moon, Sun, Palette, Globe, Clock, Shield, Database,
+  Settings, Monitor, Moon, Clock, Shield, Database,
   Bell, Lock, Server, Wifi, RefreshCw, Download, Upload, ToggleLeft, ToggleRight,
   Check, AlertTriangle, HardDrive, Zap, Languages, Volume2,
 } from 'lucide-react';

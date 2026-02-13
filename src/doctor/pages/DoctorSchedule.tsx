@@ -10,11 +10,7 @@ import {
   X,
   UserX,
   Clock,
-  Users,
   Stethoscope,
-  MoreHorizontal,
-  Plus,
-  Filter,
 } from 'lucide-react';
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useToast } from '../../context/ToastContext';

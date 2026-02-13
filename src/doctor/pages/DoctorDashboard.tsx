@@ -30,7 +30,6 @@ import {
   MessageSquare,
   FileText,
   Zap,
-  CheckCircle2,
   Loader2,
   X,
   Send,

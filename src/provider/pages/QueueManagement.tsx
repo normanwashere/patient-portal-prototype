@@ -9,7 +9,6 @@ import {
   CheckCircle,
   Clock,
   Users,
-  Timer,
   ArrowRight,
   ChevronRight,
   XCircle,

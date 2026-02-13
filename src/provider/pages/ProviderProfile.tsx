@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  User, Mail, Phone, MapPin, Shield, Clock, Camera, Save, Edit3, Star,
+  User, Mail, Phone, Shield, Camera, Save, Edit3, Star,
   Award, Calendar, Building2, Stethoscope, FileText, Key, Bell, Globe,
 } from 'lucide-react';
 import { useProvider } from '../context/ProviderContext';

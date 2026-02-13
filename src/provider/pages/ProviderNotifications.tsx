@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import {
   Bell, BellOff, Check, CheckCheck, AlertTriangle, Info, UserPlus, Calendar,
-  Package, FileText, Shield, Trash2, Filter, MailOpen, Clock, ChevronDown,
+  Package, FileText, Shield, Trash2, Filter, Clock, ChevronDown,
 } from 'lucide-react';
-import { useProvider } from '../context/ProviderContext';
-
 interface Notification {
   id: string;
   type: 'alert' | 'info' | 'appointment' | 'system' | 'staff' | 'inventory' | 'compliance';

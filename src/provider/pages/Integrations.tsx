@@ -29,7 +29,7 @@ import {
   BarChart3,
   MonitorUp,
 } from 'lucide-react';
-import { useTheme } from '../../theme/ThemeContext';
+
 
 /* ───────── inline styles ───────── */
 const S: Record<string, React.CSSProperties> = {
@@ -430,7 +430,6 @@ const DirectionBadge = ({ direction }: { direction: 'Inbound' | 'Outbound' }) =>
 /* ─────────────────────────────── component ─────────────────────────────── */
 
 export const Integrations = () => {
-  const { tenant } = useTheme();
   const [activeTab, setActiveTab] = useState<TabId>('all');
   const [search, setSearch] = useState('');
   const [hl7Search, setHl7Search] = useState('');

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Bell, Shield, Settings, Phone, ChevronRight, LogOut, CreditCard, Users, HeartPulse, X, Eye, EyeOff, Fingerprint, Lock, Smartphone, Key, Globe, Moon, ToggleLeft, ToggleRight } from 'lucide-react';
+import { User, Bell, Shield, Settings, Phone, ChevronRight, LogOut, CreditCard, Users, HeartPulse, X, Eye, Fingerprint, Lock, Smartphone, Key, Globe, Moon, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
