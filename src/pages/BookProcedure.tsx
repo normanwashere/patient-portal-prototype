@@ -7,7 +7,6 @@ import {
     CheckCircle,
     Calendar,
     MapPin,
-    Clock,
     FlaskConical,
     Stethoscope,
     Activity
