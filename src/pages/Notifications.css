@@ -111,18 +111,18 @@
 
 .notif-icon-box.warning {
     background-color: #fffbeb;
-    color: #d97706;
+    color: var(--color-warning-dark);
 }
 
 .notif-icon-box.info {
     background-color: #eff6ff;
-    color: #3b82f6;
+    color: var(--color-info);
 }
 
 /* Primary Blue */
 .notif-icon-box.error {
     background-color: #fef2f2;
-    color: #dc2626;
+    color: var(--color-error-dark);
 }
 
 .notif-content {

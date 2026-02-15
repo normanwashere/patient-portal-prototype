@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useToast } from '../../context/ToastContext';
+import { PageHeader } from '../../ui';
 
 export const DoctorMessages = () => {
   const {
@@ -184,17 +185,12 @@ export const DoctorMessages = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 800, margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--color-text)', margin: 0 }}>
-            <MessageSquare size={22} style={{ marginRight: 8, verticalAlign: 'text-bottom', color: 'var(--color-primary)' }} />
-            Messages
-          </h1>
-          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: '4px 0 0' }}>
-            {unreadCount > 0 ? `${unreadCount} unread message${unreadCount > 1 ? 's' : ''}` : 'All caught up'}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Messages"
+        subtitle={unreadCount > 0 ? `${unreadCount} unread message${unreadCount > 1 ? 's' : ''}` : 'All caught up'}
+        icon={<MessageSquare size={22} />}
+        style={{ marginBottom: 0 }}
+      />
 
       {/* Search + Filters */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

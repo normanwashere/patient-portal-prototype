@@ -87,7 +87,7 @@ export const ProviderSettings = () => {
               width: 38, height: 38, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: s.enabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(100, 116, 139, 0.08)', flexShrink: 0,
             }}>
-              <Icon size={18} style={{ color: s.enabled ? '#10b981' : '#64748b' }} />
+              <Icon size={18} style={{ color: s.enabled ? 'var(--color-success)' : 'var(--color-gray-500)' }} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{s.label}</div>
@@ -95,7 +95,7 @@ export const ProviderSettings = () => {
             </div>
             <button onClick={() => toggleSetting(category, s.key)} style={{
               background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex',
-              color: s.enabled ? '#10b981' : '#94a3b8', transition: 'color 0.2s',
+              color: s.enabled ? 'var(--color-success)' : 'var(--color-gray-400)', transition: 'color 0.2s',
             }}>
               {s.enabled ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
             </button>

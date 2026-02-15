@@ -466,7 +466,7 @@
     left: 0;
     top: 0;
     z-index: 200;
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    background: linear-gradient(180deg, var(--color-gray-800) 0%, var(--color-gray-900) 100%);
     color: white;
     overflow: hidden;
   }
@@ -795,7 +795,7 @@
 }
 .doc-badge--primary { background: var(--color-primary-transparent); color: var(--color-primary); }
 .doc-badge--blue { background: rgba(59, 130, 246, 0.2); color: var(--color-info); }
-.doc-badge--purple { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+.doc-badge--purple { background: rgba(139, 92, 246, 0.2); color: var(--color-purple); }
 .doc-badge--success { background: rgba(16, 185, 129, 0.1); color: var(--color-success); }
 .doc-badge--error { background: rgba(239, 68, 68, 0.1); color: var(--color-error); }
 .doc-badge--warning { background: rgba(245, 158, 11, 0.1); color: var(--color-warning); }

@@ -17,7 +17,7 @@
 .section-title {
     font-size: 1rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--color-gray-500);
     margin-bottom: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -210,7 +210,7 @@
 }
 
 .serving-label {
-    color: #64748b;
+    color: var(--color-gray-500);
     font-size: 0.85rem;
     font-weight: 500;
     display: block;
@@ -231,7 +231,7 @@
 
 .queue-divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+    background: linear-gradient(90deg, transparent, var(--color-gray-200), transparent);
     margin-bottom: 1.5rem;
 }
 
@@ -250,13 +250,13 @@
 .stat-val {
     font-size: 1.4rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--color-gray-800);
 }
 
 .stat-lbl {
     font-size: 0.7rem;
     font-weight: 600;
-    color: #94a3b8;
+    color: var(--color-gray-400);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-top: 4px;
@@ -279,7 +279,7 @@
     position: absolute;
     top: -8px;
     right: -8px;
-    background: #ef4444;
+    background: var(--color-error);
     color: white;
     font-size: 0.65rem;
     font-weight: 700;
@@ -410,12 +410,12 @@
 }
 
 .action-card-modern.secondary .action-title {
-    color: #1e293b;
+    color: var(--color-gray-800);
     font-weight: 700;
 }
 
 .action-card-modern.secondary .action-desc {
-    color: #64748b;
+    color: var(--color-gray-500);
 }
 
 .action-title {
@@ -605,18 +605,18 @@
 }
 
 .queue-type-badge.priority {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
     color: white;
 }
 
 .queue-type-badge.walkin {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: linear-gradient(135deg, var(--color-warning) 0%, var(--color-warning-dark) 100%);
     color: white;
 }
 
 /* Walk-in queue number color */
 .queue-card-modern.walkin .big-number {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: linear-gradient(135deg, var(--color-warning) 0%, var(--color-warning-dark) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -628,7 +628,7 @@
     margin-top: 1rem;
     padding: 0.75rem;
     background: transparent;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-gray-200);
     border-radius: 0.5rem;
     color: var(--color-text-muted);
     font-size: 0.85rem;
@@ -638,8 +638,8 @@
 }
 
 .leave-queue-btn:hover {
-    border-color: #ef4444;
-    color: #ef4444;
+    border-color: var(--color-error);
+    color: var(--color-error);
     background: rgba(239, 68, 68, 0.05);
 }
 
@@ -650,7 +650,7 @@
     background: rgba(99, 102, 241, 0.1);
     border-radius: 0.5rem;
     font-size: 0.75rem;
-    color: #6366f1;
+    color: var(--color-indigo);
 }
 
 .demo-toggle label {
@@ -661,7 +661,7 @@
 }
 
 .demo-toggle input[type="checkbox"] {
-    accent-color: #6366f1;
+    accent-color: var(--color-indigo);
 }
 
 /* =========================================
@@ -717,7 +717,7 @@
 }
 
 .queue-banner.walkin .queue-num {
-    color: #d97706;
+    color: var(--color-warning-dark);
 }
 
 .queue-stats {
@@ -747,12 +747,12 @@
 }
 
 .queue-type-pill.priority {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
     color: white;
 }
 
 .queue-type-pill.walkin {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: linear-gradient(135deg, var(--color-warning) 0%, var(--color-warning-dark) 100%);
     color: white;
 }
 
@@ -771,9 +771,9 @@
 }
 
 .leave-btn:hover {
-    background: #fee2e2;
-    border-color: #ef4444;
-    color: #ef4444;
+    background: var(--color-error-light);
+    border-color: var(--color-error);
+    color: var(--color-error);
 }
 
 /* =========================================

@@ -220,7 +220,7 @@ export const DoctorDashboard = () => {
       label: 'In-Clinic Queue',
       icon: Users,
       color: doctorMode === 'teleconsult' ? 'rgba(100,116,139,0.06)' : 'rgba(59, 130, 246, 0.1)',
-      iconColor: doctorMode === 'teleconsult' ? '#94a3b8' : '#3b82f6',
+      iconColor: doctorMode === 'teleconsult' ? 'var(--color-gray-400)' : 'var(--color-info)',
       route: '/doctor/queue',
       badge: queueCount,
       visible: queueEnabled,
@@ -242,7 +242,7 @@ export const DoctorDashboard = () => {
       label: 'Encounter',
       icon: Stethoscope,
       color: 'rgba(139, 92, 246, 0.1)',
-      iconColor: '#8b5cf6',
+      iconColor: 'var(--color-purple)',
       route: '/doctor/encounter',
       badge: inSession ? 1 : 0,
       visible: true,
@@ -253,7 +253,7 @@ export const DoctorDashboard = () => {
       label: 'Lab Results',
       icon: FlaskConical,
       color: 'rgba(6, 182, 212, 0.1)',
-      iconColor: '#06b6d4',
+      iconColor: 'var(--color-cyan)',
       route: '/doctor/results',
       badge: labCount,
       visible: labsEnabled,
@@ -264,7 +264,7 @@ export const DoctorDashboard = () => {
       label: 'Prescriptions',
       icon: Pill,
       color: 'rgba(245, 158, 11, 0.1)',
-      iconColor: '#f59e0b',
+      iconColor: 'var(--color-warning)',
       route: '/doctor/prescriptions',
       badge: rxCount,
       visible: true,
@@ -275,7 +275,7 @@ export const DoctorDashboard = () => {
       label: 'CDSS Alerts',
       icon: ShieldAlert,
       color: 'rgba(239, 68, 68, 0.08)',
-      iconColor: '#ef4444',
+      iconColor: 'var(--color-error)',
       route: '/doctor/encounter',
       badge: alertCount,
       visible: hasCDSS,
@@ -300,8 +300,8 @@ export const DoctorDashboard = () => {
         ? (doctorMode === 'in-clinic' ? 'rgba(100,116,139,0.06)' : 'rgba(139, 92, 246, 0.08)')
         : 'rgba(139, 92, 246, 0.06)',
       iconColor: teleconsultNowEnabled
-        ? (doctorMode === 'in-clinic' ? '#94a3b8' : '#7c3aed')
-        : '#7c3aed',
+        ? (doctorMode === 'in-clinic' ? 'var(--color-gray-400)' : 'var(--color-purple-dark)')
+        : 'var(--color-purple-dark)',
       route: '/doctor/teleconsult',
       badge: teleconsultNowEnabled ? 3 : 0,
       visible: teleconsultEnabled,
@@ -314,7 +314,7 @@ export const DoctorDashboard = () => {
       label: 'Tasks',
       icon: ClipboardList,
       color: 'rgba(100, 116, 139, 0.1)',
-      iconColor: '#64748b',
+      iconColor: 'var(--color-gray-500)',
       route: '/doctor/tasks',
       badge: labCount + rxCount + noteCount,
       visible: true,
@@ -325,7 +325,7 @@ export const DoctorDashboard = () => {
       label: 'Immunizations',
       icon: Syringe,
       color: 'rgba(16, 185, 129, 0.1)',
-      iconColor: '#10b981',
+      iconColor: 'var(--color-success)',
       route: '/doctor/immunizations',
       badge: 0,
       visible: true,
@@ -336,7 +336,7 @@ export const DoctorDashboard = () => {
       label: 'LOA Review',
       icon: FileCheck,
       color: 'rgba(245, 158, 11, 0.08)',
-      iconColor: '#d97706',
+      iconColor: 'var(--color-warning-dark)',
       route: '/doctor/loa',
       badge: 0,
       visible: loaEnabled,
@@ -393,11 +393,11 @@ export const DoctorDashboard = () => {
         }}>
           <div style={{
             width: 8, height: 8, borderRadius: '50%',
-            background: doctorMode === 'teleconsult' ? '#7c3aed' : 'var(--color-primary)',
+            background: doctorMode === 'teleconsult' ? 'var(--color-purple-dark)' : 'var(--color-primary)',
             boxShadow: `0 0 6px ${doctorMode === 'teleconsult' ? 'rgba(124,58,237,0.5)' : 'rgba(59,130,246,0.4)'}`,
             animation: 'pulse 2s infinite',
           }} />
-          <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: doctorMode === 'teleconsult' ? '#7c3aed' : 'var(--color-primary)' }}>
+          <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: doctorMode === 'teleconsult' ? 'var(--color-purple-dark)' : 'var(--color-primary)' }}>
             {doctorMode === 'teleconsult' ? (
               <>
                 <Video size={13} style={{ marginRight: 5, verticalAlign: 'text-bottom' }} />
@@ -414,7 +414,7 @@ export const DoctorDashboard = () => {
             onClick={() => navigate(doctorMode === 'teleconsult' ? '/doctor/teleconsult' : '/doctor/queue')}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 12, fontWeight: 600, color: doctorMode === 'teleconsult' ? '#7c3aed' : 'var(--color-primary)',
+              fontSize: 12, fontWeight: 600, color: doctorMode === 'teleconsult' ? 'var(--color-purple-dark)' : 'var(--color-primary)',
               textDecoration: 'underline', padding: 0,
             }}
           >
@@ -442,7 +442,7 @@ export const DoctorDashboard = () => {
           {/* Pulsing video indicator */}
           <div style={{
             width: 44, height: 44, borderRadius: 12,
-            background: 'linear-gradient(135deg, #7c3aed, #6366f1)',
+            background: 'linear-gradient(135deg, var(--color-purple-dark), var(--color-indigo))',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             position: 'relative', flexShrink: 0,
           }}>
@@ -458,16 +458,16 @@ export const DoctorDashboard = () => {
 
           {/* Call info */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#7c3aed', marginBottom: 2 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-purple-dark)', marginBottom: 2 }}>
               Active Teleconsult — {activeTeleconsultCall.patientName}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--color-text-muted)' }}>
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 3,
-                background: 'rgba(74,222,128,0.1)', color: '#16a34a',
+                background: 'rgba(74,222,128,0.1)', color: 'var(--color-success-dark)',
                 padding: '2px 8px', borderRadius: 6, fontWeight: 700, fontSize: 11,
               }}>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#16a34a', animation: 'pulse 2s infinite' }} />
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-success-dark)', animation: 'pulse 2s infinite' }} />
                 LIVE
               </span>
               <Clock size={11} /> {formatCallTime(tcElapsed)}
@@ -484,7 +484,7 @@ export const DoctorDashboard = () => {
             onClick={(e) => { e.stopPropagation(); navigate('/doctor/teleconsult'); }}
             style={{
               padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer',
-              background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#fff',
+              background: 'linear-gradient(135deg, var(--color-purple-dark), var(--color-indigo))', color: '#fff',
               fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5,
               boxShadow: '0 2px 8px rgba(124,58,237,0.25)',
               flexShrink: 0,
@@ -498,8 +498,8 @@ export const DoctorDashboard = () => {
       {/* ===== AI & Voice Assistant Section (Functional + Collapsible) ===== */}
       <section style={{
         background: aiEnabled
-          ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)'
-          : 'linear-gradient(135deg, #1e293b 0%, #334155 60%, #1e293b 100%)',
+          ? 'linear-gradient(135deg, var(--color-gray-900) 0%, var(--color-gray-800) 60%, var(--color-gray-900) 100%)'
+          : 'linear-gradient(135deg, var(--color-gray-800) 0%, var(--color-gray-700) 60%, var(--color-gray-800) 100%)',
         borderRadius: 16,
         color: '#fff',
         position: 'relative',
@@ -528,7 +528,7 @@ export const DoctorDashboard = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
               width: 44, height: 44, borderRadius: 12,
-              background: !aiEnabled ? 'rgba(148,163,184,0.15)' : isListening ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              background: !aiEnabled ? 'rgba(148,163,184,0.15)' : isListening ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, var(--color-indigo), var(--color-purple))',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               transition: 'background 0.3s',
               animation: aiEnabled && isListening ? 'pulse 1.5s infinite' : 'none',
@@ -536,15 +536,15 @@ export const DoctorDashboard = () => {
               {!aiEnabled ? <AudioWaveform size={22} color="#64748b" /> : isListening ? <Mic size={22} color="#fff" /> : <AudioWaveform size={22} color="#fff" />}
             </div>
             <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: isDesktop ? 17 : 15, fontWeight: 700, letterSpacing: '-0.01em', color: aiEnabled ? '#fff' : '#94a3b8' }}>AI Clinical Assistant</div>
+              <div style={{ fontSize: isDesktop ? 17 : 15, fontWeight: 700, letterSpacing: '-0.01em', color: aiEnabled ? '#fff' : 'var(--color-gray-400)' }}>AI Clinical Assistant</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
                 {aiEnabled ? (
                   <>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: isListening ? '#22c55e' : '#6366f1', display: 'inline-block', animation: 'pulse 2s infinite', boxShadow: `0 0 6px ${isListening ? 'rgba(34,197,94,0.6)' : 'rgba(99,102,241,0.5)'}` }} />
-                    <span style={{ fontSize: 12, color: '#94a3b8' }}>{isListening ? 'Listening...' : aiProcessing ? 'Processing...' : 'Ready'} · {commandCount} commands today</span>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: isListening ? '#22c55e' : 'var(--color-indigo)', display: 'inline-block', animation: 'pulse 2s infinite', boxShadow: `0 0 6px ${isListening ? 'rgba(34,197,94,0.6)' : 'rgba(99,102,241,0.5)'}` }} />
+                    <span style={{ fontSize: 12, color: 'var(--color-gray-400)' }}>{isListening ? 'Listening...' : aiProcessing ? 'Processing...' : 'Ready'} · {commandCount} commands today</span>
                   </>
                 ) : (
-                  <span style={{ fontSize: 12, color: '#64748b' }}>Tap toggle to activate AI assistant</span>
+                  <span style={{ fontSize: 12, color: 'var(--color-gray-500)' }}>Tap toggle to activate AI assistant</span>
                 )}
               </div>
             </div>
@@ -563,14 +563,14 @@ export const DoctorDashboard = () => {
                 background: aiEnabled ? 'rgba(99, 102, 241, 0.2)' : 'rgba(148, 163, 184, 0.12)',
                 border: `1px solid ${aiEnabled ? 'rgba(99, 102, 241, 0.35)' : 'rgba(148, 163, 184, 0.2)'}`,
                 borderRadius: 10, padding: '6px 12px', cursor: 'pointer',
-                color: aiEnabled ? '#818cf8' : '#64748b', fontSize: 12, fontWeight: 600,
+                color: aiEnabled ? '#818cf8' : 'var(--color-gray-500)', fontSize: 12, fontWeight: 600,
                 transition: 'all 0.2s',
               }}
             >
               {aiEnabled ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
               {aiEnabled ? 'ON' : 'OFF'}
             </span>
-            {aiEnabled && (aiCollapsed ? <ChevronDown size={18} style={{ color: '#94a3b8' }} /> : <ChevronUp size={18} style={{ color: '#94a3b8' }} />)}
+            {aiEnabled && (aiCollapsed ? <ChevronDown size={18} style={{ color: 'var(--color-gray-400)' }} /> : <ChevronUp size={18} style={{ color: 'var(--color-gray-400)' }} />)}
           </div>
         </button>
 
@@ -587,7 +587,7 @@ export const DoctorDashboard = () => {
                   background: handsFreeMode ? 'rgba(34, 197, 94, 0.15)' : 'rgba(148, 163, 184, 0.1)',
                   border: `1px solid ${handsFreeMode ? 'rgba(34, 197, 94, 0.3)' : 'rgba(148, 163, 184, 0.15)'}`,
                   borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
-                  color: handsFreeMode ? '#4ade80' : '#94a3b8', fontSize: 12, fontWeight: 600,
+                  color: handsFreeMode ? '#4ade80' : 'var(--color-gray-400)', fontSize: 12, fontWeight: 600,
                   transition: 'all 0.2s',
                 }}
               >
@@ -617,7 +617,7 @@ export const DoctorDashboard = () => {
                   display: 'flex', alignItems: 'center', gap: 6,
                   background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8, padding: '7px 12px',
                   border: '1px solid rgba(255, 255, 255, 0.08)', cursor: aiProcessing ? 'wait' : 'pointer',
-                  color: '#cbd5e1', fontSize: 12, fontWeight: 500, transition: 'all 0.15s',
+                  color: 'var(--color-gray-300)', fontSize: 12, fontWeight: 500, transition: 'all 0.15s',
                   opacity: aiProcessing ? 0.5 : 1,
                 }}>
                   <CmdIcon size={12} style={{ color: '#818cf8' }} />
@@ -642,16 +642,16 @@ export const DoctorDashboard = () => {
                         <User size={12} style={{ color: '#818cf8' }} />
                       </div>
                       <div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{entry.cmd}</div>
-                        <div style={{ fontSize: 10, color: '#475569' }}>{entry.time}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-gray-200)' }}>{entry.cmd}</div>
+                        <div style={{ fontSize: 10, color: 'var(--color-gray-600)' }}>{entry.time}</div>
                       </div>
                     </div>
                     {/* AI response */}
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, paddingLeft: 4 }}>
                       <div style={{ width: 24, height: 24, borderRadius: 6, background: entry.status === 'success' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(6, 182, 212, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-                        <Bot size={12} style={{ color: entry.status === 'success' ? '#22c55e' : '#06b6d4' }} />
+                        <Bot size={12} style={{ color: entry.status === 'success' ? '#22c55e' : 'var(--color-cyan)' }} />
                       </div>
-                      <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5, whiteSpace: 'pre-wrap', flex: 1 }}>
+                      <div style={{ fontSize: 12, color: 'var(--color-gray-400)', lineHeight: 1.5, whiteSpace: 'pre-wrap', flex: 1 }}>
                         {entry.response}
                       </div>
                     </div>
@@ -660,7 +660,7 @@ export const DoctorDashboard = () => {
                 {aiProcessing && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 4 }}>
                     <Loader2 size={14} style={{ color: '#818cf8', animation: 'spin 1s linear infinite' }} />
-                    <span style={{ fontSize: 12, color: '#64748b', fontStyle: 'italic' }}>Processing command...</span>
+                    <span style={{ fontSize: 12, color: 'var(--color-gray-500)', fontStyle: 'italic' }}>Processing command...</span>
                   </div>
                 )}
               </div>
@@ -683,13 +683,13 @@ export const DoctorDashboard = () => {
                 disabled={aiProcessing}
                 style={{
                   flex: 1, background: 'none', border: 'none', outline: 'none',
-                  color: '#e2e8f0', fontSize: 13, padding: '8px 0',
+                  color: 'var(--color-gray-200)', fontSize: 13, padding: '8px 0',
                   fontFamily: 'inherit',
                 }}
               />
               {aiInput && !aiProcessing && (
                 <button onClick={() => setAiInput('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
-                  <X size={14} style={{ color: '#64748b' }} />
+                  <X size={14} style={{ color: 'var(--color-gray-500)' }} />
                 </button>
               )}
               <button onClick={toggleListening} style={{
@@ -698,14 +698,14 @@ export const DoctorDashboard = () => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.2s', animation: isListening ? 'pulse 1.5s infinite' : 'none',
               }}>
-                {isListening ? <MicOff size={16} color="#fff" /> : <Mic size={16} style={{ color: '#94a3b8' }} />}
+                {isListening ? <MicOff size={16} color="#fff" /> : <Mic size={16} style={{ color: 'var(--color-gray-400)' }} />}
               </button>
               <button onClick={handleAiSubmit} disabled={!aiInput.trim() || aiProcessing} style={{
                 width: 36, height: 36, borderRadius: 10, border: 'none', cursor: aiInput.trim() && !aiProcessing ? 'pointer' : 'default',
-                background: aiInput.trim() && !aiProcessing ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.04)',
+                background: aiInput.trim() && !aiProcessing ? 'linear-gradient(135deg, var(--color-indigo), var(--color-purple))' : 'rgba(255,255,255,0.04)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s',
               }}>
-                {aiProcessing ? <Loader2 size={16} style={{ color: '#818cf8', animation: 'spin 1s linear infinite' }} /> : <Send size={16} style={{ color: aiInput.trim() ? '#fff' : '#475569' }} />}
+                {aiProcessing ? <Loader2 size={16} style={{ color: '#818cf8', animation: 'spin 1s linear infinite' }} /> : <Send size={16} style={{ color: aiInput.trim() ? '#fff' : 'var(--color-gray-600)' }} />}
               </button>
             </div>
 
@@ -717,26 +717,26 @@ export const DoctorDashboard = () => {
               border: '1px solid rgba(255, 255, 255, 0.06)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 120 }}>
-                <MessageSquare size={14} style={{ color: '#6366f1' }} />
+                <MessageSquare size={14} style={{ color: 'var(--color-indigo)' }} />
                 <div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#e2e8f0' }}>{commandCount}</div>
-                  <div style={{ fontSize: 10, color: '#64748b' }}>Commands today</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-gray-200)' }}>{commandCount}</div>
+                  <div style={{ fontSize: 10, color: 'var(--color-gray-500)' }}>Commands today</div>
                 </div>
               </div>
               <div style={{ width: 1, background: 'rgba(255,255,255,0.08)', alignSelf: 'stretch' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 120 }}>
-                <FileText size={14} style={{ color: '#8b5cf6' }} />
+                <FileText size={14} style={{ color: 'var(--color-purple)' }} />
                 <div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#e2e8f0' }}>{soapCount}</div>
-                  <div style={{ fontSize: 10, color: '#64748b' }}>AI SOAP notes</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-gray-200)' }}>{soapCount}</div>
+                  <div style={{ fontSize: 10, color: 'var(--color-gray-500)' }}>AI SOAP notes</div>
                 </div>
               </div>
               <div style={{ width: 1, background: 'rgba(255,255,255,0.08)', alignSelf: 'stretch' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 120 }}>
                 <Zap size={14} style={{ color: '#22c55e' }} />
                 <div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#e2e8f0' }}>98.4%</div>
-                  <div style={{ fontSize: 10, color: '#64748b' }}>Accuracy</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-gray-200)' }}>98.4%</div>
+                  <div style={{ fontSize: 10, color: 'var(--color-gray-500)' }}>Accuracy</div>
                 </div>
               </div>
             </div>
@@ -899,7 +899,7 @@ export const DoctorDashboard = () => {
               justifyContent: 'center',
               flexShrink: 0,
             }}>
-              <Radio size={18} style={{ color: '#06b6d4' }} />
+              <Radio size={18} style={{ color: 'var(--color-cyan)' }} />
             </div>
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text, #1e293b)' }}>Interoperability Status</div>
@@ -909,7 +909,7 @@ export const DoctorDashboard = () => {
           <div style={{
             fontSize: 11,
             fontWeight: 600,
-            color: '#06b6d4',
+            color: 'var(--color-cyan)',
             background: 'rgba(6, 182, 212, 0.08)',
             padding: '4px 10px',
             borderRadius: 8,
@@ -934,7 +934,7 @@ export const DoctorDashboard = () => {
             padding: '12px 14px',
             border: '1px solid rgba(16, 185, 129, 0.12)',
           }}>
-            <Activity size={18} style={{ color: '#10b981', flexShrink: 0 }} />
+            <Activity size={18} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text, #1e293b)' }}>FHIR R4 API</div>
               <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #64748b)' }}>HL7 FHIR Release 4</div>
@@ -962,7 +962,7 @@ export const DoctorDashboard = () => {
             padding: '12px 14px',
             border: '1px solid rgba(16, 185, 129, 0.12)',
           }}>
-            <Wifi size={18} style={{ color: '#10b981', flexShrink: 0 }} />
+            <Wifi size={18} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text, #1e293b)' }}>HL7 v2 Engine</div>
               <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #64748b)' }}>Message processing</div>
@@ -992,14 +992,14 @@ export const DoctorDashboard = () => {
           flexWrap: 'wrap',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Activity size={14} style={{ color: '#6366f1' }} />
+            <Activity size={14} style={{ color: 'var(--color-indigo)' }} />
             <span style={{ fontSize: 13, color: 'var(--color-text-secondary, #64748b)' }}>
               Today: <strong style={{ color: 'var(--color-text, #1e293b)' }}>1,247</strong> FHIR transactions
             </span>
           </div>
           <span style={{ color: 'var(--color-border, #d1d5db)' }}>|</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Radio size={14} style={{ color: '#8b5cf6' }} />
+            <Radio size={14} style={{ color: 'var(--color-purple)' }} />
             <span style={{ fontSize: 13, color: 'var(--color-text-secondary, #64748b)' }}>
               <strong style={{ color: 'var(--color-text, #1e293b)' }}>892</strong> HL7 messages
             </span>

@@ -121,7 +121,7 @@ export const TeleconsultPiP = () => {
       {/* Video area */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+          background: 'linear-gradient(135deg, var(--color-gray-800) 0%, var(--color-gray-900) 100%)',
           height: 140,
           position: 'relative',
           display: 'flex',
@@ -135,7 +135,7 @@ export const TeleconsultPiP = () => {
             width: 56,
             height: 56,
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            background: 'linear-gradient(135deg, var(--color-indigo), var(--color-purple))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -214,7 +214,7 @@ export const TeleconsultPiP = () => {
             justifyContent: 'center',
             fontSize: 11,
             fontWeight: 700,
-            color: '#94a3b8',
+            color: 'var(--color-gray-400)',
           }}
         >
           DR
@@ -228,7 +228,7 @@ export const TeleconsultPiP = () => {
             right: 10,
             fontSize: 9,
             fontWeight: 800,
-            color: '#ef4444',
+            color: 'var(--color-error)',
             display: 'flex',
             alignItems: 'center',
             gap: 3,
@@ -242,7 +242,7 @@ export const TeleconsultPiP = () => {
               width: 6,
               height: 6,
               borderRadius: '50%',
-              background: '#ef4444',
+              background: 'var(--color-error)',
               display: 'inline-block',
               animation: 'pulse 1.5s infinite',
             }}
@@ -254,7 +254,7 @@ export const TeleconsultPiP = () => {
       {/* Controls bar */}
       <div
         style={{
-          background: '#1e293b',
+          background: 'var(--color-gray-800)',
           padding: '8px 10px',
           display: 'flex',
           alignItems: 'center',
@@ -274,7 +274,7 @@ export const TeleconsultPiP = () => {
             alignItems: 'center',
             justifyContent: 'center',
             background: micOn ? 'rgba(255,255,255,0.1)' : 'rgba(239,68,68,0.2)',
-            color: micOn ? '#94a3b8' : '#ef4444',
+            color: micOn ? 'var(--color-gray-400)' : 'var(--color-error)',
             transition: 'all 0.15s',
           }}
         >
@@ -294,7 +294,7 @@ export const TeleconsultPiP = () => {
             alignItems: 'center',
             justifyContent: 'center',
             background: videoOn ? 'rgba(255,255,255,0.1)' : 'rgba(239,68,68,0.2)',
-            color: videoOn ? '#94a3b8' : '#ef4444',
+            color: videoOn ? 'var(--color-gray-400)' : 'var(--color-error)',
             transition: 'all 0.15s',
           }}
         >
@@ -342,7 +342,7 @@ export const TeleconsultPiP = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#ef4444',
+            background: 'var(--color-error)',
             color: '#fff',
             transition: 'all 0.15s',
           }}

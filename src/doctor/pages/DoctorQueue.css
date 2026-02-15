@@ -284,7 +284,7 @@
 }
 
 .queue-action-btn.start:hover {
-  background: #059669;
+  background: var(--color-success-dark);
 }
 
 .queue-action-btn.complete {

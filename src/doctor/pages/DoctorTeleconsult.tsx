@@ -550,7 +550,7 @@ export const DoctorTeleconsult = () => {
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 padding: '10px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
                 fontSize: 13, fontWeight: 700, transition: 'all 0.2s',
-                background: waitingTab === 'scheduled' ? '#7c3aed' : 'transparent',
+                background: waitingTab === 'scheduled' ? 'var(--color-purple-dark)' : 'transparent',
                 color: waitingTab === 'scheduled' ? '#fff' : 'var(--color-text-muted)',
               }}
             >
@@ -560,7 +560,7 @@ export const DoctorTeleconsult = () => {
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 8,
                   background: waitingTab === 'scheduled' ? 'rgba(255,255,255,0.25)' : 'rgba(124,58,237,0.1)',
-                  color: waitingTab === 'scheduled' ? '#fff' : '#7c3aed',
+                  color: waitingTab === 'scheduled' ? '#fff' : 'var(--color-purple-dark)',
                 }}>
                   {myTeleconsultAppts.length}
                 </span>
@@ -755,7 +755,7 @@ export const DoctorTeleconsult = () => {
                             {/* Time badge */}
                             <div style={{
                               minWidth: 56, textAlign: 'center', padding: '8px 6px', borderRadius: 10,
-                              background: canJoin ? 'linear-gradient(135deg, #7c3aed, #6366f1)' : 'var(--color-background)',
+                              background: canJoin ? 'linear-gradient(135deg, var(--color-purple-dark), var(--color-indigo))' : 'var(--color-background)',
                               border: canJoin ? 'none' : '1px solid var(--color-border)',
                             }}>
                               <div style={{ fontSize: 14, fontWeight: 800, color: canJoin ? '#fff' : 'var(--color-text)', lineHeight: 1 }}>{apt.time.replace(/:00/,'').replace(' ','')}</div>
@@ -839,7 +839,7 @@ export const DoctorTeleconsult = () => {
                   padding: '12px 16px', borderRadius: 10,
                   background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.1)',
                   display: 'flex', alignItems: 'center', gap: 8,
-                  fontSize: 12, color: '#7c3aed', fontWeight: 600,
+                  fontSize: 12, color: 'var(--color-purple-dark)', fontWeight: 600,
                 }}>
                   <Video size={14} />
                   {myTeleconsultAppts.length} upcoming teleconsult{myTeleconsultAppts.length !== 1 ? 's' : ''}

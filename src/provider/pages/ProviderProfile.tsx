@@ -88,9 +88,9 @@ export const ProviderProfile = () => {
             <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{profile.department}</span>
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>Active</span>
+            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)' }}>Active</span>
             <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}>{profile.role}</span>
-            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, background: 'rgba(99,102,241,0.1)', color: '#6366f1' }}>RBAC: Level 3</span>
+            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, background: 'rgba(99,102,241,0.1)', color: 'var(--color-indigo)' }}>RBAC: Level 3</span>
           </div>
         </div>
         <button onClick={() => isEditing ? handleSave() : setIsEditing(true)} style={{
@@ -156,7 +156,7 @@ export const ProviderProfile = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
           {profile.certifications.map(cert => (
             <div key={cert} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--color-background)', border: '1px solid var(--color-border)' }}>
-              <Star size={14} style={{ color: '#f59e0b', flexShrink: 0 }} />
+              <Star size={14} style={{ color: 'var(--color-warning)', flexShrink: 0 }} />
               <span style={{ fontSize: 13, color: 'var(--color-text)' }}>{cert}</span>
             </div>
           ))}
@@ -220,16 +220,16 @@ export const ProviderProfile = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 10, background: 'var(--color-background)', border: '1px solid var(--color-border)' }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>Two-Factor Authentication</div>
-              <div style={{ fontSize: 12, color: '#10b981' }}>Enabled — Authenticator app</div>
+              <div style={{ fontSize: 12, color: 'var(--color-success)' }}>Enabled — Authenticator app</div>
             </div>
-            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>Active</span>
+            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)' }}>Active</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 10, background: 'var(--color-background)', border: '1px solid var(--color-border)' }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>Active Sessions</div>
               <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>2 devices — This device, iPad</div>
             </div>
-            <button onClick={() => showToast('Other sessions terminated', 'success')} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.05)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#ef4444' }}>Revoke others</button>
+            <button onClick={() => showToast('Other sessions terminated', 'success')} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.05)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--color-error)' }}>Revoke others</button>
           </div>
         </div>
       </div>

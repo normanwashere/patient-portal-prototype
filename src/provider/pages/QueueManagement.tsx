@@ -76,9 +76,9 @@ function getPatientSection(p: QueuePatient): MSSection {
 
 const priorityColor = (p: string): CSSProperties => {
   switch (p) {
-    case 'Emergency': return { background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5' };
-    case 'Senior': return { background: '#eff6ff', color: '#2563eb', border: '1px solid #93c5fd' };
-    case 'PWD': return { background: '#f0fdf4', color: '#16a34a', border: '1px solid #86efac' };
+    case 'Emergency': return { background: 'var(--color-error-light)', color: 'var(--color-error-dark)', border: '1px solid #fca5a5' };
+    case 'Senior': return { background: '#eff6ff', color: 'var(--color-info-dark)', border: '1px solid #93c5fd' };
+    case 'PWD': return { background: '#f0fdf4', color: 'var(--color-success-dark)', border: '1px solid #86efac' };
     default: return { background: 'var(--color-gray-100, #f3f4f6)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' };
   }
 };
@@ -373,8 +373,8 @@ export const QueueManagement = () => {
         {isAtOrderStation && currentOrder && isLinear && (
           <div style={S.orderChipRow}>
             {p.doctorOrders.map((o) => {
-              const bg = o.status === 'completed' ? '#dcfce7' : o.status === 'in-progress' || o.status === 'queued' ? '#dbeafe' : '#f3f4f6';
-              const fg = o.status === 'completed' ? '#16a34a' : o.status === 'in-progress' || o.status === 'queued' ? '#2563eb' : '#6b7280';
+              const bg = o.status === 'completed' ? '#dcfce7' : o.status === 'in-progress' || o.status === 'queued' ? 'var(--color-info-light)' : '#f3f4f6';
+              const fg = o.status === 'completed' ? 'var(--color-success-dark)' : o.status === 'in-progress' || o.status === 'queued' ? 'var(--color-info-dark)' : '#6b7280';
               return (
                 <span key={o.id} style={{ ...S.orderChip, background: bg, color: fg, fontWeight: o.id === currentOrder.id ? 700 : 500 }}>
                   {o.status === 'completed' ? <Check size={9} /> : o.status === 'pending' ? <Circle size={9} /> : <Play size={9} />}
@@ -389,7 +389,7 @@ export const QueueManagement = () => {
         {(isAtReturnConsult || section === 'post-orders') && hasCompletedOrders && (
           <div style={S.orderChipRow}>
             {p.doctorOrders.map((o) => (
-              <span key={o.id} style={{ ...S.orderChip, background: '#dcfce7', color: '#16a34a' }}>
+              <span key={o.id} style={{ ...S.orderChip, background: '#dcfce7', color: 'var(--color-success-dark)' }}>
                 <Check size={10} /> {o.label}
               </span>
             ))}
@@ -614,8 +614,8 @@ export const QueueManagement = () => {
                           <div style={S.cardRow}>
                             <span style={{
                               ...S.status,
-                              background: ord.status === 'in-progress' ? '#dbeafe' : ord.status === 'queued' ? '#fef9c3' : '#e5e7eb',
-                              color: ord.status === 'in-progress' ? '#2563eb' : ord.status === 'queued' ? '#a16207' : '#6b7280',
+                              background: ord.status === 'in-progress' ? 'var(--color-info-light)' : ord.status === 'queued' ? '#fef9c3' : '#e5e7eb',
+                              color: ord.status === 'in-progress' ? 'var(--color-info-dark)' : ord.status === 'queued' ? '#a16207' : '#6b7280',
                             }}>
                               {ord.status === 'in-progress' ? 'In Progress' : ord.status === 'queued' ? 'Waiting' : ord.status}
                             </span>
@@ -627,8 +627,8 @@ export const QueueManagement = () => {
                           <div style={S.orderChipRow}>
                             {p.doctorOrders.map((o) => {
                               const isThis = o.id === ord.id;
-                              const bg = o.status === 'completed' ? '#dcfce7' : o.status === 'in-progress' ? '#dbeafe' : isThis ? '#fef9c3' : '#f3f4f6';
-                              const fg = o.status === 'completed' ? '#16a34a' : o.status === 'in-progress' ? '#2563eb' : isThis ? '#a16207' : '#6b7280';
+                              const bg = o.status === 'completed' ? '#dcfce7' : o.status === 'in-progress' ? 'var(--color-info-light)' : isThis ? '#fef9c3' : '#f3f4f6';
+                              const fg = o.status === 'completed' ? 'var(--color-success-dark)' : o.status === 'in-progress' ? 'var(--color-info-dark)' : isThis ? '#a16207' : '#6b7280';
                               return (
                                 <span key={o.id} style={{ ...S.orderChip, background: bg, color: fg, fontWeight: isThis ? 700 : 500 }}>
                                   {o.status === 'completed' ? <Check size={9} /> : o.status === 'in-progress' ? <Play size={9} /> : <Circle size={9} />}
@@ -737,7 +737,7 @@ export const QueueManagement = () => {
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {msSections.done.map((p) => (
-              <span key={p.id} style={{ fontSize: 11, padding: '4px 10px', background: '#dcfce7', color: '#16a34a', borderRadius: 10, fontWeight: 600 }}>
+              <span key={p.id} style={{ fontSize: 11, padding: '4px 10px', background: '#dcfce7', color: 'var(--color-success-dark)', borderRadius: 10, fontWeight: 600 }}>
                 {p.ticketNumber} {p.patientName}
               </span>
             ))}

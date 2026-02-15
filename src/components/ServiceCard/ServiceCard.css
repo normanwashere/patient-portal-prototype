@@ -26,7 +26,7 @@
 /* Image Bar Header */
 .service-card-header {
     height: 100px;
-    background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+    background: linear-gradient(135deg, var(--color-gray-200), var(--color-gray-300));
     position: relative;
     display: flex;
     align-items: center;
@@ -112,7 +112,7 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #f1f5f9;
+    background: var(--color-gray-100);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -144,7 +144,7 @@
 }
 
 .service-card.theme-blue {
-    --card-color: #3b82f6;
+    --card-color: var(--color-info);
 }
 
 .service-card.theme-blue .service-card-header {
@@ -152,7 +152,7 @@
 }
 
 .service-card.theme-green {
-    --card-color: #10b981;
+    --card-color: var(--color-success);
 }
 
 .service-card.theme-green .service-card-header {
@@ -160,7 +160,7 @@
 }
 
 .service-card.theme-purple {
-    --card-color: #8b5cf6;
+    --card-color: var(--color-purple);
 }
 
 .service-card.theme-purple .service-card-header {
@@ -210,24 +210,24 @@
 }
 
 .service-action-btn.secondary {
-    background: #f1f5f9;
+    background: var(--color-gray-100);
     color: var(--color-text);
 }
 
 .service-action-btn.secondary:hover {
-    background: #e2e8f0;
+    background: var(--color-gray-200);
     color: var(--color-primary);
 }
 
 .service-action-btn.outline {
     background: transparent;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-gray-200);
     color: var(--color-text);
 }
 
 .service-action-btn.outline:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
+    background: var(--color-gray-50);
+    border-color: var(--color-gray-300);
 }
 
 /* Old badge removed or repurposed */
@@ -235,7 +235,7 @@
     position: absolute;
     top: -8px;
     right: -16px;
-    background-color: #ef4444;
+    background-color: var(--color-error);
     /* color-error */
     color: white;
     font-size: 0.7rem;

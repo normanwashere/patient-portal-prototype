@@ -85,11 +85,11 @@
 }
 
 .branch-type-badge[data-type="clinic"] {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, var(--color-success), var(--color-success-dark));
 }
 
 .branch-type-badge[data-type="lying-in"] {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+    background: linear-gradient(135deg, var(--color-warning), var(--color-warning-dark));
 }
 
 .branch-distance {
@@ -139,8 +139,8 @@
     font-size: 0.65rem;
     font-weight: 600;
     padding: 0.25rem 0.5rem;
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--color-gray-100);
+    color: var(--color-gray-600);
     border-radius: 4px;
 }
 

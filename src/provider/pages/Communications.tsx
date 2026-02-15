@@ -24,28 +24,28 @@ import type { Conversation, ConversationType } from '../types';
 // ── Colors ──
 const V = {
   bg: '#f0f2f5',
-  sidebar: '#ffffff',
+  sidebar: 'var(--color-white)',
   chat: '#e5ddd5',
   chatBg: '#efeae2',
-  card: '#ffffff',
-  border: '#e2e8f0',
-  borderLight: '#f1f5f9',
-  primary: 'var(--color-primary, #2563eb)',
-  primaryLight: '#dbeafe',
-  success: '#16a34a',
-  successLight: '#dcfce7',
-  warn: '#f59e0b',
-  warnLight: '#fef3c7',
+  card: 'var(--color-white)',
+  border: 'var(--color-gray-200)',
+  borderLight: 'var(--color-gray-100)',
+  primary: 'var(--color-primary)',
+  primaryLight: 'var(--color-info-light)',
+  success: 'var(--color-success-dark)',
+  successLight: 'var(--color-success-light)',
+  warn: 'var(--color-warning)',
+  warnLight: 'var(--color-warning-light)',
   danger: '#dc2626',
-  dangerLight: '#fee2e2',
-  info: '#0ea5e9',
-  purple: '#7c3aed',
-  purpleLight: '#ede9fe',
-  text: '#1e293b',
-  textSec: '#64748b',
-  textMuted: '#94a3b8',
+  dangerLight: 'var(--color-error-light)',
+  info: 'var(--color-info)',
+  purple: 'var(--color-purple-dark)',
+  purpleLight: 'var(--color-purple-light)',
+  text: 'var(--color-gray-800)',
+  textSec: 'var(--color-gray-500)',
+  textMuted: 'var(--color-gray-400)',
   bubbleSelf: '#dcf8c6',
-  bubbleOther: '#ffffff',
+  bubbleOther: 'var(--color-white)',
   radius: '10px',
   radiusSm: '6px',
   shadow: '0 1px 3px rgba(0,0,0,.08)',
@@ -58,9 +58,9 @@ const DEPT_ICONS: Record<string, typeof Hash> = {
 };
 
 const ROLE_COLORS: Record<string, string> = {
-  doctor: '#2563eb', nurse: '#16a34a', lab_tech: '#7c3aed',
-  pharmacist: '#f59e0b', billing_staff: '#0ea5e9', front_desk: '#ec4899',
-  admin: '#64748b', hr: '#06b6d4', imaging_tech: '#8b5cf6',
+  doctor: 'var(--color-info-dark)', nurse: 'var(--color-success-dark)', lab_tech: 'var(--color-purple-dark)',
+  pharmacist: 'var(--color-warning)', billing_staff: 'var(--color-info)', front_desk: 'var(--color-pink)',
+  admin: 'var(--color-gray-500)', hr: 'var(--color-cyan)', imaging_tech: 'var(--color-purple)',
 };
 
 function getInitials(name: string): string {
@@ -93,7 +93,7 @@ const S: Record<string, CSSProperties> = {
   leftHeader: { padding: '16px 16px 12px', borderBottom: `1px solid ${V.border}` },
   leftTitle: { fontSize: 18, fontWeight: 700, color: V.text, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 },
   searchBox: { position: 'relative' as const },
-  searchInput: { width: '100%', padding: '8px 12px 8px 34px', borderRadius: 20, border: `1px solid ${V.border}`, fontSize: 13, outline: 'none', background: '#f8fafc', boxSizing: 'border-box' as const },
+  searchInput: { width: '100%', padding: '8px 12px 8px 34px', borderRadius: 20, border: `1px solid ${V.border}`, fontSize: 13, outline: 'none', background: 'var(--color-gray-50)', boxSizing: 'border-box' as const },
   convList: { flex: 1, overflowY: 'auto' as const },
   sectionLabel: { fontSize: 11, fontWeight: 700, color: V.textMuted, textTransform: 'uppercase' as const, padding: '12px 16px 4px', letterSpacing: '0.5px' },
 
@@ -127,7 +127,7 @@ const S: Record<string, CSSProperties> = {
 
   // Compose
   composeBar: { padding: '10px 20px', background: V.card, borderTop: `1px solid ${V.border}`, display: 'flex', alignItems: 'center', gap: 10 },
-  composeInput: { flex: 1, padding: '10px 14px', borderRadius: 20, border: `1px solid ${V.border}`, fontSize: 13, outline: 'none', background: '#f8fafc' },
+  composeInput: { flex: 1, padding: '10px 14px', borderRadius: 20, border: `1px solid ${V.border}`, fontSize: 13, outline: 'none', background: 'var(--color-gray-50)' },
   sendBtn: { width: 40, height: 40, borderRadius: '50%', background: V.primary, color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
 
   // Empty state
@@ -268,7 +268,7 @@ export const Communications = () => {
   const renderAvatar = (conv: Conversation, size = 42) => {
     if (conv.type === 'department') {
       const DeptIcon = DEPT_ICONS[conv.departmentTag || ''] || Hash;
-      const colors = ['#2563eb', '#7c3aed', '#0ea5e9', '#16a34a', '#f59e0b', '#dc2626'];
+      const colors = ['var(--color-info-dark)', 'var(--color-purple-dark)', 'var(--color-info)', 'var(--color-success-dark)', 'var(--color-warning)', 'var(--color-error-dark)'];
       const bg = colors[conv.id.charCodeAt(conv.id.length - 1) % colors.length];
       return (
         <div style={{ ...S.convAvatar, width: size, height: size, background: bg, fontSize: size * 0.33 }}>
@@ -287,7 +287,7 @@ export const Communications = () => {
     const otherName = conv.participantNames.find((n) => n !== currentStaff.name) || conv.name;
     const otherId = conv.participantIds.find((id) => id !== currentStaff.id) || '';
     const otherStaff = staff.find((s) => s.id === otherId);
-    const bg = ROLE_COLORS[otherStaff?.role || ''] || '#64748b';
+    const bg = ROLE_COLORS[otherStaff?.role || ''] || 'var(--color-gray-500)';
     return (
       <div style={{ ...S.convAvatar, width: size, height: size, background: bg, fontSize: size * 0.33 }}>
         {getInitials(otherName)}
@@ -307,7 +307,7 @@ export const Communications = () => {
         key={conv.id}
         style={{ ...S.convItem, ...(isActive ? S.convItemActive : {}) }}
         onClick={() => handleSelectConv(conv.id)}
-        onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = '#f8fafc'; }}
+        onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--color-gray-50)'; }}
         onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
       >
         {renderAvatar(conv)}
@@ -600,7 +600,7 @@ export const Communications = () => {
                     <button key={t.key}
                       style={{
                         ...S.btn, flex: 1, flexDirection: 'column', alignItems: 'center', padding: '10px 8px',
-                        background: newConvType === t.key ? V.primaryLight : '#f8fafc',
+                        background: newConvType === t.key ? V.primaryLight : 'var(--color-gray-50)',
                         color: newConvType === t.key ? V.primary : V.textSec,
                         border: `2px solid ${newConvType === t.key ? V.primary : V.border}`,
                         borderRadius: V.radiusSm,

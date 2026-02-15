@@ -74,27 +74,27 @@
 }
 
 .event-badge.screening {
-    background: #dbeafe;
+    background: var(--color-info-light);
     color: #1d4ed8;
 }
 
 .event-badge.webinar {
     background: #f3e8ff;
-    color: #7c3aed;
+    color: var(--color-purple-dark);
 }
 
 .event-badge.vaccination {
-    background: #d1fae5;
-    color: #059669;
+    background: var(--color-success-light);
+    color: var(--color-success-dark);
 }
 
 .event-badge.wellness {
-    background: #fef3c7;
-    color: #d97706;
+    background: var(--color-warning-light);
+    color: var(--color-warning-dark);
 }
 
 .event-badge.fair {
-    background: #fce7f3;
+    background: var(--color-pink-light);
     color: #db2777;
 }
 
@@ -180,27 +180,27 @@
 }
 
 .type-pill.screening {
-    background: #dbeafe;
+    background: var(--color-info-light);
     color: #1d4ed8;
 }
 
 .type-pill.webinar {
     background: #f3e8ff;
-    color: #7c3aed;
+    color: var(--color-purple-dark);
 }
 
 .type-pill.vaccination {
-    background: #d1fae5;
-    color: #059669;
+    background: var(--color-success-light);
+    color: var(--color-success-dark);
 }
 
 .type-pill.wellness {
-    background: #fef3c7;
-    color: #d97706;
+    background: var(--color-warning-light);
+    color: var(--color-warning-dark);
 }
 
 .type-pill.fair {
-    background: #fce7f3;
+    background: var(--color-pink-light);
     color: #db2777;
 }
 
@@ -210,7 +210,7 @@
     padding: 0.2rem 0.5rem;
     border-radius: 100px;
     background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-    color: #059669;
+    color: var(--color-success-dark);
 }
 
 .event-content h4 {
@@ -252,7 +252,7 @@
 }
 
 .chevron {
-    color: #cbd5e1;
+    color: var(--color-gray-300);
     transition: transform var(--transition-fast);
 }
 

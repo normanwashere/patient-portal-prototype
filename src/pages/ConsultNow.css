@@ -83,11 +83,11 @@
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #334155, #475569);
+    background: linear-gradient(135deg, var(--color-gray-700), var(--color-gray-600));
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #94a3b8;
+    color: var(--color-gray-400);
 }
 
 .waiting-dots {
@@ -162,8 +162,8 @@
 }
 
 .btn-cancel:hover {
-    border-color: #ef4444;
-    color: #ef4444;
+    border-color: var(--color-error);
+    color: var(--color-error);
 }
 
 /* Joined State */
@@ -208,7 +208,7 @@
     right: 1rem;
     width: 80px;
     height: 100px;
-    background: linear-gradient(135deg, #334155, #475569);
+    background: linear-gradient(135deg, var(--color-gray-700), var(--color-gray-600));
     border-radius: 12px;
     display: flex;
     flex-direction: column;
@@ -216,7 +216,7 @@
     justify-content: center;
     gap: 0.25rem;
     font-size: 0.7rem;
-    color: #94a3b8;
+    color: var(--color-gray-400);
 }
 
 /* Call Controls */
@@ -251,7 +251,7 @@
 
 .control-btn.disabled {
     background: rgba(239, 68, 68, 0.3);
-    color: #ef4444;
+    color: var(--color-error);
 }
 
 .control-btn.chat {
@@ -259,12 +259,12 @@
 }
 
 .control-btn.end {
-    background: #ef4444;
+    background: var(--color-error);
     transform: rotate(135deg);
 }
 
 .control-btn.end:hover {
-    background: #dc2626;
+    background: var(--color-error-dark);
 }
 
 /* Ended State */
@@ -272,7 +272,7 @@
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #334155, #475569);
+    background: linear-gradient(135deg, var(--color-gray-700), var(--color-gray-600));
     display: flex;
     align-items: center;
     justify-content: center;

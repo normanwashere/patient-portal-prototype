@@ -39,7 +39,7 @@
 }
 
 .search-bar input::placeholder {
-    color: #94a3b8;
+    color: var(--color-gray-400);
 }
 
 /* Filter Chips */
@@ -68,8 +68,8 @@
 }
 
 .chip:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
+    background: var(--color-gray-100);
+    border-color: var(--color-gray-300);
 }
 
 .chip.active {
@@ -166,7 +166,7 @@
 /* Critical Badge */
 .badge-critical {
     background: linear-gradient(135deg, #fee2e2, #fecaca);
-    color: #dc2626;
+    color: var(--color-error-dark);
     font-size: 0.65rem;
     padding: 0.2rem 0.5rem;
     border-radius: 6px;
@@ -219,7 +219,7 @@
     align-items: center;
     gap: 6px;
     background: linear-gradient(135deg, #fee2e2, #fecaca);
-    color: #dc2626;
+    color: var(--color-error-dark);
     border: 1px solid rgba(220, 38, 38, 0.2);
     padding: 0.5rem 0.875rem;
     border-radius: 8px;
@@ -244,7 +244,7 @@
     gap: 4px;
     margin-top: 0.5rem;
     font-size: 0.75rem;
-    color: #059669;
+    color: var(--color-success-dark);
     font-weight: 700;
     background: rgba(16, 185, 129, 0.1);
     padding: 0.25rem 0.5rem;
@@ -258,7 +258,7 @@
     align-items: center;
     justify-content: center;
     padding: 4rem 2rem;
-    color: #94a3b8;
+    color: var(--color-gray-400);
     gap: 1rem;
     text-align: center;
 }

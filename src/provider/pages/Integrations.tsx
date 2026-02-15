@@ -138,9 +138,9 @@ const S: Record<string, React.CSSProperties> = {
 type IntegrationStatus = 'Active' | 'Pending' | 'Error' | 'Not Configured';
 
 const STATUS_CONFIG: Record<IntegrationStatus, { bg: string; color: string; icon: typeof CheckCircle2 }> = {
-  Active: { bg: '#d1fae5', color: '#065f46', icon: CheckCircle2 },
-  Pending: { bg: '#fef3c7', color: '#92400e', icon: Clock },
-  Error: { bg: '#fee2e2', color: '#991b1b', icon: XCircle },
+  Active: { bg: 'var(--color-success-light)', color: '#065f46', icon: CheckCircle2 },
+  Pending: { bg: 'var(--color-warning-light)', color: '#92400e', icon: Clock },
+  Error: { bg: 'var(--color-error-light)', color: '#991b1b', icon: XCircle },
   'Not Configured': { bg: '#f3f4f6', color: '#6b7280', icon: WifiOff },
 };
 
@@ -170,8 +170,8 @@ const INTEGRATIONS: Integration[] = [
     name: 'Laboratory Information System',
     description: 'Bidirectional order/result flow with HL7 v2.x ORM/ORU messaging',
     icon: Microscope,
-    iconBg: '#dbeafe',
-    iconColor: '#2563eb',
+    iconBg: 'var(--color-info-light)',
+    iconColor: 'var(--color-info-dark)',
     status: 'Active',
     protocol: 'HL7 v2.5.1',
     lastSync: '2026-02-13 08:42:15',
@@ -186,8 +186,8 @@ const INTEGRATIONS: Integration[] = [
     name: 'Radiology Information System',
     description: 'DICOM worklist management & order routing',
     icon: ScanLine,
-    iconBg: '#e0e7ff',
-    iconColor: '#4338ca',
+    iconBg: 'var(--color-indigo-light)',
+    iconColor: 'var(--color-indigo)',
     status: 'Active',
     protocol: 'DICOM / HL7 v2',
     lastSync: '2026-02-13 08:40:03',
@@ -202,7 +202,7 @@ const INTEGRATIONS: Integration[] = [
     name: 'Picture Archiving & Communication',
     description: 'DICOM image storage, retrieval & viewer integration',
     icon: Image,
-    iconBg: '#fce7f3',
+    iconBg: 'var(--color-pink-light)',
     iconColor: '#be185d',
     status: 'Active',
     protocol: 'DICOM / DICOMweb',
@@ -218,8 +218,8 @@ const INTEGRATIONS: Integration[] = [
     name: 'ERP - Oracle Financials',
     description: 'Financial ledger, accounts payable/receivable, billing integration',
     icon: Briefcase,
-    iconBg: '#fef3c7',
-    iconColor: '#d97706',
+    iconBg: 'var(--color-warning-light)',
+    iconColor: 'var(--color-warning-dark)',
     status: 'Active',
     protocol: 'REST API / SOAP',
     lastSync: '2026-02-13 07:30:00',
@@ -234,7 +234,7 @@ const INTEGRATIONS: Integration[] = [
     name: 'ERP - SAP (Inventory & HR)',
     description: 'Supply chain, pharmacy inventory, HR & payroll modules',
     icon: Database,
-    iconBg: '#e0f2fe',
+    iconBg: 'var(--color-info-light)',
     iconColor: '#0284c7',
     status: 'Pending',
     protocol: 'SAP RFC / OData',
@@ -250,8 +250,8 @@ const INTEGRATIONS: Integration[] = [
     name: 'GCash Payment Gateway',
     description: 'Mobile wallet payments for patient billing & co-pays',
     icon: CreditCard,
-    iconBg: '#dbeafe',
-    iconColor: '#2563eb',
+    iconBg: 'var(--color-info-light)',
+    iconColor: 'var(--color-info-dark)',
     status: 'Active',
     protocol: 'REST API',
     lastSync: '2026-02-13 08:44:30',
@@ -266,8 +266,8 @@ const INTEGRATIONS: Integration[] = [
     name: 'Maya Payment Gateway',
     description: 'Digital payment processing for e-wallet & QR transactions',
     icon: CreditCard,
-    iconBg: '#d1fae5',
-    iconColor: '#059669',
+    iconBg: 'var(--color-success-light)',
+    iconColor: 'var(--color-success-dark)',
     status: 'Active',
     protocol: 'REST API',
     lastSync: '2026-02-13 08:44:12',
@@ -282,7 +282,7 @@ const INTEGRATIONS: Integration[] = [
     name: 'Credit Card Processor',
     description: 'Visa, Mastercard, AMEX processing with 3D Secure',
     icon: CreditCard,
-    iconBg: '#fef3c7',
+    iconBg: 'var(--color-warning-light)',
     iconColor: '#b45309',
     status: 'Active',
     protocol: 'PCI-DSS REST API',
@@ -298,8 +298,8 @@ const INTEGRATIONS: Integration[] = [
     name: 'Insurance Claims Engine',
     description: 'PhilHealth, HMO & private insurance claims submission',
     icon: Shield,
-    iconBg: '#ede9fe',
-    iconColor: '#7c3aed',
+    iconBg: 'var(--color-purple-light)',
+    iconColor: 'var(--color-purple-dark)',
     status: 'Active',
     protocol: 'REST API / EDI X12',
     lastSync: '2026-02-13 08:30:00',
@@ -315,7 +315,7 @@ const INTEGRATIONS: Integration[] = [
     description: 'HL7 FHIR R4 RESTful API for interoperability',
     icon: Globe,
     iconBg: '#dcfce7',
-    iconColor: '#16a34a',
+    iconColor: 'var(--color-success-dark)',
     status: 'Active',
     protocol: 'FHIR R4 (REST)',
     lastSync: '2026-02-13 08:44:45',
@@ -330,8 +330,8 @@ const INTEGRATIONS: Integration[] = [
     name: 'HL7 v2 Interface Engine',
     description: 'ADT, ORM, ORU, SIU message routing & transformation',
     icon: Server,
-    iconBg: '#f3e8ff',
-    iconColor: '#9333ea',
+    iconBg: 'var(--color-purple-light)',
+    iconColor: 'var(--color-purple-dark)',
     status: 'Pending',
     protocol: 'HL7 v2.x MLLP',
     lastSync: 'Awaiting go-live',
@@ -346,8 +346,8 @@ const INTEGRATIONS: Integration[] = [
     name: 'Health Information Exchange',
     description: 'Regional HIE document sharing via XDS.b / IHE profiles',
     icon: MonitorUp,
-    iconBg: '#fee2e2',
-    iconColor: '#dc2626',
+    iconBg: 'var(--color-error-light)',
+    iconColor: 'var(--color-error-dark)',
     status: 'Error',
     protocol: 'IHE XDS.b / XCA',
     lastSync: '2026-02-13 06:15:00 (failed)',
@@ -410,9 +410,9 @@ const StatusBadge = ({ status }: { status: IntegrationStatus }) => {
 
 const MsgStatusBadge = ({ status }: { status: 'Success' | 'Failed' | 'Pending' }) => {
   const map = {
-    Success: { bg: '#d1fae5', color: '#065f46' },
-    Failed: { bg: '#fee2e2', color: '#991b1b' },
-    Pending: { bg: '#fef3c7', color: '#92400e' },
+    Success: { bg: 'var(--color-success-light)', color: '#065f46' },
+    Failed: { bg: 'var(--color-error-light)', color: '#991b1b' },
+    Pending: { bg: 'var(--color-warning-light)', color: '#92400e' },
   };
   const c = map[status];
   return <span style={{ ...S.badge, background: c.bg, color: c.color, fontSize: 11 }}>{status}</span>;
@@ -421,7 +421,7 @@ const MsgStatusBadge = ({ status }: { status: 'Success' | 'Failed' | 'Pending' }
 const DirectionBadge = ({ direction }: { direction: 'Inbound' | 'Outbound' }) => {
   const isIn = direction === 'Inbound';
   return (
-    <span style={{ ...S.dirBadge, background: isIn ? '#dbeafe' : '#fce7f3', color: isIn ? '#1d4ed8' : '#be185d' }}>
+    <span style={{ ...S.dirBadge, background: isIn ? 'var(--color-info-light)' : 'var(--color-pink-light)', color: isIn ? '#1d4ed8' : '#be185d' }}>
       {isIn ? <ArrowDownLeft size={12} /> : <ArrowUpRight size={12} />} {direction}
     </span>
   );
@@ -472,10 +472,10 @@ export const Integrations = () => {
   };
 
   const stats = [
-    { label: 'Total Integrations', value: statusCounts.total, icon: Link2, bg: '#dbeafe', color: '#2563eb' },
-    { label: 'Active', value: statusCounts.active, icon: CheckCircle2, bg: '#d1fae5', color: '#059669' },
-    { label: 'Pending', value: statusCounts.pending, icon: Clock, bg: '#fef3c7', color: '#d97706' },
-    { label: 'Error', value: statusCounts.error, icon: AlertTriangle, bg: '#fee2e2', color: '#dc2626' },
+    { label: 'Total Integrations', value: statusCounts.total, icon: Link2, bg: 'var(--color-info-light)', color: 'var(--color-info-dark)' },
+    { label: 'Active', value: statusCounts.active, icon: CheckCircle2, bg: 'var(--color-success-light)', color: 'var(--color-success-dark)' },
+    { label: 'Pending', value: statusCounts.pending, icon: Clock, bg: 'var(--color-warning-light)', color: 'var(--color-warning-dark)' },
+    { label: 'Error', value: statusCounts.error, icon: AlertTriangle, bg: 'var(--color-error-light)', color: 'var(--color-error-dark)' },
   ];
 
   return (
@@ -630,10 +630,10 @@ export const Integrations = () => {
                   <td style={{ ...S.td, fontWeight: 600 }}>{r.resource}</td>
                   <td style={S.td}><code style={S.mono}>{r.endpoint}</code></td>
                   <td style={S.td}>
-                    <span style={{ ...S.badge, background: '#dbeafe', color: '#1d4ed8', fontSize: 11 }}>{r.operations}</span>
+                    <span style={{ ...S.badge, background: 'var(--color-info-light)', color: '#1d4ed8', fontSize: 11 }}>{r.operations}</span>
                   </td>
                   <td style={S.td}>
-                    <span style={{ ...S.badge, background: '#d1fae5', color: '#065f46', fontSize: 11 }}>
+                    <span style={{ ...S.badge, background: 'var(--color-success-light)', color: '#065f46', fontSize: 11 }}>
                       <CheckCircle2 size={12} /> {r.status}
                     </span>
                   </td>
@@ -699,7 +699,7 @@ export const Integrations = () => {
                 <tr key={msg.id}>
                   <td style={S.td}><code style={S.mono}>{msg.id}</code></td>
                   <td style={{ ...S.td, fontWeight: 700 }}>
-                    <span style={{ ...S.badge, background: '#f3e8ff', color: '#7c3aed', fontSize: 12 }}>
+                    <span style={{ ...S.badge, background: 'var(--color-purple-light)', color: 'var(--color-purple-dark)', fontSize: 12 }}>
                       {msg.type}^{msg.event}
                     </span>
                   </td>

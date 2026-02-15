@@ -16,6 +16,8 @@ import {
 import { useProvider } from '../context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { useToast } from '../../context/ToastContext';
+import { StatusBadge, TabBar, PageHeader } from '../../ui';
+import type { BadgeVariant } from '../../ui';
 import type { LabOrder } from '../types';
 
 /* ───────── shared inline styles ───────── */
@@ -44,10 +46,10 @@ const S: Record<string, React.CSSProperties> = {
   td: { padding: '14px 14px', fontSize: 14, color: 'var(--color-text)', borderBottom: '1px solid var(--color-border)' },
   btn: { padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 },
   btnPrimary: { background: 'var(--color-primary)', color: 'white' },
-  btnSuccess: { background: '#10b981', color: 'white' },
-  btnWarning: { background: '#f59e0b', color: 'white' },
+  btnSuccess: { background: 'var(--color-success)', color: 'white' },
+  btnWarning: { background: 'var(--color-warning)', color: 'white' },
   btnOutline: { background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)' },
-  btnDanger: { background: '#ef4444', color: 'white' },
+  btnDanger: { background: 'var(--color-error)', color: 'white' },
   badge: { display: 'inline-block', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 },
   formGroup: { marginBottom: 16 },
   formLabel: { display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginBottom: 6 },
@@ -69,18 +71,27 @@ const S: Record<string, React.CSSProperties> = {
 const STATUS_PIPELINE: LabOrder['status'][] = ['Ordered', 'Specimen Collected', 'In Progress', 'Resulted', 'Reviewed'];
 
 const STATUS_CONFIG: Record<string, { bg: string; color: string; label: string }> = {
-  Ordered: { bg: '#dbeafe', color: '#1d4ed8', label: 'Ordered' },
-  'Specimen Collected': { bg: '#fef3c7', color: '#92400e', label: 'Collected' },
-  'In Progress': { bg: '#e0e7ff', color: '#4338ca', label: 'Processing' },
-  Resulted: { bg: '#d1fae5', color: '#065f46', label: 'Resulted' },
+  Ordered: { bg: 'var(--color-info-light)', color: '#1d4ed8', label: 'Ordered' },
+  'Specimen Collected': { bg: 'var(--color-warning-light)', color: '#92400e', label: 'Collected' },
+  'In Progress': { bg: 'var(--color-indigo-light)', color: 'var(--color-indigo)', label: 'Processing' },
+  Resulted: { bg: 'var(--color-success-light)', color: '#065f46', label: 'Resulted' },
   Reviewed: { bg: '#f0fdf4', color: '#166534', label: 'Reviewed' },
-  Cancelled: { bg: '#fee2e2', color: '#991b1b', label: 'Cancelled' },
+  Cancelled: { bg: 'var(--color-error-light)', color: '#991b1b', label: 'Cancelled' },
 };
 
-const PRIORITY_CONFIG: Record<string, { bg: string; color: string }> = {
-  Stat: { bg: '#fee2e2', color: '#dc2626' },
-  Urgent: { bg: '#fef3c7', color: '#d97706' },
-  Routine: { bg: '#dbeafe', color: '#2563eb' },
+const LAB_STATUS_VARIANT: Record<string, BadgeVariant> = {
+  Ordered: 'info',
+  'Specimen Collected': 'warning',
+  'In Progress': 'indigo',
+  Resulted: 'success',
+  Reviewed: 'success',
+  Cancelled: 'error',
+};
+
+const PRIORITY_VARIANT: Record<string, BadgeVariant> = {
+  Stat: 'error',
+  Urgent: 'warning',
+  Routine: 'info',
 };
 
 const NEXT_STATUS: Record<string, LabOrder['status']> = {
@@ -231,23 +242,23 @@ export function LabImaging() {
   return (
     <div style={S.page}>
       {/* ── Header ── */}
-      <div style={S.header}>
-        <div style={S.titleWrap}>
-          <h1 style={S.title}>Lab & Imaging</h1>
-          <p style={S.subtitle}>Order management, result entry, and turnaround analytics</p>
-        </div>
-        <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => setShowNewOrder(true)}>
-          <Plus size={16} /> New Order
-        </button>
-      </div>
+      <PageHeader
+        title="Lab & Imaging"
+        subtitle="Order management, result entry, and turnaround analytics"
+        actions={
+          <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => setShowNewOrder(true)}>
+            <Plus size={16} /> New Order
+          </button>
+        }
+      />
 
       {/* ── Stats Row ── */}
       <div style={S.statsRow}>
         {[
-          { label: 'Ordered', value: orderedCount, bg: '#dbeafe', color: '#2563eb', icon: <FlaskConical size={20} /> },
-          { label: 'Collected', value: collectedCount, bg: '#fef3c7', color: '#d97706', icon: <Beaker size={20} /> },
-          { label: 'Processing', value: processingCount, bg: '#e0e7ff', color: '#4338ca', icon: <Activity size={20} /> },
-          { label: 'Resulted', value: resultedCount, bg: '#d1fae5', color: '#059669', icon: <Clock size={20} /> },
+          { label: 'Ordered', value: orderedCount, bg: 'var(--color-info-light)', color: 'var(--color-info-dark)', icon: <FlaskConical size={20} /> },
+          { label: 'Collected', value: collectedCount, bg: 'var(--color-warning-light)', color: 'var(--color-warning-dark)', icon: <Beaker size={20} /> },
+          { label: 'Processing', value: processingCount, bg: 'var(--color-indigo-light)', color: 'var(--color-indigo)', icon: <Activity size={20} /> },
+          { label: 'Resulted', value: resultedCount, bg: 'var(--color-success-light)', color: 'var(--color-success-dark)', icon: <Clock size={20} /> },
           { label: 'Reviewed', value: reviewedCount, bg: '#f0fdf4', color: '#166534', icon: <CheckCircle2 size={20} /> },
         ].map(s => (
           <div key={s.label} style={S.statCard}>
@@ -261,17 +272,15 @@ export function LabImaging() {
       </div>
 
       {/* ── Tabs ── */}
-      <div style={S.tabs}>
-        {([
-          { id: 'orders' as const, label: 'Orders', icon: <FlaskConical size={16} /> },
-          { id: 'results' as const, label: 'Results', icon: <FileText size={16} /> },
-          { id: 'turnaround' as const, label: 'Turnaround', icon: <BarChart3 size={16} /> },
-        ]).map(t => (
-          <button key={t.id} style={{ ...S.tab, ...(activeTab === t.id ? S.tabActive : {}) }} onClick={() => setActiveTab(t.id)}>
-            {t.icon} {t.label}
-          </button>
-        ))}
-      </div>
+      <TabBar
+        tabs={[
+          { key: 'orders' as const, label: 'Orders', icon: <FlaskConical size={16} /> },
+          { key: 'results' as const, label: 'Results', icon: <FileText size={16} /> },
+          { key: 'turnaround' as const, label: 'Turnaround', icon: <BarChart3 size={16} /> },
+        ]}
+        active={activeTab}
+        onChange={setActiveTab}
+      />
 
       {/* ═══════════ ORDERS TAB ═══════════ */}
       {activeTab === 'orders' && (
@@ -295,7 +304,7 @@ export function LabImaging() {
               return (
                 <div key={status} style={S.pipelineCol}>
                   <div style={S.pipelineTitle}>
-                    <span style={{ ...S.badge, background: sc.bg, color: sc.color }}>{orders.length}</span>
+                    <StatusBadge variant={LAB_STATUS_VARIANT[status] ?? 'muted'} size="sm">{orders.length}</StatusBadge>
                     {sc.label}
                   </div>
                   {orders.length === 0 && (
@@ -311,16 +320,14 @@ export function LabImaging() {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                         <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text)' }}>{o.patientName}</div>
-                        <span style={{ ...S.badge, background: PRIORITY_CONFIG[o.priority]?.bg, color: PRIORITY_CONFIG[o.priority]?.color, fontSize: 11 }}>
-                          {o.priority}
-                        </span>
+                        <StatusBadge variant={PRIORITY_VARIANT[o.priority] ?? 'muted'} size="sm">{o.priority}</StatusBadge>
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 4 }}>{o.testName} ({o.testType})</div>
                       <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                         {o.id} &middot; Dr. {o.doctorName.replace('Dr. ', '')}
                       </div>
                       {o.isCritical && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#ef4444', fontWeight: 600, marginTop: 6 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--color-error)', fontWeight: 600, marginTop: 6 }}>
                           <AlertTriangle size={14} /> Critical
                         </div>
                       )}
@@ -400,19 +407,17 @@ export function LabImaging() {
                         <td style={S.td}>{o.patientName}</td>
                         <td style={S.td}>{o.testName}</td>
                         <td style={S.td}>{o.testType}</td>
-                        <td style={{ ...S.td, ...(isAbn ? { color: '#ef4444', fontWeight: 600 } : {}) }}>
+                        <td style={{ ...S.td, ...(isAbn ? { color: 'var(--color-error)', fontWeight: 600 } : {}) }}>
                           {o.result || '—'}
                         </td>
                         <td style={S.td}>{o.referenceRange || '—'}</td>
                         <td style={S.td}>
                           {isCrit ? (
-                            <span style={{ ...S.badge, background: '#fee2e2', color: '#dc2626' }}>
-                              <AlertTriangle size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />Critical
-                            </span>
+                            <StatusBadge variant="error" icon={<AlertTriangle size={12} />}>Critical</StatusBadge>
                           ) : isAbn ? (
-                            <span style={{ ...S.badge, background: '#fef3c7', color: '#d97706' }}>Abnormal</span>
+                            <StatusBadge variant="warning">Abnormal</StatusBadge>
                           ) : (
-                            <span style={{ ...S.badge, background: '#d1fae5', color: '#065f46' }}>Normal</span>
+                            <StatusBadge variant="success">Normal</StatusBadge>
                           )}
                         </td>
                         <td style={S.td}>{o.resultedDate || '—'}</td>
@@ -450,14 +455,14 @@ export function LabImaging() {
                           <td style={S.td}><span style={{ fontWeight: 600 }}>{o.id}</span></td>
                           <td style={S.td}>{o.patientName}</td>
                           <td style={S.td}>{o.testName}</td>
-                          <td style={{ ...S.td, ...(o.isAbnormal ? { color: '#ef4444', fontWeight: 600 } : {}) }}>{o.result || '—'}</td>
+                          <td style={{ ...S.td, ...(o.isAbnormal ? { color: 'var(--color-error)', fontWeight: 600 } : {}) }}>{o.result || '—'}</td>
                           <td style={S.td}>
                             {o.isCritical ? (
-                              <span style={{ ...S.badge, background: '#fee2e2', color: '#dc2626' }}>Critical</span>
+                              <StatusBadge variant="error">Critical</StatusBadge>
                             ) : o.isAbnormal ? (
-                              <span style={{ ...S.badge, background: '#fef3c7', color: '#d97706' }}>Abnormal</span>
+                              <StatusBadge variant="warning">Abnormal</StatusBadge>
                             ) : (
-                              <span style={{ ...S.badge, background: '#d1fae5', color: '#065f46' }}>Normal</span>
+                              <StatusBadge variant="success">Normal</StatusBadge>
                             )}
                           </td>
                           <td style={S.td}>
@@ -491,9 +496,9 @@ export function LabImaging() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 28 }}>
             {[
               { label: 'Avg TAT (All)', value: `${Math.round(TAT_DATA.reduce((a, t) => a + t.avgTat, 0) / TAT_DATA.length)} min`, color: 'var(--color-primary)' },
-              { label: 'On Target', value: `${TAT_DATA.filter(t => t.avgTat <= t.targetTat).length}/${TAT_DATA.length}`, color: '#10b981' },
-              { label: 'Delayed', value: `${TAT_DATA.filter(t => t.avgTat > t.targetTat).length}`, color: '#ef4444' },
-              { label: 'Samples This Week', value: TAT_DATA.reduce((a, t) => a + t.samplesThisWeek, 0).toString(), color: '#6366f1' },
+              { label: 'On Target', value: `${TAT_DATA.filter(t => t.avgTat <= t.targetTat).length}/${TAT_DATA.length}`, color: 'var(--color-success)' },
+              { label: 'Delayed', value: `${TAT_DATA.filter(t => t.avgTat > t.targetTat).length}`, color: 'var(--color-error)' },
+              { label: 'Samples This Week', value: TAT_DATA.reduce((a, t) => a + t.samplesThisWeek, 0).toString(), color: 'var(--color-indigo)' },
             ].map(c => (
               <div key={c.label} style={{ background: 'var(--color-background)', borderRadius: 10, padding: 16, textAlign: 'center' }}>
                 <div style={{ fontSize: 22, fontWeight: 700, color: c.color }}>{c.value}</div>
@@ -511,7 +516,7 @@ export function LabImaging() {
                 <div key={t.testType}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                     <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{t.testType}</span>
-                    <span style={{ fontSize: 13, color: isDelayed ? '#ef4444' : '#10b981', fontWeight: 600 }}>
+                    <span style={{ fontSize: 13, color: isDelayed ? 'var(--color-error)' : 'var(--color-success)', fontWeight: 600 }}>
                       {t.avgTat} min / target {t.targetTat} min
                     </span>
                   </div>
@@ -519,7 +524,7 @@ export function LabImaging() {
                     <div style={{
                       width: `${Math.min(100, ratio * 100)}%`,
                       height: '100%',
-                      background: isDelayed ? '#ef4444' : '#10b981',
+                      background: isDelayed ? 'var(--color-error)' : 'var(--color-success)',
                       borderRadius: 4,
                       transition: 'width .3s ease',
                     }} />
@@ -551,13 +556,9 @@ export function LabImaging() {
                       <td style={S.td}>{t.targetTat}</td>
                       <td style={S.td}>{t.samplesThisWeek}</td>
                       <td style={S.td}>
-                        <span style={{
-                          ...S.badge,
-                          background: isDelayed ? '#fee2e2' : '#d1fae5',
-                          color: isDelayed ? '#dc2626' : '#065f46',
-                        }}>
+                        <StatusBadge variant={isDelayed ? 'error' : 'success'}>
                           {isDelayed ? 'Delayed' : 'On Target'}
-                        </span>
+                        </StatusBadge>
                       </td>
                     </tr>
                   );

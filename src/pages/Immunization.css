@@ -98,11 +98,11 @@
 }
 
 .section-icon.warning {
-    color: #f59e0b;
+    color: var(--color-warning);
 }
 
 .section-icon.success {
-    color: #10b981;
+    color: var(--color-success);
 }
 
 /* Vaccine List */
@@ -131,15 +131,15 @@
 }
 
 .vaccine-card.overdue {
-    border-left: 4px solid #ef4444;
+    border-left: 4px solid var(--color-error);
 }
 
 .vaccine-card.due {
-    border-left: 4px solid #f59e0b;
+    border-left: 4px solid var(--color-warning);
 }
 
 .vaccine-card.completed {
-    border-left: 4px solid #10b981;
+    border-left: 4px solid var(--color-success);
 }
 
 .vaccine-icon {
@@ -156,12 +156,12 @@
 
 .vaccine-card.overdue .vaccine-icon {
     background: linear-gradient(135deg, #fee2e2, #fecaca);
-    color: #ef4444;
+    color: var(--color-error);
 }
 
 .vaccine-card.due .vaccine-icon {
     background: linear-gradient(135deg, #fef3c7, #fde68a);
-    color: #d97706;
+    color: var(--color-warning-dark);
 }
 
 .vaccine-info {
@@ -202,7 +202,7 @@
 }
 
 .vaccine-check {
-    color: #10b981;
+    color: var(--color-success);
 }
 
 /* Schedule Button */

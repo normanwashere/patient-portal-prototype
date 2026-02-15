@@ -15,6 +15,8 @@ import {
 import { useProvider } from '../context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { useToast } from '../../context/ToastContext';
+import { StatusBadge, TabBar, PageHeader } from '../../ui';
+import type { BadgeVariant } from '../../ui';
 
 /* ───────── shared inline styles ───────── */
 const S: Record<string, React.CSSProperties> = {
@@ -44,7 +46,7 @@ const S: Record<string, React.CSSProperties> = {
   td: { padding: '14px 14px', fontSize: 14, color: 'var(--color-text)', borderBottom: '1px solid var(--color-border)' },
   btn: { padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 },
   btnPrimary: { background: 'var(--color-primary)', color: 'white' },
-  btnSuccess: { background: '#10b981', color: 'white' },
+  btnSuccess: { background: 'var(--color-success)', color: 'white' },
   btnOutline: { background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)' },
   btnIcon: { width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)', padding: 0 },
   badge: { display: 'inline-block', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 },
@@ -52,30 +54,25 @@ const S: Record<string, React.CSSProperties> = {
   emptyState: { textAlign: 'center' as const, padding: 40, color: 'var(--color-text-muted)' },
 };
 
-const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  'Active': { bg: '#dbeafe', color: '#2563eb' },
-  'Pending Approval': { bg: '#fef3c7', color: '#d97706' },
-  'Completed': { bg: '#d1fae5', color: '#065f46' },
-  'Cancelled': { bg: '#fee2e2', color: '#dc2626' },
-  'Dispensed': { bg: '#d1fae5', color: '#065f46' },
-  'Pending': { bg: '#fef3c7', color: '#d97706' },
-  'Partially Dispensed': { bg: '#e0e7ff', color: '#4338ca' },
-  'Returned': { bg: '#fee2e2', color: '#dc2626' },
-  'In Stock': { bg: '#d1fae5', color: '#065f46' },
-  'Low Stock': { bg: '#fef3c7', color: '#d97706' },
-  'Out of Stock': { bg: '#fee2e2', color: '#dc2626' },
-  'Expired': { bg: '#fee2e2', color: '#991b1b' },
+const STATUS_VARIANT: Record<string, BadgeVariant> = {
+  'Active': 'info',
+  'Pending Approval': 'warning',
+  'Completed': 'success',
+  'Cancelled': 'error',
+  'Dispensed': 'success',
+  'Pending': 'warning',
+  'Partially Dispensed': 'indigo',
+  'Returned': 'error',
+  'In Stock': 'success',
+  'Low Stock': 'warning',
+  'Out of Stock': 'error',
+  'Expired': 'error',
 };
 
-function StatusBadge({ status }: { status: string }) {
-  const c = STATUS_COLORS[status] ?? { bg: 'var(--color-background)', color: 'var(--color-text-muted)' };
-  return <span style={{ ...S.badge, background: c.bg, color: c.color }}>{status}</span>;
-}
-
 function getStockBarColor(ratio: number) {
-  if (ratio >= 1) return '#10b981';
-  if (ratio >= 0.5) return '#f59e0b';
-  return '#ef4444';
+  if (ratio >= 1) return 'var(--color-success)';
+  if (ratio >= 0.5) return 'var(--color-warning)';
+  return 'var(--color-error)';
 }
 
 export function PharmacyOps() {
@@ -163,21 +160,16 @@ export function PharmacyOps() {
   return (
     <div style={S.page}>
       {/* ── Header ── */}
-      <div style={S.header}>
-        <div style={S.titleWrap}>
-          <h1 style={S.title}>Pharmacy Operations</h1>
-          <p style={S.subtitle}>Prescription dispensing, records, and inventory management</p>
-        </div>
-      </div>
+      <PageHeader title="Pharmacy Operations" subtitle="Prescription dispensing, records, and inventory management" />
 
       {/* ── Stats Row ── */}
       <div style={S.statsRow}>
         {[
-          { label: 'Pending Rx', value: pendingRx.length, bg: '#fef3c7', color: '#d97706', icon: <Clock size={20} /> },
-          { label: 'Dispensed', value: dispensedToday, bg: '#d1fae5', color: '#059669', icon: <CheckCircle2 size={20} /> },
-          { label: 'Low / OOS', value: lowStockCount, bg: '#fee2e2', color: '#dc2626', icon: <AlertTriangle size={20} /> },
-          { label: 'Total Items', value: totalItems, bg: '#dbeafe', color: '#2563eb', icon: <Package size={20} /> },
-          { label: 'Controlled', value: controlledCount, bg: '#f3e8ff', color: '#7c3aed', icon: <Shield size={20} /> },
+          { label: 'Pending Rx', value: pendingRx.length, bg: 'var(--color-warning-light)', color: 'var(--color-warning-dark)', icon: <Clock size={20} /> },
+          { label: 'Dispensed', value: dispensedToday, bg: 'var(--color-success-light)', color: 'var(--color-success-dark)', icon: <CheckCircle2 size={20} /> },
+          { label: 'Low / OOS', value: lowStockCount, bg: 'var(--color-error-light)', color: 'var(--color-error-dark)', icon: <AlertTriangle size={20} /> },
+          { label: 'Total Items', value: totalItems, bg: 'var(--color-info-light)', color: 'var(--color-info-dark)', icon: <Package size={20} /> },
+          { label: 'Controlled', value: controlledCount, bg: 'var(--color-purple-light)', color: 'var(--color-purple-dark)', icon: <Shield size={20} /> },
         ].map(s => (
           <div key={s.label} style={S.statCard}>
             <div style={{ ...S.statIcon, background: s.bg }}>
@@ -190,17 +182,15 @@ export function PharmacyOps() {
       </div>
 
       {/* ── Tabs ── */}
-      <div style={S.tabs}>
-        {([
-          { id: 'prescriptions' as const, label: 'Prescriptions', icon: <ClipboardCheck size={16} /> },
-          { id: 'dispensing' as const, label: 'Dispensing', icon: <Archive size={16} /> },
-          { id: 'inventory' as const, label: 'Inventory', icon: <Package size={16} /> },
-        ]).map(t => (
-          <button key={t.id} style={{ ...S.tab, ...(activeTab === t.id ? S.tabActive : {}) }} onClick={() => { setActiveTab(t.id); setSearch(''); }}>
-            {t.icon} {t.label}
-          </button>
-        ))}
-      </div>
+      <TabBar
+        tabs={[
+          { key: 'prescriptions' as const, label: 'Prescriptions', icon: <ClipboardCheck size={16} /> },
+          { key: 'dispensing' as const, label: 'Dispensing', icon: <Archive size={16} /> },
+          { key: 'inventory' as const, label: 'Inventory', icon: <Package size={16} /> },
+        ]}
+        active={activeTab}
+        onChange={(key) => { setActiveTab(key); setSearch(''); }}
+      />
 
       {/* ═══════════ PRESCRIPTIONS TAB ═══════════ */}
       {activeTab === 'prescriptions' && (
@@ -248,7 +238,7 @@ export function PharmacyOps() {
                       <td style={S.td}>{rx.quantity}</td>
                       <td style={S.td}>{rx.refillsRemaining}</td>
                       <td style={S.td}>{rx.doctorName}</td>
-                      <td style={S.td}><StatusBadge status={rx.status} /></td>
+                      <td style={S.td}><StatusBadge variant={STATUS_VARIANT[rx.status] ?? 'muted'}>{rx.status}</StatusBadge></td>
                       <td style={S.td}>
                         <button
                           style={{ ...S.btn, ...S.btnSuccess, fontSize: 12, padding: '6px 14px' }}
@@ -291,7 +281,7 @@ export function PharmacyOps() {
                           <td style={S.td}>{p.patientName}</td>
                           <td style={S.td}>{p.medication} {p.dosage}</td>
                           <td style={S.td}>{p.doctorName}</td>
-                          <td style={S.td}><StatusBadge status={p.status} /></td>
+                          <td style={S.td}><StatusBadge variant={STATUS_VARIANT[p.status] ?? 'muted'}>{p.status}</StatusBadge></td>
                         </tr>
                       ))}
                     </tbody>
@@ -349,7 +339,7 @@ export function PharmacyOps() {
                       <td style={S.td}>{d.quantity}</td>
                       <td style={S.td}>{d.dispensedBy}</td>
                       <td style={S.td}>{d.dispensedDate}</td>
-                      <td style={S.td}><StatusBadge status={d.status} /></td>
+                      <td style={S.td}><StatusBadge variant={STATUS_VARIANT[d.status] ?? 'muted'}>{d.status}</StatusBadge></td>
                     </tr>
                   ))}
                 </tbody>
@@ -413,12 +403,12 @@ export function PharmacyOps() {
                   const isExpiringSoon = new Date(item.expiryDate) < new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
                   const isLow = item.status === 'Low Stock' || item.status === 'Out of Stock';
                   return (
-                    <tr key={item.id} style={isLow ? { background: '#fffbeb', borderLeft: '3px solid #f59e0b' } : undefined}>
+                    <tr key={item.id} style={isLow ? { background: '#fffbeb', borderLeft: '3px solid var(--color-warning)' } : undefined}>
                       <td style={S.td}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ fontWeight: 600 }}>{item.name}</span>
                           {item.isControlled && (
-                            <Shield size={14} style={{ color: '#7c3aed' }} />
+                            <Shield size={14} style={{ color: 'var(--color-purple-dark)' }} />
                           )}
                         </div>
                       </td>
@@ -429,17 +419,17 @@ export function PharmacyOps() {
                           <div style={{ ...S.progressBar, width: 60, flexShrink: 0 }}>
                             <div style={{ width: `${Math.min(100, ratio * 100)}%`, height: '100%', background: barColor, borderRadius: 4 }} />
                           </div>
-                          <span style={{ fontWeight: 600, color: isLow ? '#ef4444' : 'var(--color-text)' }}>{item.stockLevel}</span>
+                          <span style={{ fontWeight: 600, color: isLow ? 'var(--color-error)' : 'var(--color-text)' }}>{item.stockLevel}</span>
                         </div>
                       </td>
                       <td style={S.td}>{item.minStock}</td>
                       <td style={S.td}>₱{item.unitPrice.toLocaleString()}</td>
                       <td style={S.td}>
-                        <span style={isExpiringSoon ? { color: '#ef4444', fontWeight: 600 } : {}}>
+                        <span style={isExpiringSoon ? { color: 'var(--color-error)', fontWeight: 600 } : {}}>
                           {item.expiryDate}
                         </span>
                       </td>
-                      <td style={S.td}><StatusBadge status={item.status} /></td>
+                      <td style={S.td}><StatusBadge variant={STATUS_VARIANT[item.status] ?? 'muted'}>{item.status}</StatusBadge></td>
                       <td style={S.td}>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                           <button

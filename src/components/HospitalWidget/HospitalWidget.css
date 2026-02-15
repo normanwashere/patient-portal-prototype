@@ -37,8 +37,8 @@
     letter-spacing: 0.05em;
     padding: 0.25rem 0.625rem;
     border-radius: 100px;
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--color-gray-100);
+    color: var(--color-gray-600);
 }
 
 .widget-badge.hospital {
@@ -48,7 +48,7 @@
 
 .widget-badge.clinic {
     background: rgba(99, 102, 241, 0.1);
-    color: #6366f1;
+    color: var(--color-indigo);
 }
 
 .widget-distance {
@@ -57,7 +57,7 @@
     gap: 0.25rem;
     font-size: 0.7rem;
     font-weight: 700;
-    color: #94a3b8;
+    color: var(--color-gray-400);
 }
 
 .widget-body {
@@ -67,7 +67,7 @@
 .widget-name {
     font-size: 0.95rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--color-gray-800);
     line-height: 1.25;
     margin: 0 0 0.4rem 0;
     display: -webkit-box;
@@ -82,7 +82,7 @@
     align-items: center;
     gap: 0.35rem;
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-gray-500);
     font-weight: 500;
 }
 

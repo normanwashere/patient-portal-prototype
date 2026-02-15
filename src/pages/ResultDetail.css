@@ -152,11 +152,11 @@
 }
 
 .result-row.high {
-    border-left: 4px solid #ef4444;
+    border-left: 4px solid var(--color-error);
 }
 
 .result-row.low {
-    border-left: 4px solid #f59e0b;
+    border-left: 4px solid var(--color-warning);
 }
 
 .result-name {
@@ -179,13 +179,13 @@
 }
 
 .flag-badge.high {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--color-error-light);
+    color: var(--color-error-dark);
 }
 
 .flag-badge.low {
-    background: #fef3c7;
-    color: #d97706;
+    background: var(--color-warning-light);
+    color: var(--color-warning-dark);
 }
 
 /* Result Value */
@@ -208,11 +208,11 @@
 }
 
 .result-value .value.high {
-    color: #dc2626;
+    color: var(--color-error-dark);
 }
 
 .result-value .value.low {
-    color: #d97706;
+    color: var(--color-warning-dark);
 }
 
 .result-value .unit {
@@ -227,21 +227,21 @@
 }
 
 .result-value .trend.up {
-    color: #dc2626;
+    color: var(--color-error-dark);
 }
 
 .result-value .trend.down {
-    color: #2563eb;
+    color: var(--color-info-dark);
 }
 
 .result-value .trend.stable {
-    color: #94a3b8;
+    color: var(--color-gray-400);
 }
 
 /* Range Bar */
 .range-bar {
     height: 8px;
-    background: #e2e8f0;
+    background: var(--color-gray-200);
     border-radius: 100px;
     position: relative;
     overflow: visible;
@@ -268,16 +268,16 @@
 }
 
 .value-marker.high {
-    background: #dc2626;
+    background: var(--color-error-dark);
 }
 
 .value-marker.low {
-    background: #d97706;
+    background: var(--color-warning-dark);
 }
 
 .ref-range {
     font-size: 0.7rem;
-    color: #94a3b8;
+    color: var(--color-gray-400);
 }
 
 /* Interpretation Card */

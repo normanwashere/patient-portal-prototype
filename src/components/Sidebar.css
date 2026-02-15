@@ -117,16 +117,16 @@
 
 .logout-btn:hover {
     background: linear-gradient(90deg, rgba(248, 113, 113, 0.1), transparent) !important;
-    color: #ef4444 !important;
+    color: var(--color-error) !important;
 }
 
 .logout-btn.active::before {
-    background: #ef4444 !important;
+    background: var(--color-error) !important;
 }
 
 .version-info {
     font-size: 0.7rem;
-    color: #94a3b8;
+    color: var(--color-gray-400);
     text-align: center;
     margin-top: 1rem;
     letter-spacing: 0.5px;
@@ -149,7 +149,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #94a3b8;
+    color: var(--color-gray-400);
     padding: 0 1.25rem;
     margin-bottom: 0.5rem;
 }
@@ -190,7 +190,7 @@
 }
 
 .group-link-area svg {
-    color: #94a3b8;
+    color: var(--color-gray-400);
     transition: color 0.2s ease, transform 0.2s ease;
 }
 
@@ -207,7 +207,7 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    color: #94a3b8;
+    color: var(--color-gray-400);
     transition: all 0.2s ease;
     border-left: 1px solid transparent;
 }
@@ -220,11 +220,11 @@
 /* Active State Styling */
 .group-header-row.open .group-link-area {
     font-weight: 600;
-    color: #475569;
+    color: var(--color-gray-600);
 }
 
 .group-header-row.open .group-toggle-btn {
-    color: #475569;
+    color: var(--color-gray-600);
 }
 
 .group-label {
@@ -254,7 +254,7 @@
 .sub-item {
     font-size: 0.85rem;
     padding: 0.65rem 0.75rem;
-    color: #64748b;
+    color: var(--color-gray-500);
     border-radius: 8px;
 }
 
@@ -311,6 +311,6 @@
 .sidebar-badge {
     top: -6px;
     right: -6px;
-    border-color: #f8fafc;
+    border-color: var(--color-gray-50);
     /* Match sidebar bg if needed, or keeping white is usually fine */
 }

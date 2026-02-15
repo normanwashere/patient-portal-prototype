@@ -12,6 +12,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useToast } from '../../context/ToastContext';
+import { PageHeader, StatusBadge, EmptyState } from '../../ui';
 
 type TaskType = 'lab-review' | 'refill-request' | 'note-sign';
 type TaskFilter = 'all' | TaskType;
@@ -111,7 +112,7 @@ export const DoctorTasks = () => {
 
   const getIconBg = (type: string) => {
     switch (type) {
-      case 'lab-review': return { bg: 'rgba(139,92,246,0.1)', color: '#8b5cf6' };
+      case 'lab-review': return { bg: 'rgba(139,92,246,0.1)', color: 'var(--color-purple)' };
       case 'refill-request': return { bg: 'rgba(16,185,129,0.1)', color: 'var(--color-success)' };
       case 'note-sign': return { bg: 'var(--color-primary-transparent)', color: 'var(--color-primary)' };
       default: return { bg: 'rgba(59,130,246,0.1)', color: 'var(--color-info)' };
@@ -194,37 +195,39 @@ export const DoctorTasks = () => {
   if (allTasks.length === 0) {
     return (
       <div className="doc-page" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>Tasks</h2>
-        <div style={{ textAlign: 'center', padding: 48, color: 'var(--color-text-muted)', background: 'var(--color-surface)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)' }}>
-          <CheckCircle2 size={40} style={{ color: 'var(--color-success)', marginBottom: 8 }} />
-          <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--color-text)' }}>All caught up!</div>
-          <div style={{ fontSize: 12 }}>No pending tasks</div>
-        </div>
+        <PageHeader title="Tasks" style={{ marginBottom: 0 }} />
+        <EmptyState
+          icon={<CheckCircle2 size={40} style={{ color: 'var(--color-success)' }} />}
+          title="All caught up!"
+          description="No pending tasks"
+          style={{ background: 'var(--color-surface)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)' }}
+        />
       </div>
     );
   }
 
   return (
     <div className="doc-page" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>
-          Tasks ({activeTasks.length})
-        </h2>
-        {snoozedTasks.length > 0 && (
-          <button
-            onClick={() => setShowSnoozed(!showSnoozed)}
-            style={{
-              padding: '5px 12px', borderRadius: 6, border: '1px solid var(--color-border)',
-              background: showSnoozed ? 'var(--color-primary)' : 'var(--color-surface)',
-              color: showSnoozed ? 'white' : 'var(--color-text-muted)',
-              fontSize: 11, fontWeight: 600, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}
-          >
-            <Clock size={12} /> Snoozed ({snoozedTasks.length})
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title={`Tasks (${activeTasks.length})`}
+        style={{ marginBottom: 0 }}
+        actions={
+          snoozedTasks.length > 0 ? (
+            <button
+              onClick={() => setShowSnoozed(!showSnoozed)}
+              style={{
+                padding: '5px 12px', borderRadius: 6, border: '1px solid var(--color-border)',
+                background: showSnoozed ? 'var(--color-primary)' : 'var(--color-surface)',
+                color: showSnoozed ? 'white' : 'var(--color-text-muted)',
+                fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 4,
+              }}
+            >
+              <Clock size={12} /> Snoozed ({snoozedTasks.length})
+            </button>
+          ) : undefined
+        }
+      />
 
       {/* Type filter chips */}
       <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
@@ -285,13 +288,14 @@ export const DoctorTasks = () => {
 
           return (
             <div key={priority}>
-              <div style={{
-                fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
-                color: priority === 'critical' ? 'var(--color-error)' : priority === 'urgent' ? 'var(--color-warning)' : 'var(--color-text-muted)',
-                marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                {priority === 'critical' && <AlertCircle size={12} />}
-                {priority} ({group.length})
+              <div style={{ marginBottom: 8 }}>
+                <StatusBadge
+                  variant={priority === 'critical' ? 'error' : priority === 'urgent' ? 'warning' : 'muted'}
+                  icon={priority === 'critical' ? <AlertCircle size={12} /> : undefined}
+                  style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                >
+                  {priority} ({group.length})
+                </StatusBadge>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {group.map(task => renderTask(task))}

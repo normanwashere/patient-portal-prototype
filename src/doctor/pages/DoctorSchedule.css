@@ -180,7 +180,7 @@
   padding: 3px 10px;
   border-radius: 6px;
   background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  color: var(--color-success);
 }
 
 /* ===== Appointment List (Day View) ===== */
@@ -306,22 +306,22 @@
 
 .ds-apt-action--confirm {
   background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  color: var(--color-info);
 }
 
 .ds-apt-action--complete {
   background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .ds-apt-action--cancel {
   background: rgba(239, 68, 68, 0.08);
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 .ds-apt-action--noshow {
   background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 
 /* Empty State */
@@ -392,7 +392,7 @@
   left: 52px;
   right: 0;
   height: 2px;
-  background: #ef4444;
+  background: var(--color-error);
   z-index: 10;
   box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
 }
@@ -404,7 +404,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #ef4444;
+  background: var(--color-error);
   box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
 }
 
@@ -459,13 +459,13 @@
 
 .ds-slot-block--apt {
   background: rgba(59, 130, 246, 0.08);
-  color: #3b82f6;
+  color: var(--color-info);
   border: 1px solid rgba(59, 130, 246, 0.15);
 }
 
 .ds-slot-block--tele {
   background: rgba(139, 92, 246, 0.08);
-  color: #8b5cf6;
+  color: var(--color-purple);
   border: 1px solid rgba(139, 92, 246, 0.15);
 }
 
@@ -679,7 +679,7 @@
   padding: 2px 8px;
   border-radius: 4px;
   background: rgba(6, 182, 212, 0.1);
-  color: #06b6d4;
+  color: var(--color-cyan);
 }
 
 .ds-avail-toggle {

@@ -42,7 +42,7 @@
 }
 
 .empty-state-card svg {
-    color: #cbd5e1;
+    color: var(--color-gray-300);
 }
 
 .empty-state-card h3 {
@@ -122,7 +122,7 @@
     height: 40px;
     border-radius: 10px;
     background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-    color: #2563eb;
+    color: var(--color-info-dark);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -159,13 +159,13 @@
 }
 
 .status-badge.confirmed {
-    background: #d1fae5;
-    color: #059669;
+    background: var(--color-success-light);
+    color: var(--color-success-dark);
 }
 
 .status-badge.pending {
-    background: #fef3c7;
-    color: #d97706;
+    background: var(--color-warning-light);
+    color: var(--color-warning-dark);
 }
 
 /* Help Section */

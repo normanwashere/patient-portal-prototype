@@ -262,14 +262,14 @@
 }
 
 .context-banner-stack .tag {
-    background: #f1f5f9;
+    background: var(--color-gray-100);
     padding: 0.4rem 0.8rem;
     border-radius: 100px;
     font-size: 0.8rem;
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    color: #475569;
+    color: var(--color-gray-600);
     font-weight: 500;
 }
 

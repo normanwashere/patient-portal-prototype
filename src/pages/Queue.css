@@ -117,7 +117,7 @@
 }
 
 .h-step-item.completed .h-step-label {
-    color: #059669;
+    color: var(--color-success-dark);
     /* Or stick to gray? Design keeps gray */
 }
 
@@ -309,7 +309,7 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: linear-gradient(to bottom, transparent, #cbd5e1 10%, #cbd5e1 90%, transparent);
+    background: linear-gradient(to bottom, transparent, var(--color-gray-300) 10%, var(--color-gray-300) 90%, transparent);
 }
 
 .timeline-step {
@@ -420,7 +420,7 @@
 }
 
 .step-status-badge.completed {
-    background: #d1fae5;
+    background: var(--color-success-light);
     color: #047857;
 }
 
@@ -594,7 +594,7 @@
 .board-section-title {
     font-size: 0.75rem;
     font-weight: 800;
-    color: #94a3b8;
+    color: var(--color-gray-400);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 1rem;
@@ -632,7 +632,7 @@
     background: white;
     border-radius: 1.25rem;
     padding: 1.25rem;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--color-gray-100);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     position: relative;
     overflow: hidden;
@@ -653,7 +653,7 @@
     min-height: auto;
     cursor: default;
     transform: none !important;
-    border-color: #3b82f6;
+    border-color: var(--color-info);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     z-index: 10;
 }
@@ -682,26 +682,26 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f8fafc;
-    color: #64748b;
+    background: var(--color-gray-50);
+    color: var(--color-gray-500);
     transition: all 0.3s ease;
 }
 
 .active-tile.ready .tile-icon-box {
-    background: #10b981;
+    background: var(--color-success);
     color: white;
 }
 
 .active-tile.in-session .tile-icon-box {
-    background: #3b82f6;
+    background: var(--color-info);
     color: white;
 }
 
 .tile-ticket {
     font-size: 0.75rem;
     font-weight: 700;
-    color: #94a3b8;
-    background: #f1f5f9;
+    color: var(--color-gray-400);
+    background: var(--color-gray-100);
     padding: 0.25rem 0.5rem;
     border-radius: 0.375rem;
 }
@@ -709,13 +709,13 @@
 .tile-main h4 {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--color-gray-800);
     margin-bottom: 0.25rem;
 }
 
 .tile-location {
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--color-gray-500);
     display: flex;
     align-items: center;
     gap: 0.25rem;
@@ -745,19 +745,19 @@
 }
 
 .tag-in-session {
-    background: #dbeafe;
+    background: var(--color-info-light);
     color: #1d4ed8;
 }
 
 .tag-queued {
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--color-gray-100);
+    color: var(--color-gray-600);
 }
 
 .tile-wait {
     font-size: 0.65rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--color-gray-500);
     display: flex;
     align-items: center;
     gap: 0.25rem;
@@ -775,7 +775,7 @@
     gap: 0.75rem;
     padding: 1rem;
     background: #fffbeb;
-    border: 1px solid #fef3c7;
+    border: 1px solid var(--color-warning-light);
     border-radius: 0.75rem;
     color: #92400e;
     margin-bottom: 2rem;
@@ -785,7 +785,7 @@
 }
 
 .requeue-reminder svg {
-    color: #d97706;
+    color: var(--color-warning-dark);
     flex-shrink: 0;
 }
 
@@ -800,7 +800,7 @@
     background: white;
     padding: 0.5rem;
     border-radius: 0.75rem;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--color-gray-100);
 }
 
 @keyframes fadeInSlideUp {
@@ -829,12 +829,12 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--color-gray-100);
     transition: all 0.2s ease;
 }
 
 .mini-step-item.completed {
-    background: #f8fafc;
+    background: var(--color-gray-50);
     opacity: 0.7;
 }
 
@@ -842,11 +842,11 @@
     width: 2rem;
     height: 2rem;
     border-radius: 50%;
-    background: #f1f5f9;
+    background: var(--color-gray-100);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #94a3b8;
+    color: var(--color-gray-400);
 }
 
 .completed .mini-step-icon {
@@ -861,11 +861,11 @@
 .mini-step-name {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--color-gray-800);
 }
 
 .mini-join-btn {
-    background: #3b82f6;
+    background: var(--color-info);
     color: white;
     border: none;
     padding: 0.4rem 0.75rem;
@@ -877,7 +877,7 @@
 }
 
 .mini-join-btn:hover {
-    background: #2563eb;
+    background: var(--color-info-dark);
     transform: translateY(-1px);
 }
 
@@ -886,18 +886,18 @@
 }
 
 .join-all-btn:hover {
-    background: #2563eb !important;
+    background: var(--color-info-dark) !important;
     transform: translateY(-1px);
 }
 
 .mini-step-item.queuable {
-    border-color: #3b82f6;
+    border-color: var(--color-info);
     background: #eff6ff;
 }
 
 .mini-step-meta {
     font-size: 0.7rem;
-    color: #94a3b8;
+    color: var(--color-gray-400);
 }
 
 @media (max-width: 480px) {

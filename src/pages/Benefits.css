@@ -62,7 +62,7 @@
 /* Progress Bar */
 .progress-bar {
     height: 10px;
-    background: #e2e8f0;
+    background: var(--color-gray-200);
     border-radius: 100px;
     overflow: hidden;
     margin-top: 0.25rem;
@@ -140,7 +140,7 @@
 }
 
 .service-type-picker::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: var(--color-gray-200);
     border-radius: 4px;
 }
 
@@ -150,8 +150,8 @@
     justify-content: space-between;
     padding: 1rem;
     border-radius: 1rem;
-    border: 1px solid #f1f5f9;
-    background: #f8fafc;
+    border: 1px solid var(--color-gray-100);
+    background: var(--color-gray-50);
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -161,7 +161,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #64748b;
+    color: var(--color-gray-500);
     font-size: 0.95rem;
     font-weight: 700;
 }
@@ -171,7 +171,7 @@
     display: flex;
     gap: 1.5rem;
     margin-bottom: 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--color-gray-200);
     padding-bottom: 0.25rem;
 }
 
@@ -181,7 +181,7 @@
     padding: 0.5rem 0.25rem 0.75rem;
     font-size: 0.95rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--color-gray-500);
     cursor: pointer;
     position: relative;
     transition: color 0.2s;
@@ -242,18 +242,18 @@
 .section-header-v3 h3 {
     font-size: 1.05rem;
     font-weight: 900;
-    color: #0f172a;
+    color: var(--color-gray-900);
 }
 
 .section-header-v3 svg {
-    color: #94a3b8;
+    color: var(--color-gray-400);
 }
 
 .breakdown-section {
     background: white;
     padding: 1.25rem;
     border-radius: 1.25rem;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--color-gray-100);
 }
 
 .breakdown-list {
@@ -272,7 +272,7 @@
     font-size: 1.25rem;
     width: 2.5rem;
     height: 2.5rem;
-    background: #f8fafc;
+    background: var(--color-gray-50);
     border-radius: 0.75rem;
     display: flex;
     align-items: center;
@@ -290,7 +290,7 @@
 .item-name {
     font-size: 0.9rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--color-gray-800);
 }
 
 .item-progress {
@@ -302,7 +302,7 @@
 .mini-progress {
     flex: 1;
     height: 6px;
-    background: #f1f5f9;
+    background: var(--color-gray-100);
     border-radius: 3px;
     overflow: hidden;
 }
@@ -316,13 +316,13 @@
 .item-stat {
     font-size: 0.75rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--color-gray-500);
     white-space: nowrap;
 }
 
 /* Claims Section */
 .claims-header-banner {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    background: linear-gradient(135deg, var(--color-indigo) 0%, #4f46e5 100%);
     padding: 1.5rem;
     border-radius: 1.25rem;
     display: flex;
@@ -356,7 +356,7 @@
 }
 
 .claim-card {
-    border-left: 4px solid #6366f1;
+    border-left: 4px solid var(--color-indigo);
 }
 
 .claim-icon {
@@ -366,7 +366,7 @@
 .claim-method {
     font-size: 0.7rem;
     font-weight: 700;
-    color: #6366f1;
+    color: var(--color-indigo);
     display: block;
     margin-top: 0.25rem;
 }
@@ -386,7 +386,7 @@
 .membership-card {
     width: 100%;
     aspect-ratio: 1.58 / 1;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    background: linear-gradient(135deg, var(--color-gray-900) 0%, var(--color-gray-800) 100%);
     border-radius: 1.25rem;
     padding: 1.5rem;
     color: white;
@@ -546,7 +546,7 @@
 .service-option-label {
     font-size: 0.9rem;
     font-weight: 850;
-    color: #0f172a;
+    color: var(--color-gray-900);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -554,7 +554,7 @@
 
 .service-option-desc {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-gray-500);
     font-weight: 500;
 }
 
@@ -605,24 +605,24 @@
 
 /* Status Colors */
 .status-badge.text-green-600 {
-    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-    color: #059669;
+    background: linear-gradient(135deg, var(--color-success-light), #a7f3d0);
+    color: var(--color-success-dark);
 }
 
 .status-badge.text-yellow-600 {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    color: #d97706;
+    background: linear-gradient(135deg, var(--color-warning-light), #fde68a);
+    color: var(--color-warning-dark);
 }
 
 .status-badge.text-red-600 {
-    background: linear-gradient(135deg, #fee2e2, #fecaca);
-    color: #dc2626;
+    background: linear-gradient(135deg, var(--color-error-light), #fecaca);
+    color: var(--color-error-dark);
 }
 
 .req-amount {
     font-size: 0.85rem;
     font-weight: 900;
-    color: #0f172a;
+    color: var(--color-gray-900);
 }
 
 /* Modal Overlay */
@@ -681,7 +681,7 @@
 }
 
 .modal-actions .btn-secondary {
-    background: #f1f5f9;
+    background: var(--color-gray-100);
     border: none;
 }
 
@@ -706,7 +706,7 @@
 }
 
 .close-btn:hover {
-    background: #f1f5f9;
+    background: var(--color-gray-100);
 }
 
 .form-group {
@@ -726,7 +726,7 @@
 .form-input {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-gray-200);
     border-radius: 0.75rem;
     font-size: 0.95rem;
     transition: border-color 0.2s;
@@ -739,10 +739,10 @@
 }
 
 .modal-disclaimer {
-    background: #f8fafc;
+    background: var(--color-gray-50);
     padding: 0.75rem !important;
     border-radius: 0.5rem;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--color-gray-100);
     text-align: left;
     color: var(--color-text-muted);
     font-size: 0.85rem;
@@ -771,13 +771,13 @@
     gap: 0.5rem;
     padding: 0.75rem;
     border-radius: 0.75rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-gray-200);
     background: white;
     cursor: pointer;
     transition: all 0.2s;
     font-size: 0.85rem;
     font-weight: 700;
-    color: #475569;
+    color: var(--color-gray-600);
 }
 
 .hmo-select-btn:hover {

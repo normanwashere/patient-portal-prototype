@@ -336,14 +336,14 @@ export const DoctorQueue = () => {
             width: 52, height: 52, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: 'rgba(124,58,237,0.08)',
           }}>
-            <PauseCircle size={28} style={{ color: '#7c3aed' }} />
+            <PauseCircle size={28} style={{ color: 'var(--color-purple-dark)' }} />
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: '#7c3aed', marginBottom: 4 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-purple-dark)', marginBottom: 4 }}>
               In-Clinic Queue On Hold
             </div>
             <div style={{ fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
-              You are currently in <strong style={{ color: '#7c3aed' }}>Teleconsult</strong> mode.
+              You are currently in <strong style={{ color: 'var(--color-purple-dark)' }}>Teleconsult</strong> mode.
               In-clinic patients are on hold and will be notified of the delay.
             </div>
           </div>

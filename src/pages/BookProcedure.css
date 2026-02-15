@@ -34,7 +34,7 @@
     gap: 1rem;
     padding: 1rem;
     background: #fffbeb;
-    border: 1px solid #fef3c7;
+    border: 1px solid var(--color-warning-light);
     border-radius: 0.75rem;
     color: #92400e;
     margin: 1.5rem 0;
@@ -42,13 +42,13 @@
 }
 
 .prep-notice svg {
-    color: #d97706;
+    color: var(--color-warning-dark);
     flex-shrink: 0;
 }
 
 .next-steps-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--color-gray-50);
+    border: 1px solid var(--color-gray-200);
     border-radius: 1rem;
     padding: 1.25rem;
     margin: 1.5rem 0;
@@ -59,7 +59,7 @@
 .next-steps-card h4 {
     margin: 0 0 0.75rem 0;
     font-size: 0.9rem;
-    color: #1e293b;
+    color: var(--color-gray-800);
     font-weight: 700;
 }
 
@@ -73,7 +73,7 @@
 
 .next-steps-card li {
     font-size: 0.85rem;
-    color: #475569;
+    color: var(--color-gray-600);
 }
 
 .success-actions {

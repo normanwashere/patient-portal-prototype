@@ -115,7 +115,7 @@ export const DoctorResults = () => {
                   <div style={{
                     width: 36, height: 36, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: order.isCritical ? 'rgba(239,68,68,0.1)' : 'rgba(139,92,246,0.1)',
-                    color: order.isCritical ? 'var(--color-error)' : '#8b5cf6', flexShrink: 0,
+                    color: order.isCritical ? 'var(--color-error)' : 'var(--color-purple)', flexShrink: 0,
                   }}>
                     {order.isCritical ? <AlertTriangle size={16} /> : <FlaskConical size={16} />}
                   </div>
@@ -201,7 +201,7 @@ export const DoctorResults = () => {
                           padding: 12, borderRadius: 8, background: 'rgba(139,92,246,0.04)',
                           border: '1px solid rgba(139,92,246,0.1)', marginBottom: 12,
                         }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-purple-dark)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                             <TrendingUp size={14} /> Previous Results
                           </div>
                           {HISTORY[order.testName].map((h, i) => (

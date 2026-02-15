@@ -142,16 +142,16 @@ const styles: Record<string, React.CSSProperties> = {
     borderBottom: '1px solid var(--color-border)',
     cursor: 'pointer',
   },
-  soapLetterS: { width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'white', background: '#3b82f6' },
-  soapLetterO: { width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'white', background: '#10b981' },
-  soapLetterA: { width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'white', background: '#f59e0b' },
-  soapLetterP: { width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'white', background: '#8b5cf6' },
+  soapLetterS: { width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'white', background: 'var(--color-info)' },
+  soapLetterO: { width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'white', background: 'var(--color-success)' },
+  soapLetterA: { width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'white', background: 'var(--color-warning)' },
+  soapLetterP: { width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'white', background: 'var(--color-purple)' },
   aiBadge: {
     fontSize: 9,
     fontWeight: 700,
     padding: '2px 7px',
     borderRadius: 4,
-    background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+    background: 'linear-gradient(135deg, var(--color-purple), var(--color-indigo))',
     color: 'white',
     display: 'flex',
     alignItems: 'center',
@@ -176,7 +176,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(139, 92, 246, 0.08)',
     fontSize: 12,
     fontWeight: 600,
-    color: '#8b5cf6',
+    color: 'var(--color-purple)',
   },
   recordBtn: {
     width: '100%',
@@ -200,10 +200,10 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-error)',
   },
   severityBadgeContra: { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' as const, background: '#7f1d1d', color: 'white' },
-  severityBadgeMajor: { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' as const, background: '#dc2626', color: 'white' },
+  severityBadgeMajor: { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' as const, background: 'var(--color-error-dark)', color: 'white' },
   severityBadgeModerate: { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' as const, background: '#ea580c', color: 'white' },
   severityBadgeMinor: { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' as const, background: '#ca8a04', color: 'white' },
-  severityBadgeInfo: { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' as const, background: '#2563eb', color: 'white' },
+  severityBadgeInfo: { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' as const, background: 'var(--color-info-dark)', color: 'white' },
   severityBadgeDefault: { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' as const, background: '#6b7280', color: 'white' },
   actionBar: {
     display: 'flex',
@@ -521,10 +521,10 @@ export const PatientEncounter = () => {
   const getSeverityStyle = (severity: string) => {
     const map: Record<string, string> = {
       contraindicated: '#7f1d1d',
-      major: '#dc2626',
+      major: 'var(--color-error-dark)',
       moderate: '#ea580c',
       minor: '#ca8a04',
-      info: '#2563eb',
+      info: 'var(--color-info-dark)',
     };
     return map[severity] ?? '#6b7280';
   };
@@ -1517,7 +1517,7 @@ export const PatientEncounter = () => {
                               item.status === 'In Stock'
                                 ? 'var(--color-success)'
                                 : item.status === 'Low Stock'
-                                ? '#d97706'
+                                ? 'var(--color-warning-dark)'
                                 : 'var(--color-error)',
                           }}
                         >
@@ -1885,7 +1885,7 @@ export const PatientEncounter = () => {
               background: 'rgba(245, 158, 11, 0.08)',
               borderBottom: '1px solid rgba(245, 158, 11, 0.15)',
             }}>
-              <AlertTriangle size={22} style={{ color: '#d97706', flexShrink: 0 }} />
+              <AlertTriangle size={22} style={{ color: 'var(--color-warning-dark)', flexShrink: 0 }} />
               <div>
                 <div style={{ fontWeight: 700, fontSize: 16, color: '#92400e' }}>
                   Unreviewed CDSS Alerts
@@ -1939,7 +1939,7 @@ export const PatientEncounter = () => {
               <button
                 style={{
                   ...styles.btnPrimary, flex: 1, justifyContent: 'center',
-                  background: '#d97706', minWidth: 140,
+                  background: 'var(--color-warning-dark)', minWidth: 140,
                 }}
                 onClick={() => {
                   setShowCdssConfirm(false);
@@ -1986,7 +1986,7 @@ export const PatientEncounter = () => {
                 <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
                   {currentPatient?.patientName} · {signedTimestamp}
                   {signedNoteSnapshot.aiGenerated && (
-                    <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: 'rgba(139,92,246,0.1)', color: '#7c3aed' }}>
+                    <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: 'rgba(139,92,246,0.1)', color: 'var(--color-purple-dark)' }}>
                       AI-Assisted
                     </span>
                   )}

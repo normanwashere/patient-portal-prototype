@@ -15,6 +15,7 @@ import {
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
+import { PageHeader } from '../../ui';
 import './DoctorSchedule.css';
 
 const SLOT_HEIGHT = 54;
@@ -106,24 +107,20 @@ export const DoctorSchedule = () => {
 
   const getAptStatusColor = (status: string) => {
     switch (status) {
-      case 'Upcoming': return { bg: 'rgba(59, 130, 246, 0.08)', border: 'rgba(59, 130, 246, 0.25)', text: '#3b82f6', dot: '#3b82f6' };
-      case 'Completed': return { bg: 'rgba(16, 185, 129, 0.08)', border: 'rgba(16, 185, 129, 0.25)', text: '#10b981', dot: '#10b981' };
-      case 'Cancelled': return { bg: 'rgba(239, 68, 68, 0.06)', border: 'rgba(239, 68, 68, 0.2)', text: '#ef4444', dot: '#ef4444' };
-      default: return { bg: 'rgba(100, 116, 139, 0.08)', border: 'rgba(100, 116, 139, 0.2)', text: '#64748b', dot: '#64748b' };
+      case 'Upcoming': return { bg: 'rgba(59, 130, 246, 0.08)', border: 'rgba(59, 130, 246, 0.25)', text: 'var(--color-info)', dot: 'var(--color-info)' };
+      case 'Completed': return { bg: 'rgba(16, 185, 129, 0.08)', border: 'rgba(16, 185, 129, 0.25)', text: 'var(--color-success)', dot: 'var(--color-success)' };
+      case 'Cancelled': return { bg: 'rgba(239, 68, 68, 0.06)', border: 'rgba(239, 68, 68, 0.2)', text: 'var(--color-error)', dot: 'var(--color-error)' };
+      default: return { bg: 'rgba(100, 116, 139, 0.08)', border: 'rgba(100, 116, 139, 0.2)', text: 'var(--color-gray-500)', dot: 'var(--color-gray-500)' };
     }
   };
 
   return (
     <div className="ds-page">
       {/* ===== Header ===== */}
-      <header className="ds-header">
-        <div className="ds-header-left">
-          <h1 className="ds-title">Schedule</h1>
-          <p className="ds-subtitle">
-            {isToday ? 'Today' : shortDateStr} · Dr. {currentStaff?.name?.replace(/^Dr\.\s*/i, '').split(' ')[0] ?? 'Doctor'}
-          </p>
-        </div>
-        <div className="ds-header-actions">
+      <PageHeader
+        title="Schedule"
+        subtitle={`${isToday ? 'Today' : shortDateStr} · Dr. ${currentStaff?.name?.replace(/^Dr\.\s*/i, '').split(' ')[0] ?? 'Doctor'}`}
+        actions={
           <div className="ds-view-toggle">
             {(['day', 'week'] as const).map(mode => (
               <button key={mode} className={`ds-view-btn ${viewMode === mode ? 'ds-view-btn--active' : ''}`} onClick={() => setViewMode(mode)}>
@@ -131,14 +128,15 @@ export const DoctorSchedule = () => {
               </button>
             ))}
           </div>
-        </div>
-      </header>
+        }
+        style={{ marginBottom: 0 }}
+      />
 
       {/* ===== Stats Strip ===== */}
       <div className="ds-stats">
         <div className="ds-stat">
           <div className="ds-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
-            <Calendar size={16} style={{ color: '#3b82f6' }} />
+            <Calendar size={16} style={{ color: 'var(--color-info)' }} />
           </div>
           <div>
             <span className="ds-stat-value">{totalApts}</span>
@@ -148,7 +146,7 @@ export const DoctorSchedule = () => {
         <div className="ds-stat-divider" />
         <div className="ds-stat">
           <div className="ds-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
-            <Check size={16} style={{ color: '#10b981' }} />
+            <Check size={16} style={{ color: 'var(--color-success)' }} />
           </div>
           <div>
             <span className="ds-stat-value">{confirmedApts}</span>
@@ -160,7 +158,7 @@ export const DoctorSchedule = () => {
             <div className="ds-stat-divider" />
             <div className="ds-stat">
               <div className="ds-stat-icon" style={{ background: 'rgba(139, 92, 246, 0.1)' }}>
-                <Video size={16} style={{ color: '#8b5cf6' }} />
+                <Video size={16} style={{ color: 'var(--color-purple)' }} />
               </div>
               <div>
                 <span className="ds-stat-value">{teleApts}</span>
@@ -172,7 +170,7 @@ export const DoctorSchedule = () => {
         <div className="ds-stat-divider" />
         <div className="ds-stat">
           <div className="ds-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)' }}>
-            <Clock size={16} style={{ color: '#f59e0b' }} />
+            <Clock size={16} style={{ color: 'var(--color-warning)' }} />
           </div>
           <div>
             <span className="ds-stat-value">{myAvailability.filter(a => !a.isBlocked).length}</span>
@@ -212,7 +210,7 @@ export const DoctorSchedule = () => {
                       <div className="ds-apt-time-col">
                         <span className="ds-apt-time">{apt.time}</span>
                         <span className="ds-apt-type-icon">
-                          {isTele ? <Video size={14} style={{ color: '#8b5cf6' }} /> : <MapPin size={14} style={{ color: '#3b82f6' }} />}
+                          {isTele ? <Video size={14} style={{ color: 'var(--color-purple)' }} /> : <MapPin size={14} style={{ color: 'var(--color-info)' }} />}
                         </span>
                       </div>
                       <div className="ds-apt-info">

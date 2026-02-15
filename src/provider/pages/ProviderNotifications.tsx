@@ -27,13 +27,13 @@ const MOCK_NOTIFICATIONS: Notification[] = [
 ];
 
 const TYPE_CONFIG: Record<string, { icon: React.FC<any>; color: string; bg: string }> = {
-  alert: { icon: AlertTriangle, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' },
-  info: { icon: Info, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)' },
-  appointment: { icon: Calendar, color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)' },
-  system: { icon: Shield, color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.1)' },
-  staff: { icon: UserPlus, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
-  inventory: { icon: Package, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)' },
-  compliance: { icon: FileText, color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)' },
+  alert: { icon: AlertTriangle, color: 'var(--color-error)', bg: 'rgba(239, 68, 68, 0.1)' },
+  info: { icon: Info, color: 'var(--color-info)', bg: 'rgba(59, 130, 246, 0.1)' },
+  appointment: { icon: Calendar, color: 'var(--color-purple)', bg: 'rgba(139, 92, 246, 0.1)' },
+  system: { icon: Shield, color: 'var(--color-cyan)', bg: 'rgba(6, 182, 212, 0.1)' },
+  staff: { icon: UserPlus, color: 'var(--color-success)', bg: 'rgba(16, 185, 129, 0.1)' },
+  inventory: { icon: Package, color: 'var(--color-warning)', bg: 'rgba(245, 158, 11, 0.1)' },
+  compliance: { icon: FileText, color: 'var(--color-pink)', bg: 'rgba(236, 72, 153, 0.1)' },
 };
 
 export const ProviderNotifications = () => {
@@ -134,7 +134,7 @@ export const ProviderNotifications = () => {
                 cursor: 'pointer', transition: 'all 0.15s', position: 'relative',
               }}>
                 {/* Unread indicator */}
-                {!notif.read && <div style={{ position: 'absolute', left: 6, top: '50%', transform: 'translateY(-50%)', width: 6, height: 6, borderRadius: '50%', background: '#6366f1' }} />}
+                {!notif.read && <div style={{ position: 'absolute', left: 6, top: '50%', transform: 'translateY(-50%)', width: 6, height: 6, borderRadius: '50%', background: 'var(--color-indigo)' }} />}
                 {/* Icon */}
                 <div style={{
                   width: 40, height: 40, borderRadius: 10, background: cfg.bg,
@@ -155,7 +155,7 @@ export const ProviderNotifications = () => {
                     <span style={{
                       fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6,
                       background: notif.priority === 'high' ? 'rgba(239,68,68,0.1)' : notif.priority === 'medium' ? 'rgba(245,158,11,0.1)' : 'rgba(100,116,139,0.1)',
-                      color: notif.priority === 'high' ? '#ef4444' : notif.priority === 'medium' ? '#f59e0b' : '#64748b',
+                      color: notif.priority === 'high' ? 'var(--color-error)' : notif.priority === 'medium' ? 'var(--color-warning)' : 'var(--color-gray-500)',
                       textTransform: 'uppercase',
                     }}>
                       {notif.priority}

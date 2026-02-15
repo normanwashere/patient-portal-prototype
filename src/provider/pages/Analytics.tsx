@@ -79,12 +79,12 @@ const revenueData = [
 ];
 
 const departmentData = [
-  { name: 'Emergency', pct: 89, color: '#ef4444' },
-  { name: 'Pharmacy', pct: 81, color: '#8b5cf6' },
-  { name: 'Outpatient', pct: 72, color: '#3b82f6' },
-  { name: 'Laboratory', pct: 65, color: '#f59e0b' },
-  { name: 'Imaging', pct: 58, color: '#06b6d4' },
-  { name: 'Surgery', pct: 45, color: '#10b981' },
+  { name: 'Emergency', pct: 89, color: 'var(--color-error)' },
+  { name: 'Pharmacy', pct: 81, color: 'var(--color-purple)' },
+  { name: 'Outpatient', pct: 72, color: 'var(--color-info)' },
+  { name: 'Laboratory', pct: 65, color: 'var(--color-warning)' },
+  { name: 'Imaging', pct: 58, color: 'var(--color-cyan)' },
+  { name: 'Surgery', pct: 45, color: 'var(--color-success)' },
 ];
 
 const clinicalOutcomes = [
@@ -414,8 +414,8 @@ export const Analytics = () => {
                         height: barH,
                         borderRadius: '6px 6px 0 0',
                         background: growing
-                          ? 'linear-gradient(180deg, #10b981 0%, rgba(16,185,129,0.3) 100%)'
-                          : 'linear-gradient(180deg, #f59e0b 0%, rgba(245,158,11,0.3) 100%)',
+                          ? 'linear-gradient(180deg, var(--color-success) 0%, rgba(16,185,129,0.3) 100%)'
+                          : 'linear-gradient(180deg, var(--color-warning) 0%, rgba(245,158,11,0.3) 100%)',
                         transition: 'height 0.4s ease',
                         position: 'relative',
                       }}
@@ -537,19 +537,19 @@ export const Analytics = () => {
               }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ width: 10, height: 10, borderRadius: 2, background: '#ef4444', display: 'inline-block' }} />
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--color-error)', display: 'inline-block' }} />
                 Critical (85%+)
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ width: 10, height: 10, borderRadius: 2, background: '#f59e0b', display: 'inline-block' }} />
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--color-warning)', display: 'inline-block' }} />
                 High (70–84%)
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ width: 10, height: 10, borderRadius: 2, background: '#3b82f6', display: 'inline-block' }} />
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--color-info)', display: 'inline-block' }} />
                 Normal (55–69%)
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ width: 10, height: 10, borderRadius: 2, background: '#10b981', display: 'inline-block' }} />
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--color-success)', display: 'inline-block' }} />
                 Low (&lt;55%)
               </span>
             </div>
@@ -790,13 +790,13 @@ export const Analytics = () => {
               </span>
               <span>
                 Peak:{' '}
-                <strong style={{ color: '#ef4444' }}>
+                <strong style={{ color: 'var(--color-error)' }}>
                   {maxWait} min ({waitTimeData.find((w) => w.minutes === maxWait)?.hour})
                 </strong>
               </span>
               <span>
                 Lowest:{' '}
-                <strong style={{ color: '#10b981' }}>
+                <strong style={{ color: 'var(--color-success)' }}>
                   {Math.min(...waitTimeData.map((w) => w.minutes))} min ({waitTimeData.find((w) => w.minutes === Math.min(...waitTimeData.map((ww) => ww.minutes)))?.hour})
                 </strong>
               </span>

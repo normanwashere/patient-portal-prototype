@@ -125,8 +125,8 @@
 }
 
 .stage-badge.queued {
-    background-color: #f59e0b;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+    background-color: var(--color-warning);
+    background: linear-gradient(135deg, var(--color-warning), var(--color-warning-dark));
 }
 
 .stage-badge.ready {
@@ -142,8 +142,8 @@
 }
 
 .stage-badge.complete {
-    background-color: #64748b;
-    background: linear-gradient(135deg, #64748b, #475569);
+    background-color: var(--color-gray-500);
+    background: linear-gradient(135deg, var(--color-gray-500), var(--color-gray-600));
 }
 
 /* Attention Grabber for Ready State */
@@ -318,5 +318,5 @@
 }
 
 .demo-fab .indicator.active {
-    background: #10b981;
+    background: var(--color-success);
 }

@@ -32,24 +32,24 @@ type SessionFilter = 'all' | TeleconsultSessionStatus;
 
 // ── Style constants ──
 const V = {
-  bg: 'var(--color-background, #f8fafc)',
-  card: '#ffffff',
+  bg: 'var(--color-gray-50)',
+  card: 'var(--color-white)',
   border: '#e2e8f0',
-  primary: 'var(--color-primary, #2563eb)',
-  primaryLight: 'var(--color-primary-light, #dbeafe)',
-  success: '#16a34a',
-  successLight: '#dcfce7',
-  warn: '#f59e0b',
-  warnLight: '#fef3c7',
-  danger: '#dc2626',
-  dangerLight: '#fee2e2',
+  primary: 'var(--color-primary)',
+  primaryLight: 'var(--color-info-light)',
+  success: 'var(--color-success-dark)',
+  successLight: 'var(--color-success-light)',
+  warn: 'var(--color-warning)',
+  warnLight: 'var(--color-warning-light)',
+  danger: 'var(--color-error-dark)',
+  dangerLight: 'var(--color-error-light)',
   info: '#0ea5e9',
-  infoLight: '#e0f2fe',
+  infoLight: 'var(--color-info-light)',
   purple: '#7c3aed',
-  purpleLight: '#ede9fe',
-  text: '#1e293b',
-  textSec: '#64748b',
-  textMuted: '#94a3b8',
+  purpleLight: 'var(--color-purple-light)',
+  text: 'var(--color-gray-800)',
+  textSec: 'var(--color-gray-500)',
+  textMuted: 'var(--color-gray-400)',
   radius: '10px',
   radiusSm: '6px',
   shadow: '0 1px 3px rgba(0,0,0,.08)',
@@ -57,7 +57,7 @@ const V = {
 };
 
 const S: Record<string, CSSProperties> = {
-  page: { padding: '20px 24px', background: V.bg, minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+  page: { padding: '20px 24px', background: V.bg, minHeight: '100vh', fontFamily: 'var(--font-family)' },
   header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 },
   title: { fontSize: 22, fontWeight: 700, color: V.text, display: 'flex', alignItems: 'center', gap: 10 },
   subtitle: { fontSize: 13, color: V.textSec, fontWeight: 400 },
@@ -130,20 +130,20 @@ const SESSION_STATUS_CONFIG: Record<TeleconsultSessionStatus, {
   'in-queue':         { label: 'In Queue',         bg: V.warnLight,    color: V.warn,      icon: Clock,       patientSees: '"Waiting for Doctor" + timer',     doctorSees: 'Patient in waiting list' },
   'doctor-assigned':  { label: 'Doctor Assigned',  bg: V.purpleLight,  color: V.purple,    icon: UserCheck,   patientSees: 'Still "Waiting for Doctor"',       doctorSees: 'Patient highlighted in queue' },
   'connecting':       { label: 'Connecting',       bg: '#fdf4ff',      color: '#a855f7',   icon: Loader,      patientSees: '"Connecting…" animation',          doctorSees: 'Joining call' },
-  'in-session':       { label: 'In Session',       bg: '#dcfce7',      color: V.success,   icon: Video,       patientSees: 'Active video call with doctor',    doctorSees: 'Video call + SOAP / AI / Orders' },
+  'in-session':       { label: 'In Session',       bg: 'var(--color-success-light)',      color: V.success,   icon: Video,       patientSees: 'Active video call with doctor',    doctorSees: 'Video call + SOAP / AI / Orders' },
   'wrap-up':          { label: 'Wrap-Up',          bg: V.primaryLight, color: V.primary,   icon: FileText,    patientSees: '"Consultation Ended" screen',      doctorSees: 'Post-call summary — completing notes' },
   'completed':        { label: 'Completed',        bg: '#f0fdf4',      color: '#15803d',   icon: CheckCircle, patientSees: '"Back to Visits" / "Go Home"',     doctorSees: 'Back to waiting room' },
   'no-show':          { label: 'No Show',          bg: V.dangerLight,  color: V.danger,    icon: XCircle,     patientSees: 'Did not connect',                  doctorSees: 'Patient marked absent' },
-  'cancelled':        { label: 'Cancelled',        bg: '#f1f5f9',      color: V.textMuted, icon: XCircle,     patientSees: 'Consultation cancelled',           doctorSees: 'Session removed from queue' },
+  'cancelled':        { label: 'Cancelled',        bg: 'var(--color-gray-100)',      color: V.textMuted, icon: XCircle,     patientSees: 'Consultation cancelled',           doctorSees: 'Session removed from queue' },
 };
 
 const DOCTOR_STATUS_CONFIG: Record<DoctorTCStatus, { label: string; bg: string; color: string; icon: typeof User }> = {
   'available':      { label: 'Available',      bg: V.successLight, color: V.success, icon: UserCheck },
-  'in-session':     { label: 'In Session',     bg: '#dcfce7',      color: V.success, icon: Video },
+  'in-session':     { label: 'In Session',     bg: 'var(--color-success-light)',      color: V.success, icon: Video },
   'on-break':       { label: 'On Break',       bg: V.warnLight,    color: V.warn,    icon: Coffee },
   'clinic-consult': { label: 'Clinic Consult', bg: V.infoLight,    color: V.info,    icon: Stethoscope },
   'rounds':         { label: 'Rounds',         bg: V.purpleLight,  color: V.purple,  icon: Building2 },
-  'offline':        { label: 'Offline',        bg: '#f1f5f9',      color: V.textMuted, icon: UserCheck },
+  'offline':        { label: 'Offline',        bg: 'var(--color-gray-100)',      color: V.textMuted, icon: UserCheck },
   'scheduled':      { label: 'Scheduled',      bg: V.primaryLight, color: V.primary, icon: CalendarClock },
 };
 
@@ -158,7 +158,7 @@ function StatusBadge({ config }: { status: string; config: { label: string; bg: 
 }
 
 function ConnectionBadge({ online, quality }: { online: boolean; quality?: string }) {
-  if (!online) return <span style={{ ...S.metaBadge, background: '#f1f5f9', color: V.textMuted }}><WifiOff size={11} /> Offline</span>;
+  if (!online) return <span style={{ ...S.metaBadge, background: 'var(--color-gray-100)', color: V.textMuted }}><WifiOff size={11} /> Offline</span>;
   const q = quality || 'good';
   const colors = q === 'good' ? { bg: V.successLight, c: V.success } : q === 'fair' ? { bg: V.warnLight, c: V.warn } : { bg: V.dangerLight, c: V.danger };
   return <span style={{ ...S.metaBadge, background: colors.bg, color: colors.c }}><Signal size={11} /> {q.charAt(0).toUpperCase() + q.slice(1)}</span>;
@@ -387,7 +387,7 @@ export const TeleconsultQueue = () => {
         { icon: CheckCircle, val: viewStats.completed, label: 'Completed', bg: '#f0fdf4', color: '#15803d', key: 'completed' },
         { icon: Timer, val: `${viewStats.avgWait}m`, label: 'Avg Wait', bg: '#f0f9ff', color: V.info, key: 'avg-wait' },
         { icon: UserCheck, val: tcStats.doctorsAvailable, label: 'Drs Available', bg: V.successLight, color: V.success, key: 'drs-available' },
-        { icon: Activity, val: tcStats.doctorsInSession, label: 'Drs In Session', bg: '#ede9fe', color: V.purple, key: 'drs-in-session' },
+        { icon: Activity, val: tcStats.doctorsInSession, label: 'Drs In Session', bg: 'var(--color-purple-light)', color: V.purple, key: 'drs-in-session' },
       ].map((s) => {
         const Icon = s.icon;
         return (
@@ -598,7 +598,7 @@ export const TeleconsultQueue = () => {
   const renderDoctorCard = (doc: TeleconsultDoctor) => {
     const cfg = DOCTOR_STATUS_CONFIG[doc.status];
     const initials = doc.name.split(' ').filter((_, i, a) => i === 0 || i === a.length - 1).map((w) => w[0]).join('');
-    const avatarColors = ['#2563eb', '#7c3aed', '#0ea5e9', '#16a34a', '#dc2626', '#f59e0b', '#ec4899', '#06b6d4'];
+    const avatarColors = ['var(--color-info-dark)', 'var(--color-purple-dark)', 'var(--color-info)', 'var(--color-success-dark)', 'var(--color-error-dark)', 'var(--color-warning)', 'var(--color-pink)', 'var(--color-cyan)'];
     const avatarBg = avatarColors[doc.id.charCodeAt(doc.id.length - 1) % avatarColors.length];
     const shiftStartTime = new Date(doc.shiftStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const shiftEndTime = new Date(doc.shiftEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -680,7 +680,7 @@ export const TeleconsultQueue = () => {
 
         {/* Recent notifications for this doctor */}
         {notifyHistory.filter((n) => n.doctorId === doc.id).length > 0 && (
-          <div style={{ marginTop: 8, padding: '6px 8px', background: '#f8fafc', borderRadius: V.radiusSm, border: `1px solid ${V.border}` }}>
+          <div style={{ marginTop: 8, padding: '6px 8px', background: 'var(--color-gray-50)', borderRadius: V.radiusSm, border: `1px solid ${V.border}` }}>
             <div style={{ fontSize: 10, fontWeight: 600, color: V.textMuted, marginBottom: 4, textTransform: 'uppercase' }}>Recent Notifications</div>
             {notifyHistory.filter((n) => n.doctorId === doc.id).slice(0, 2).map((n, i) => (
               <div key={i} style={{ fontSize: 11, color: V.textSec, display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
@@ -801,7 +801,7 @@ export const TeleconsultQueue = () => {
             <div style={{
               display: 'flex', alignItems: 'center', gap: 3,
               padding: '2px 8px', borderRadius: 12,
-              background: '#f1f5f9', color: V.textMuted,
+              background: 'var(--color-gray-100)', color: V.textMuted,
               fontSize: 10, fontWeight: 600, whiteSpace: 'nowrap',
             }}>
               <Clipboard size={10} /> Intake (pre-queue)
@@ -1099,7 +1099,7 @@ export const TeleconsultQueue = () => {
               </div>
 
               {/* Doctor info */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#f8fafc', borderRadius: V.radiusSm, marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--color-gray-50)', borderRadius: V.radiusSm, marginBottom: 16 }}>
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: V.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14 }}>
                   {targetDoc?.name.split(' ').filter((_, i, a) => i === 0 || i === a.length - 1).map((w) => w[0]).join('')}
                 </div>
@@ -1124,7 +1124,7 @@ export const TeleconsultQueue = () => {
                     <button key={tmpl}
                       style={{
                         ...S.btn, ...S.btnSm,
-                        background: notifyMessage === tmpl ? V.primaryLight : '#f8fafc',
+                        background: notifyMessage === tmpl ? V.primaryLight : 'var(--color-gray-50)',
                         color: notifyMessage === tmpl ? V.primary : V.textSec,
                         border: `1px solid ${notifyMessage === tmpl ? V.primary + '44' : V.border}`,
                         fontSize: 11,
@@ -1163,7 +1163,7 @@ export const TeleconsultQueue = () => {
                         style={{
                           ...S.btn, flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                           padding: '10px 8px', borderRadius: V.radiusSm,
-                          background: isActive ? V.primaryLight : '#f8fafc',
+                          background: isActive ? V.primaryLight : 'var(--color-gray-50)',
                           color: isActive ? V.primary : V.textSec,
                           border: `2px solid ${isActive ? V.primary : V.border}`,
                         }}

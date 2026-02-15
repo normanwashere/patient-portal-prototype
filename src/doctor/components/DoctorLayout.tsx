@@ -325,7 +325,7 @@ export const DoctorLayout = () => {
                 style={{
                   width: '100%', padding: '6px 0', borderRadius: 7,
                   border: 'none', cursor: 'pointer',
-                  background: 'var(--color-secondary, linear-gradient(135deg, #7c3aed, #6366f1))',
+                  background: 'var(--color-secondary, linear-gradient(135deg, var(--color-purple-dark), var(--color-indigo)))',
                   color: '#fff', fontSize: 11, fontWeight: 700,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                 }}

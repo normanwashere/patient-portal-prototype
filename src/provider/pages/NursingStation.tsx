@@ -21,6 +21,8 @@ import {
 import { useProvider } from '../context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { useToast } from '../../context/ToastContext';
+import { StatusBadge, TabBar, PageHeader } from '../../ui';
+import type { BadgeVariant } from '../../ui';
 import type { TriageRecord, NursingTask, StationType } from '../types';
 
 /* ───────── shared inline styles ───────── */
@@ -37,10 +39,10 @@ const S: Record<string, React.CSSProperties> = {
   cardTitle: { fontSize: 16, fontWeight: 600, color: 'var(--color-text)', marginBottom: 16, margin: 0 },
   btn: { padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 },
   btnPrimary: { background: 'var(--color-primary)', color: 'white' },
-  btnSuccess: { background: '#10b981', color: 'white' },
-  btnWarning: { background: '#f59e0b', color: 'white' },
+  btnSuccess: { background: 'var(--color-success)', color: 'white' },
+  btnWarning: { background: 'var(--color-warning)', color: 'white' },
   btnOutline: { background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)' },
-  btnDanger: { background: '#ef4444', color: 'white' },
+  btnDanger: { background: 'var(--color-error)', color: 'white' },
   badge: { display: 'inline-block', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 },
   table: { width: '100%', borderCollapse: 'collapse' as const },
   th: { padding: '12px 14px', textAlign: 'left' as const, fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', background: 'var(--color-background)', borderBottom: '1px solid var(--color-border)', textTransform: 'uppercase' as const, letterSpacing: 0.5 },
@@ -60,7 +62,7 @@ const S: Record<string, React.CSSProperties> = {
   boardColTitle: { fontSize: 13, fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase' as const, letterSpacing: 0.5 },
   patientCard: { background: 'var(--color-surface)', borderRadius: 8, padding: 12, marginBottom: 8, border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,.04)' },
   taskCard: { background: 'var(--color-surface)', borderRadius: 10, padding: 16, border: '1px solid var(--color-border)', marginBottom: 10, boxShadow: '0 1px 3px rgba(0,0,0,.04)' },
-  taskOverdue: { borderLeft: '3px solid #ef4444', background: '#fef2f2' },
+  taskOverdue: { borderLeft: '3px solid var(--color-error)', background: 'var(--color-error-light)' },
   marRow: { display: 'grid', gridTemplateColumns: '80px 1fr 1fr 1fr 80px 120px', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--color-border)', alignItems: 'center', fontSize: 14 },
   marHeader: { fontWeight: 600, color: 'var(--color-text-muted)' },
   carePlanCard: { background: 'var(--color-surface)', borderRadius: 10, border: '1px solid var(--color-border)', padding: 20, marginBottom: 14, boxShadow: '0 1px 3px rgba(0,0,0,.04)' },
@@ -73,30 +75,31 @@ const S: Record<string, React.CSSProperties> = {
   vitalLabel: { fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4 },
 };
 
-const PRIORITY_COLORS: Record<string, { bg: string; color: string }> = {
-  Emergency: { bg: '#fee2e2', color: '#dc2626' },
-  Urgent: { bg: '#fef3c7', color: '#d97706' },
-  'Semi-Urgent': { bg: '#fef3c7', color: '#d97706' },
-  'Non-Urgent': { bg: '#d1fae5', color: '#065f46' },
-};
-
-const TASK_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  Pending: { bg: '#dbeafe', color: '#2563eb' },
-  'In Progress': { bg: '#fef3c7', color: '#d97706' },
-  Completed: { bg: '#d1fae5', color: '#065f46' },
-  Overdue: { bg: '#fee2e2', color: '#dc2626' },
-};
 
 const TASK_PRIORITY_COLORS: Record<string, string> = {
-  High: '#ef4444',
-  Medium: '#f59e0b',
-  Low: '#10b981',
+  High: 'var(--color-error)',
+  Medium: 'var(--color-warning)',
+  Low: 'var(--color-success)',
 };
 
-const MAR_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  Administered: { bg: '#d1fae5', color: '#065f46' },
-  Pending: { bg: '#fef3c7', color: '#d97706' },
-  Held: { bg: '#fee2e2', color: '#dc2626' },
+const PRIORITY_VARIANT: Record<string, BadgeVariant> = {
+  Emergency: 'error',
+  Urgent: 'warning',
+  'Semi-Urgent': 'warning',
+  'Non-Urgent': 'success',
+};
+
+const TASK_STATUS_VARIANT: Record<string, BadgeVariant> = {
+  Pending: 'info',
+  'In Progress': 'warning',
+  Completed: 'success',
+  Overdue: 'error',
+};
+
+const MAR_STATUS_VARIANT: Record<string, BadgeVariant> = {
+  Administered: 'success',
+  Pending: 'warning',
+  Held: 'error',
 };
 
 const BOARD_STATIONS: StationType[] = ['Check-In', 'Triage', 'Consult', 'Lab', 'Imaging', 'Pharmacy', 'Billing'];
@@ -285,36 +288,27 @@ export const NursingStation = () => {
   return (
     <div style={S.page}>
       {/* ── Header ── */}
-      <div style={S.header}>
-        <div style={S.titleWrap}>
-          <h1 style={S.title}>Nursing Station</h1>
-          <p style={S.subtitle}>
-            {currentNurse ? `Logged in as ${currentNurse.name}` : 'Nursing Module'}
-            {overdueTasks > 0 && (
-              <span style={{ marginLeft: 12, color: '#ef4444', fontWeight: 600 }}>
-                <AlertTriangle size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                {overdueTasks} overdue task{overdueTasks > 1 ? 's' : ''}
-              </span>
-            )}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Nursing Station"
+        subtitle={currentNurse ? `Logged in as ${currentNurse.name}` : 'Nursing Module'}
+        actions={overdueTasks > 0 ? (
+          <StatusBadge variant="error" icon={<AlertTriangle size={14} />}>
+            {overdueTasks} overdue task{overdueTasks > 1 ? 's' : ''}
+          </StatusBadge>
+        ) : undefined}
+      />
 
       {/* ── Tabs ── */}
-      <div style={S.tabs}>
-        {tabs.map(({ id, label, icon }) => (
-          <button
-            key={id}
-            style={{ ...S.tab, ...(effectiveTab === id ? S.tabActive : {}) }}
-            onClick={() => setActiveTab(id)}
-          >
-            {icon} {label}
-            {id === 'tasks' && overdueTasks > 0 && (
-              <span style={{ ...S.badge, background: '#fee2e2', color: '#dc2626', padding: '2px 8px', fontSize: 11, marginLeft: 4 }}>{overdueTasks}</span>
-            )}
-          </button>
-        ))}
-      </div>
+      <TabBar
+        tabs={tabs.map(t => ({
+          key: t.id,
+          label: t.label,
+          icon: t.icon,
+          ...(t.id === 'tasks' && overdueTasks > 0 ? { badge: overdueTasks } : {}),
+        }))}
+        active={effectiveTab}
+        onChange={(key) => setActiveTab(key as TabId)}
+      />
 
       {/* ═══════════ TRIAGE TAB ═══════════ */}
       {effectiveTab === 'triage' && (
@@ -342,9 +336,7 @@ export const NursingStation = () => {
                       {p.chiefComplaint || p.ticketNumber} &middot; {p.waitMinutes} min wait
                     </div>
                   </div>
-                  <span style={{ ...S.badge, background: PRIORITY_COLORS[p.priority]?.bg, color: PRIORITY_COLORS[p.priority]?.color }}>
-                    {p.priority}
-                  </span>
+                  <StatusBadge variant={PRIORITY_VARIANT[p.priority] ?? 'muted'}>{p.priority}</StatusBadge>
                 </div>
               ))
             )}
@@ -384,9 +376,7 @@ export const NursingStation = () => {
                         <td style={S.td}>{r.oxygenSaturation}%</td>
                         <td style={S.td}>{r.painScale}/10</td>
                         <td style={S.td}>
-                          <span style={{ ...S.badge, background: PRIORITY_COLORS[r.priority]?.bg, color: PRIORITY_COLORS[r.priority]?.color }}>
-                            {r.priority}
-                          </span>
+                          <StatusBadge variant={PRIORITY_VARIANT[r.priority] ?? 'muted'}>{r.priority}</StatusBadge>
                         </td>
                         <td style={S.td}>{r.chiefComplaint}</td>
                       </tr>
@@ -422,16 +412,16 @@ export const NursingStation = () => {
                     <div style={{ display: 'flex', gap: 6, marginTop: 8, alignItems: 'center' }}>
                       <span style={{
                         ...S.badge,
-                        background: p.priority === 'Emergency' ? '#fee2e2' : p.priority === 'Senior' || p.priority === 'PWD' ? '#fef3c7' : '#dbeafe',
-                        color: p.priority === 'Emergency' ? '#dc2626' : p.priority === 'Senior' || p.priority === 'PWD' ? '#d97706' : '#2563eb',
+                        background: p.priority === 'Emergency' ? 'var(--color-error-light)' : p.priority === 'Senior' || p.priority === 'PWD' ? 'var(--color-warning-light)' : 'var(--color-info-light)',
+                        color: p.priority === 'Emergency' ? 'var(--color-error-dark)' : p.priority === 'Senior' || p.priority === 'PWD' ? 'var(--color-warning-dark)' : 'var(--color-info-dark)',
                         fontSize: 11, padding: '2px 8px',
                       }}>
                         {p.priority}
                       </span>
                       <span style={{
                         ...S.badge,
-                        background: p.status === 'IN_SESSION' ? '#d1fae5' : p.status === 'READY' ? '#fef3c7' : '#dbeafe',
-                        color: p.status === 'IN_SESSION' ? '#065f46' : p.status === 'READY' ? '#d97706' : '#2563eb',
+                        background: p.status === 'IN_SESSION' ? 'var(--color-success-light)' : p.status === 'READY' ? 'var(--color-warning-light)' : 'var(--color-info-light)',
+                        color: p.status === 'IN_SESSION' ? '#065f46' : p.status === 'READY' ? 'var(--color-warning-dark)' : 'var(--color-info-dark)',
                         fontSize: 11, padding: '2px 8px',
                       }}>
                         {p.status.replace('_', ' ')}
@@ -452,10 +442,10 @@ export const NursingStation = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 14, marginBottom: 20 }}>
             {[
               { label: 'Total', value: nursingTasks.length, color: 'var(--color-primary)' },
-              { label: 'Pending', value: nursingTasks.filter(t => t.status === 'Pending').length, color: '#2563eb' },
-              { label: 'In Progress', value: nursingTasks.filter(t => t.status === 'In Progress').length, color: '#d97706' },
-              { label: 'Completed', value: completedTasks, color: '#059669' },
-              { label: 'Overdue', value: overdueTasks, color: '#ef4444' },
+              { label: 'Pending', value: nursingTasks.filter(t => t.status === 'Pending').length, color: 'var(--color-info-dark)' },
+              { label: 'In Progress', value: nursingTasks.filter(t => t.status === 'In Progress').length, color: 'var(--color-warning-dark)' },
+              { label: 'Completed', value: completedTasks, color: 'var(--color-success-dark)' },
+              { label: 'Overdue', value: overdueTasks, color: 'var(--color-error)' },
             ].map(s => (
               <div key={s.label} style={{ background: 'var(--color-surface)', borderRadius: 10, padding: 16, textAlign: 'center', border: '1px solid var(--color-border)' }}>
                 <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
@@ -483,21 +473,20 @@ export const NursingStation = () => {
                   </div>
                   {tasks.map(task => {
                     const isOverdue = task.status === 'Overdue' || (task.status === 'Pending' && new Date(task.dueTime) < new Date());
-                    const sc = TASK_STATUS_COLORS[isOverdue ? 'Overdue' : task.status] ?? { bg: '#dbeafe', color: '#2563eb' };
                     return (
                       <div key={task.id} style={{ ...S.taskCard, ...(isOverdue ? S.taskOverdue : {}) }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                               <span style={{ fontWeight: 600, fontSize: 15, color: 'var(--color-text)' }}>{task.patientName}</span>
-                              <span style={{ ...S.badge, background: '#e0e7ff', color: '#4338ca', fontSize: 11, padding: '2px 8px' }}>{task.type}</span>
+                              <StatusBadge variant="indigo" size="sm">{task.type}</StatusBadge>
                             </div>
                             <div style={{ fontSize: 14, color: 'var(--color-text)', marginBottom: 6 }}>{task.description}</div>
                             <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--color-text-muted)' }}>
                               <span><Clock size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />Due: {new Date(task.dueTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                              <span style={{ ...S.badge, background: sc.bg, color: sc.color, fontSize: 11, padding: '2px 8px' }}>
+                              <StatusBadge variant={TASK_STATUS_VARIANT[isOverdue ? 'Overdue' : task.status] ?? 'muted'} size="sm">
                                 {isOverdue ? 'Overdue' : task.status}
-                              </span>
+                              </StatusBadge>
                               {task.completedTime && <span>Completed: {new Date(task.completedTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
                             </div>
                             {task.notes && <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 6, fontStyle: 'italic' }}>{task.notes}</div>}
@@ -538,21 +527,16 @@ export const NursingStation = () => {
               <div>Route</div>
               <div>Status</div>
             </div>
-            {MOCK_MAR.map((m, i) => {
-              const sc = MAR_STATUS_COLORS[m.status] ?? { bg: 'var(--color-background)', color: 'var(--color-text-muted)' };
-              return (
+            {MOCK_MAR.map((m, i) => (
                 <div key={i} style={S.marRow}>
                   <div style={{ fontWeight: 600 }}>{m.time}</div>
                   <div>{m.patient}</div>
                   <div>{m.med}</div>
                   <div>{m.dose}</div>
                   <div>{m.route}</div>
-                  <span style={{ ...S.badge, background: sc.bg, color: sc.color }}>
-                    {m.status}
-                  </span>
+                  <StatusBadge variant={MAR_STATUS_VARIANT[m.status] ?? 'muted'}>{m.status}</StatusBadge>
                 </div>
-              );
-            })}
+            ))}
           </div>
         </div>
       )}
@@ -574,7 +558,7 @@ export const NursingStation = () => {
                 <strong>Interventions:</strong>
                 <ul style={{ marginTop: 4, paddingLeft: 20 }}>
                   {cp.interventions.map((int, idx) => (
-                    <li key={idx} style={{ marginBottom: 4, color: idx < cp.done ? '#059669' : 'var(--color-text)' }}>
+                    <li key={idx} style={{ marginBottom: 4, color: idx < cp.done ? 'var(--color-success-dark)' : 'var(--color-text)' }}>
                       <input type="checkbox" checked={idx < cp.done} readOnly style={{ marginRight: 8 }} />
                       <span style={idx < cp.done ? { textDecoration: 'line-through', opacity: 0.7 } : {}}>{int}</span>
                     </li>
@@ -649,14 +633,14 @@ export const NursingStation = () => {
             <div style={S.formRow}>
               <div style={S.formGroup}>
                 <label style={S.formLabel}>
-                  <Heart size={14} style={{ verticalAlign: 'middle', marginRight: 6, color: '#ef4444' }} />
+                  <Heart size={14} style={{ verticalAlign: 'middle', marginRight: 6, color: 'var(--color-error)' }} />
                   Blood Pressure *
                 </label>
                 <input style={S.formInput} placeholder="e.g. 120/80" value={triageBP} onChange={e => setTriageBP(e.target.value)} />
               </div>
               <div style={S.formGroup}>
                 <label style={S.formLabel}>
-                  <Activity size={14} style={{ verticalAlign: 'middle', marginRight: 6, color: '#ef4444' }} />
+                  <Activity size={14} style={{ verticalAlign: 'middle', marginRight: 6, color: 'var(--color-error)' }} />
                   Heart Rate (bpm)
                 </label>
                 <input style={S.formInput} type="number" placeholder="e.g. 78" value={triageHR} onChange={e => setTriageHR(e.target.value)} />
@@ -665,14 +649,14 @@ export const NursingStation = () => {
             <div style={S.formRow3}>
               <div style={S.formGroup}>
                 <label style={S.formLabel}>
-                  <Thermometer size={14} style={{ verticalAlign: 'middle', marginRight: 6, color: '#f59e0b' }} />
+                  <Thermometer size={14} style={{ verticalAlign: 'middle', marginRight: 6, color: 'var(--color-warning)' }} />
                   Temp (°C)
                 </label>
                 <input style={S.formInput} type="number" step="0.1" placeholder="e.g. 36.8" value={triageTemp} onChange={e => setTriageTemp(e.target.value)} />
               </div>
               <div style={S.formGroup}>
                 <label style={S.formLabel}>
-                  <Wind size={14} style={{ verticalAlign: 'middle', marginRight: 6, color: '#2563eb' }} />
+                  <Wind size={14} style={{ verticalAlign: 'middle', marginRight: 6, color: 'var(--color-info-dark)' }} />
                   RR (/min)
                 </label>
                 <input style={S.formInput} type="number" placeholder="e.g. 18" value={triageRR} onChange={e => setTriageRR(e.target.value)} />
@@ -691,7 +675,7 @@ export const NursingStation = () => {
                   <span style={{
                     fontWeight: 700,
                     fontSize: 18,
-                    color: Number(triagePain) >= 7 ? '#ef4444' : Number(triagePain) >= 4 ? '#f59e0b' : '#10b981',
+                    color: Number(triagePain) >= 7 ? 'var(--color-error)' : Number(triagePain) >= 4 ? 'var(--color-warning)' : 'var(--color-success)',
                     width: 30,
                     textAlign: 'center',
                   }}>

@@ -11,12 +11,12 @@
 .page-header h2 {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-gray-900);
     margin: 0;
 }
 
 .page-subtitle {
-    color: #64748b;
+    color: var(--color-gray-500);
     margin: 0.25rem 0 0 0;
 }
 
@@ -29,7 +29,7 @@
 .search-bar input {
     width: 100%;
     padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-gray-200);
     border-radius: 10px;
     font-size: 0.9375rem;
     background: white;
@@ -37,7 +37,7 @@
 
 .search-bar input:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--color-info);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -46,7 +46,7 @@
     left: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #94a3b8;
+    color: var(--color-gray-400);
 }
 
 /* Filter Chips */
@@ -60,24 +60,24 @@
 
 .filter-chip {
     padding: 0.375rem 0.75rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-gray-200);
     border-radius: 99px;
     background: white;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-gray-500);
     cursor: pointer;
     transition: all 0.15s ease;
     white-space: nowrap;
 }
 
 .filter-chip:hover {
-    border-color: #cbd5e1;
+    border-color: var(--color-gray-300);
 }
 
 .filter-chip.active {
-    background: #0f172a;
-    border-color: #0f172a;
+    background: var(--color-gray-900);
+    border-color: var(--color-gray-900);
     color: white;
 }
 
@@ -90,14 +90,14 @@
 
 .record-card {
     background: white;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-gray-200);
     border-radius: 12px;
     padding: 1rem;
     transition: all 0.15s ease;
 }
 
 .record-card:hover {
-    border-color: #cbd5e1;
+    border-color: var(--color-gray-300);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
@@ -115,13 +115,13 @@
 }
 
 .record-icon {
-    color: #3b82f6;
+    color: var(--color-info);
 }
 
 .record-header h4 {
     font-size: 1rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--color-gray-800);
     margin: 0;
 }
 
@@ -134,23 +134,23 @@
 }
 
 .type-badge.consultation {
-    background: #dbeafe;
+    background: var(--color-info-light);
     color: #1d4ed8;
 }
 
 .type-badge.procedure {
-    background: #fef3c7;
+    background: var(--color-warning-light);
     color: #b45309;
 }
 
 .type-badge.admission {
     background: #f3e8ff;
-    color: #7c3aed;
+    color: var(--color-purple-dark);
 }
 
 .record-summary {
     font-size: 0.875rem;
-    color: #475569;
+    color: var(--color-gray-600);
     margin: 0 0 0.75rem 0;
     line-height: 1.5;
 }
@@ -160,7 +160,7 @@
     gap: 1rem;
     margin-bottom: 0.75rem;
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--color-gray-400);
 }
 
 .record-meta span {
@@ -174,12 +174,12 @@
     justify-content: space-between;
     align-items: center;
     padding-top: 0.75rem;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--color-gray-100);
 }
 
 .facility {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-gray-500);
 }
 
 .download-btn {
@@ -187,23 +187,23 @@
     align-items: center;
     gap: 0.25rem;
     padding: 0.375rem 0.75rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--color-gray-50);
+    border: 1px solid var(--color-gray-200);
     border-radius: 6px;
     font-size: 0.75rem;
     font-weight: 500;
-    color: #475569;
+    color: var(--color-gray-600);
     cursor: pointer;
     transition: all 0.15s ease;
 }
 
 .download-btn:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
+    background: var(--color-gray-100);
+    border-color: var(--color-gray-300);
 }
 
 .empty-state {
-    color: #94a3b8;
+    color: var(--color-gray-400);
     text-align: center;
     padding: 2rem;
 }

@@ -193,17 +193,17 @@
   color: white;
 }
 
-.soap-card-label .letter.S { background: #3b82f6; }
-.soap-card-label .letter.O { background: #10b981; }
-.soap-card-label .letter.A { background: #f59e0b; }
-.soap-card-label .letter.P { background: #8b5cf6; }
+.soap-card-label .letter.S { background: var(--color-info); }
+.soap-card-label .letter.O { background: var(--color-success); }
+.soap-card-label .letter.A { background: var(--color-warning); }
+.soap-card-label .letter.P { background: var(--color-purple); }
 
 .ai-badge {
   font-size: 9px;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 4px;
-  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  background: linear-gradient(135deg, var(--color-purple), var(--color-indigo));
   color: white;
   display: flex;
   align-items: center;
@@ -325,7 +325,7 @@
 }
 
 .transcriber-btn.generate {
-  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  background: linear-gradient(135deg, var(--color-purple), var(--color-indigo));
   color: white;
 }
 
