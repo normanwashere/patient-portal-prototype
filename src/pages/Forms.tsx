@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, CloudOff, CheckCircle } from 'lucide-react';
-import { BackButton } from '../components/Common/BackButton';
+
 import './Forms.css';
 
 // Aligned with LLD [012] Table: offline_form_submissions
@@ -83,7 +83,7 @@ export const Forms: React.FC = () => {
             {view === 'list' ? (
                 <>
                     <header className="page-header">
-                        <BackButton />
+
                         <div className="header-text" style={{ flex: 1 }}>
                             <h2>My Forms</h2>
                         </div>

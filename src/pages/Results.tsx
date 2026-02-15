@@ -4,7 +4,7 @@ import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { ResultCardSkeleton } from '../components/Skeleton';
-import { BackButton } from '../components/Common/BackButton';
+// BackButton handled by Layout.tsx
 import './Results.css';
 
 export const Results: React.FC = () => {
@@ -43,14 +43,13 @@ export const Results: React.FC = () => {
 
     return (
         <div className="results-container">
-            <header className="page-header">
+            <header className="page-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
-                    <BackButton to="/dashboard" />
                     <div style={{ flex: 1 }}>
                         <h2>Results & Reports</h2>
                     </div>
                 </div>
-                <div className="search-bar" style={{ marginTop: '1rem' }}>
+                <div className="search-bar" style={{ width: '100%', margin: 0 }}>
                     <Search size={18} color="#9ca3af" />
                     <input type="text" placeholder="Search results..." />
                 </div>

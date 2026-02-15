@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Syringe, Calendar, CheckCircle, Clock, AlertTriangle, ChevronRight, Baby, User } from 'lucide-react';
-import { BackButton } from '../components/Common/BackButton';
+
 import './Immunization.css';
 
 interface Vaccine {
@@ -69,7 +69,7 @@ export const Immunization: React.FC = () => {
     return (
         <div className="immunization-container">
             <header className="page-header">
-                <BackButton />
+
                 <div className="header-text">
                     <h2>Immunization Records</h2>
                     <p className="page-subtitle">Track your vaccinations and wellness history</p>

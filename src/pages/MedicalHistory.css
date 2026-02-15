@@ -33,6 +33,7 @@
     border-radius: 10px;
     font-size: 0.9375rem;
     background: white;
+    box-sizing: border-box;
 }
 
 .search-bar input:focus {

@@ -1,36 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, User, Bell, WifiOff, Heart, X, TestTube, Pill, Syringe, Receipt, CalendarDays, LogOut, Video, ClipboardList, CreditCard, Stethoscope, Clock, Users, FlaskConical } from 'lucide-react';
+import { Home, Bell, Heart, X, TestTube, Pill, Syringe, Receipt, CalendarDays, LogOut, Video, ClipboardList, CreditCard, Stethoscope, Clock, Users, FlaskConical, ChevronRight } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import { useData } from '../context/DataContext';
-import { Sidebar } from './Sidebar';
 import { useBadges } from '../hooks/useBadges';
+import { Sidebar } from './Sidebar';
+import { OfflineBanner } from './Common/OfflineBanner';
+// Breadcrumbs removed per user feedback
+import { useHeader } from '../context/HeaderContext';
 import clsx from 'clsx';
 import './Layout.css';
 
 export const Layout: React.FC = () => {
+    const { customBack } = useHeader();
     const { tenant } = useTheme();
     const { isQueueActive, unreadNotificationsCount } = useData();
     const location = useLocation();
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isOffline, setIsOffline] = useState(!navigator.onLine);
     const { visits } = tenant.features;
     const { careBadge, financeBadge, communityBadge, recordsBadge, newMedsCount, newLabsCount, newImmunizationsCount } = useBadges();
 
     // Check if any visit type is available
     const hasVisits = visits.teleconsultEnabled || visits.clinicVisitEnabled;
 
-    useEffect(() => {
-        const handleOnline = () => setIsOffline(false);
-        const handleOffline = () => setIsOffline(true);
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-        };
-    }, []);
+    // Close menu on route change
 
     // Close menu on route change
     useEffect(() => {
@@ -44,6 +38,72 @@ export const Layout: React.FC = () => {
         navigate('/apps');
     };
 
+    // List of "Pillar" (Root) paths where Back button should be HIDDEN
+    const pillarPaths = ['/dashboard', '/visits', '/news', '/health', '/coverage', '/profile', '/apps', '/', '/appointments', '/visits/consult-now'];
+
+    // Deterministic parent route map — every sub-page maps to its known parent
+    const parentRouteMap: Record<string, string> = {
+        '/appointments/book': '/visits',
+        '/visits/book-clinic': '/visits',
+        '/visits/book-teleconsult': '/visits',
+        '/visits/teleconsult': '/visits', // Landing page -> Visits Pillar
+        '/visits/consult-now': '/visits/teleconsult', // Waiting Room -> Landing Page (or could be Visits)
+
+        '/visits/teleconsult-intake': '/visits', // Per user request
+        '/visits/book-procedure': '/visits',
+        '/visits/consult-later': '/visits',
+        '/medical-history': '/health',
+        '/results': '/health',
+        '/medications': '/health',
+        '/immunization': '/health',
+        '/health/care-plans': '/health',
+        '/health/past-appointments': '/health',
+        '/billing': '/coverage',
+        '/benefits': '/coverage',
+        '/coverage/philhealth': '/coverage',
+        '/checkout': '/billing',
+        '/payment-success': '/billing',
+        '/events': '/news',
+        '/profile/dependents': '/profile',
+        '/branches': '/visits',
+        '/forms': '/dashboard',
+        '/notifications': '/dashboard',
+        '/queue': '/visits', // Queue -> Visits
+    };
+
+    // Get the deterministic parent for the current route
+    const getParentRoute = (pathname: string): string => {
+        // Special mapping for Content Detail pages
+        if (pathname.startsWith('/content/')) {
+            return '/news';
+        }
+
+        // 1. Exact match in parentRouteMap
+        if (parentRouteMap[pathname]) return parentRouteMap[pathname];
+
+        // 2. Try matching dynamic segments (e.g., /results/123 → check /results/:id)
+        const segments = pathname.split('/').filter(Boolean);
+        if (segments.length >= 2) {
+            const parentPath = '/' + segments.slice(0, -1).join('/');
+            // If the parent path itself is a valid route, go there
+            if (parentRouteMap[parentPath] || pillarPaths.includes(parentPath)) {
+                return parentPath;
+            }
+        }
+
+        // 3. Fallback: go to dashboard
+        return '/dashboard';
+    };
+
+    // Normalize path to handle trailing slashes
+    const normalizedPath = location.pathname.endsWith('/') && location.pathname.length > 1
+        ? location.pathname.slice(0, -1)
+        : location.pathname;
+
+    // Immersive pages: Only hide header for specific full-screen flows if needed (none for now for content)
+    const isImmersivePage = false;
+    const showBackButton = ((!pillarPaths.includes(normalizedPath)) || !!customBack) && !isImmersivePage;
+
     return (
         <div className="app-shell">
             {/* Sidebar (Desktop) */}
@@ -52,47 +112,107 @@ export const Layout: React.FC = () => {
             {/* Main Content Wrapper */}
             <div className="main-content-wrapper">
                 {/* Offline Banner */}
-                {isOffline && (
-                    <div className="offline-banner">
-                        <WifiOff size={14} />
-                        <span>You are currently offline. Read-only mode active.</span>
-                    </div>
+                <OfflineBanner />
+
+                {/* Mobile Header (Hidden on Desktop) - Hide on immersive pages */}
+                {!isImmersivePage && (
+                    <header className="app-header mobile-only">
+                        <div className="header-content container">
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                {/* Always show Logo */}
+                                <div className="logo-section">
+                                    <img
+                                        src={tenant.logoUrl}
+                                        alt={tenant.name}
+                                        className="tenant-logo"
+                                        style={{ maxHeight: '32px', objectFit: 'contain' }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="header-actions">
+                                {/* Queue Indicator */}
+                                {isQueueActive && (
+                                    <button
+                                        className="icon-btn queue-indicator"
+                                        onClick={() => navigate('/queue')}
+                                        aria-label="View Queue Status"
+                                        style={{ marginRight: '0.5rem' }}
+                                    >
+                                        <Clock size={20} className="queue-icon-anim" />
+                                        <span className="queue-dot"></span>
+                                    </button>
+                                )}
+                                <button
+                                    className="icon-btn"
+                                    style={{ position: 'relative' }}
+                                    onClick={() => {
+                                        if (location.pathname === '/notifications') {
+                                            navigate(-1);
+                                        } else {
+                                            navigate('/notifications');
+                                        }
+                                    }}
+                                    aria-label="Notifications"
+                                >
+                                    <Bell size={20} color="var(--color-text-muted)" />
+                                    {unreadNotificationsCount > 0 && (
+                                        <span className="nav-badge-overlay">{unreadNotificationsCount}</span>
+                                    )}
+                                </button>
+                                <Link to="/profile" className="icon-btn" aria-label="Profile">
+                                    <Users size={20} color="var(--color-text-muted)" />
+                                </Link>
+
+                            </div>
+                        </div>
+                    </header>
                 )}
 
-                {/* Mobile Header (Hidden on Desktop) */}
-                <header className="app-header mobile-only">
-                    <div className="header-content container">
-                        <div className="logo-section">
-                            <img src={tenant.logoUrl} alt={tenant.name} className="tenant-logo" />
-                        </div>
-                        <div className="header-actions">
-                            {/* Queue Indicator */}
-                            {isQueueActive && (
-                                <button
-                                    className="icon-btn queue-indicator"
-                                    onClick={() => navigate('/queue')}
-                                    aria-label="View Queue Status"
-                                    style={{ marginRight: '0.5rem' }}
-                                >
-                                    <Clock size={20} className="queue-icon-anim" />
-                                    <span className="queue-dot"></span>
-                                </button>
-                            )}
-                            <Link to="/notifications" className="icon-btn" style={{ position: 'relative' }}>
-                                <Bell size={20} color="var(--color-text-muted)" />
-                                {unreadNotificationsCount > 0 && (
-                                    <span className="nav-badge-overlay">{unreadNotificationsCount}</span>
-                                )}
-                            </Link>
-                            <Link to="/profile" className="icon-btn">
-                                <User size={20} color="var(--color-text-muted)" />
-                            </Link>
-                        </div>
-                    </div>
-                </header>
-
                 {/* Main Content Area */}
-                <main className="app-main">
+                <main className={clsx('app-main', showBackButton && 'with-back-btn')}>
+                    {/* Desktop Back Button */}
+                    {showBackButton && (
+                        <div className="desktop-back-wrapper desktop-only">
+                            <button
+                                onClick={() => {
+                                    if (customBack) {
+                                        customBack();
+                                    } else if (location.state?.from) {
+                                        navigate(location.state.from);
+                                    } else {
+                                        navigate(getParentRoute(normalizedPath));
+                                    }
+                                }}
+                                className="back-btn-circle"
+                                aria-label="Go Back"
+                            >
+                                <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} />
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Mobile Back Button (in-page, above content) */}
+                    {showBackButton && (
+                        <div className="mobile-back-strip mobile-only">
+                            <button
+                                onClick={() => {
+                                    if (customBack) {
+                                        customBack();
+                                    } else if (location.state?.from) {
+                                        navigate(location.state.from);
+                                    } else {
+                                        navigate(getParentRoute(normalizedPath));
+                                    }
+                                }}
+                                className="back-btn-circle"
+                                aria-label="Go Back"
+                            >
+                                <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} />
+                            </button>
+                        </div>
+                    )}
+
                     <Outlet />
                 </main>
             </div>
@@ -114,7 +234,7 @@ export const Layout: React.FC = () => {
 `}</style>
 
             {/* Mobile Menu Drawer */}
-            <div className={clsx('mobile-menu-drawer', isMenuOpen && 'open')}>
+            <div className={clsx('mobile-menu-drawer mobile-only', isMenuOpen && 'open')}>
                 <div className="drawer-header">
 
                     <style>{`
@@ -204,8 +324,8 @@ export const Layout: React.FC = () => {
                     </div>
 
                     <div className="drawer-section">
-                        <span className="drawer-section-title">Community</span>
-                        <Link to="/community" className={clsx('drawer-item', isActive('/community') && 'active')}>
+                        <span className="drawer-section-title">News & Community</span>
+                        <Link to="/news" className={clsx('drawer-item', isActive('/news') && 'active')}>
                             <Users size={20} />
                             <span>Featured</span>
                             {communityBadge > 0 && <span className="drawer-badge">{communityBadge}</span>}
@@ -288,13 +408,13 @@ export const Layout: React.FC = () => {
                     </Link>
                 )}
 
-                {/* Pillar 3: Community */}
-                <Link to="/community" className={clsx('nav-item', isActive('/community') && 'active')}>
+                {/* Pillar 3: News */}
+                <Link to="/news" className={clsx('nav-item', isActive('/news') && 'active')}>
                     <div style={{ position: 'relative' }}>
                         <Users size={22} />
                         {communityBadge > 0 && <span className="nav-badge-dot" />}
                     </div>
-                    <span>Community</span>
+                    <span>News</span>
                 </Link>
 
                 {/* Pillar 4: Records */}

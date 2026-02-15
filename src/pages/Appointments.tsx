@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BackButton } from '../components/Common/BackButton';
+
 import { Clock, User, CheckCircle } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -27,7 +27,6 @@ export const Appointments: React.FC = () => {
     return (
         <div className="appointments-container">
             <header className="page-header">
-                <BackButton onClick={() => step > 1 ? setStep(step - 1) : navigate(-1)} />
                 <div className="header-text">
                     <h2 style={{ fontSize: '1.25rem' }}>Book Appointment</h2>
                 </div>
@@ -60,6 +59,7 @@ export const Appointments: React.FC = () => {
             {/* Step 2: Select Doctor */}
             {step === 2 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <button className="btn-text" onClick={() => setStep(1)} style={{ alignSelf: 'flex-start', paddingLeft: 0 }}>← Back to Services</button>
                     <h3 style={{ fontSize: '1rem', color: 'var(--color-text-muted)' }}>Select Doctor for {selectedService}</h3>
                     {DOCTORS.map(doc => (
                         <button
@@ -94,6 +94,7 @@ export const Appointments: React.FC = () => {
             {/* Step 3: Confirm */}
             {step === 3 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <button className="btn-text" onClick={() => setStep(2)} style={{ alignSelf: 'flex-start', paddingLeft: 0 }}>← Back to Doctors</button>
                     <div style={{ background: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius)', border: '1px solid var(--color-border)' }}>
                         <h3 style={{ marginBottom: '1rem' }}>Confirm Booking</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

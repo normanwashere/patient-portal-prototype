@@ -37,6 +37,8 @@ export interface Doctor {
 
 export const SPECIALTIES: Specialty[] = [
     { id: 'gen-med', name: 'General Medicine', icon: '🩺', description: 'Primary care and checkups' },
+    { id: 'im', name: 'Internal Medicine', icon: '📋', description: 'Adult diseases' },
+    { id: 'fam-med', name: 'Family Medicine', icon: '👨‍👩‍👧', description: 'Comprehensive care for all ages' },
     { id: 'cardio', name: 'Cardiology', icon: '❤️', description: 'Heart and blood vessels' },
     { id: 'derma', name: 'Dermatology', icon: '🧴', description: 'Skin, hair, and nails' },
     { id: 'peds', name: 'Pediatrics', icon: '👶', description: 'Child healthcare' },
@@ -44,6 +46,17 @@ export const SPECIALTIES: Specialty[] = [
     { id: 'eyes', name: 'Ophthalmology', icon: '👁️', description: 'Eye care' },
     { id: 'ent', name: 'ENT', icon: '👂', description: 'Ear, nose, and throat' },
     { id: 'ortho', name: 'Orthopedics', icon: '🦴', description: 'Bones and joints' },
+    { id: 'gastro', name: 'Gastroenterology', icon: '🤮', description: 'Digestive system' },
+    { id: 'pulmo', name: 'Pulmonology', icon: '🫁', description: 'Lungs and respiratory' },
+    { id: 'endo', name: 'Endocrinology', icon: '🩸', description: 'Hormones and metabolism' },
+    { id: 'nephro', name: 'Nephrology', icon: '🥜', description: 'Kidney care' },
+    { id: 'rheuma', name: 'Rheumatology', icon: '🦵', description: 'Joints and immune system' },
+    { id: 'onco', name: 'Oncology', icon: '🎗️', description: 'Cancer care' },
+    { id: 'id', name: 'Infectious Disease', icon: '🦠', description: 'Bacterial and viral infections' },
+    { id: 'uro', name: 'Urology', icon: '🚽', description: 'Urinary tract system' },
+    { id: 'surg', name: 'General Surgery', icon: '🔪', description: 'Surgical procedures' },
+    { id: 'rehab', name: 'Rehab Medicine', icon: '🤸', description: 'Physical therapy and rehab' },
+    { id: 'psych', name: 'Psychiatry', icon: '🧠', description: 'Mental health' },
 ];
 
 const generateAvailability = () => {
@@ -91,7 +104,7 @@ export const APPOINTMENTS = [
         time: '10:00 AM',
         status: 'Upcoming',
         type: 'In-Person',
-        location: 'Metro General Hospital'
+        location: 'Maxicare PCC - BGC W City Center'
     },
     {
         id: '1a', // Old one
@@ -106,7 +119,157 @@ export const APPOINTMENTS = [
 ];
 
 export const DOCTORS: Doctor[] = [
+    // ── Maxicare Doctors (New) ──
+    {
+        id: 'maxi-d1', name: 'Dr. Emily Go', specialtyId: 'im', specialtyName: 'Internal Medicine',
+        locationIds: ['maxi-pcc-bgc', 'maxi-pcc-bridgetowne', 'maxi-pcc-alabang', 'maxi-pcc-ayala-north'],
+        image: 'https://randomuser.me/api/portraits/women/44.jpg', rating: 4.9, fee: 1000,
+        bio: 'Dr. Go is a compassionate internist focusing on preventive care and lifestyle management.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d2', name: 'Dr. Michael Chen', specialtyId: 'cardio', specialtyName: 'Cardiology',
+        locationIds: ['maxi-pcc-bgc', 'maxi-pcc-makati', 'maxi-pcc-double-dragon', 'maxi-pcc-ayala-north'],
+        image: 'https://randomuser.me/api/portraits/men/32.jpg', rating: 4.8, fee: 1500,
+        bio: 'Specialist in cardiovascular health and hypertension management.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d3', name: 'Dr. Sarah Wilson', specialtyId: 'nephro', specialtyName: 'Nephrology',
+        locationIds: ['maxi-pcc-bridgetowne', 'maxi-pcc-centris', 'maxi-pcc-ayala-north'],
+        image: 'https://randomuser.me/api/portraits/women/68.jpg', rating: 4.9, fee: 1200,
+        bio: 'Expert in kidney health and dialysis management.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d4', name: 'Dr. Roberto Santos', specialtyId: 'rheuma', specialtyName: 'Rheumatology',
+        locationIds: ['maxi-pcc-bridgetowne', 'maxi-pcc-centris', 'maxi-pcc-alabang', 'maxi-pcc-ayala-north'],
+        image: 'https://randomuser.me/api/portraits/men/45.jpg', rating: 4.8, fee: 1300,
+        bio: 'Specializing in arthritis and autoimmune diseases.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d5', name: 'Dr. Lisa Wong', specialtyId: 'endo', specialtyName: 'Endocrinology',
+        locationIds: ['maxi-pcc-ayala-north', 'maxi-pcc-bgc'],
+        image: 'https://randomuser.me/api/portraits/women/22.jpg', rating: 4.7, fee: 1200,
+        bio: 'Helping patients manage diabetes and hormonal disorders for over 15 years.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d6', name: 'Dr. Mark Dy', specialtyId: 'gastro', specialtyName: 'Gastroenterology',
+        locationIds: ['maxi-pcc-bridgetowne', 'maxi-pcc-centris', 'maxi-pcc-ayala-north'],
+        image: 'https://randomuser.me/api/portraits/men/11.jpg', rating: 4.8, fee: 1200,
+        bio: 'Expert in digestive health and endoscopic procedures.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d7', name: 'Dr. Patricia Cruz', specialtyId: 'pulmo', specialtyName: 'Pulmonology',
+        locationIds: ['maxi-pcc-alabang', 'maxi-pcc-centris', 'maxi-pcc-ayala-north'],
+        image: 'https://randomuser.me/api/portraits/women/56.jpg', rating: 4.9, fee: 1100,
+        bio: 'Dedicated to respiratory health and asthma management.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d8', name: 'Dr. John Lim', specialtyId: 'uro', specialtyName: 'Urology',
+        locationIds: ['maxi-pcc-bridgetowne', 'maxi-pcc-alabang', 'maxi-pcc-ayala-north'],
+        image: 'https://randomuser.me/api/portraits/men/29.jpg', rating: 4.7, fee: 1400,
+        bio: 'Specialist in urinary tract health and men\'s health issues.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d9', name: 'Dr. Anna Tan', specialtyId: 'onco', specialtyName: 'Oncology',
+        locationIds: ['maxi-pcc-double-dragon', 'maxi-pcc-alabang', 'maxi-pcc-ayala-north'],
+        image: 'https://randomuser.me/api/portraits/women/41.jpg', rating: 4.9, fee: 1800,
+        bio: 'Compassionate care for cancer patients with a focus on holistic treatment.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d10', name: 'Dr. Ben Cortez', specialtyId: 'id', specialtyName: 'Infectious Disease',
+        locationIds: ['maxi-pcc-centris', 'maxi-pcc-ayala-north', 'maxi-pcc-bridgetowne'],
+        image: 'https://randomuser.me/api/portraits/men/61.jpg', rating: 4.8, fee: 1100,
+        bio: 'Specializing in the treatment and prevention of infectious diseases.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d11', name: 'Dr. Teresa Gomez', specialtyId: 'rehab', specialtyName: 'Rehab Medicine',
+        locationIds: ['maxi-pcc-centris', 'maxi-pcc-ayala-north'],
+        image: 'https://randomuser.me/api/portraits/women/72.jpg', rating: 4.9, fee: 1000,
+        bio: 'Helping patients recover function and improve quality of life after injury.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d12', name: 'Dr. Carlo Yap', specialtyId: 'surg', specialtyName: 'General Surgery',
+        locationIds: ['maxi-pcc-bridgetowne', 'maxi-pcc-centris', 'maxi-pcc-double-dragon', 'maxi-pcc-ayala-north'],
+        image: 'https://randomuser.me/api/portraits/men/52.jpg', rating: 4.8, fee: 1500,
+        bio: 'Experienced surgeon performing a wide range of general surgical procedures.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d13', name: 'Dr. Maria Santos', specialtyId: 'peds', specialtyName: 'Pediatrics',
+        locationIds: ['maxi-pcc-ayala-north', 'maxi-pcc-alabang', 'maxi-pcc-bgc'],
+        image: 'https://randomuser.me/api/portraits/women/33.jpg', rating: 4.8, fee: 900,
+        bio: 'Pediatric care from newborns to adolescents.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d14', name: 'Dr. Jose Rizal', specialtyId: 'ent', specialtyName: 'ENT',
+        locationIds: ['maxi-pcc-ayala-north', 'maxi-pcc-bgc'],
+        image: 'https://randomuser.me/api/portraits/men/15.jpg', rating: 4.7, fee: 1100,
+        bio: 'Specialist in Ear, Nose, and Throat diseases.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d15', name: 'Dr. Clara Bell', specialtyId: 'obgyn', specialtyName: 'OB-GYN',
+        locationIds: ['maxi-pcc-ayala-north', 'maxi-pcc-bridgetowne'],
+        image: 'https://randomuser.me/api/portraits/women/12.jpg', rating: 4.9, fee: 1200,
+        bio: 'Women\'s health specialist and obstetrician.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d16', name: 'Dr. David Chu', specialtyId: 'derma', specialtyName: 'Dermatology',
+        locationIds: ['maxi-pcc-ayala-north', 'maxi-pcc-alabang'],
+        image: 'https://randomuser.me/api/portraits/men/33.jpg', rating: 4.8, fee: 1000,
+        bio: 'Clinical and aesthetic dermatology.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d17', name: 'Dr. Susan Lee', specialtyId: 'eyes', specialtyName: 'Ophthalmology',
+        locationIds: ['maxi-pcc-ayala-north', 'maxi-pcc-centris'],
+        image: 'https://randomuser.me/api/portraits/women/55.jpg', rating: 4.8, fee: 1100,
+        bio: 'Eye care specialist.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d18', name: 'Dr. Robert Brown', specialtyId: 'psych', specialtyName: 'Psychiatry',
+        locationIds: ['maxi-pcc-ayala-north', 'maxi-pcc-bgc'],
+        image: 'https://randomuser.me/api/portraits/men/44.jpg', rating: 4.9, fee: 2000,
+        bio: 'Mental health and wellness expert.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d19', name: 'Dr. James Reid', specialtyId: 'ortho', specialtyName: 'Orthopedics',
+        locationIds: ['maxi-pcc-ayala-north', 'maxi-pcc-double-dragon'],
+        image: 'https://randomuser.me/api/portraits/men/22.jpg', rating: 4.8, fee: 1500,
+        bio: 'Bone and joint specialist.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d20', name: 'Dr. Sarah Geronimo', specialtyId: 'fam-med', specialtyName: 'Family Medicine',
+        locationIds: ['maxi-pcc-ayala-north', 'maxi-pcc-bridgetowne'],
+        image: 'https://randomuser.me/api/portraits/women/25.jpg', rating: 4.9, fee: 900,
+        bio: 'Comprehensive care for the whole family.',
+        available: availability7Days
+    },
+    {
+        id: 'maxi-d21', name: 'Dr. Gary Valenciano', specialtyId: 'gen-med', specialtyName: 'General Medicine',
+        locationIds: ['maxi-pcc-ayala-north', 'maxi-pcc-bgc'],
+        image: 'https://randomuser.me/api/portraits/men/66.jpg', rating: 4.7, fee: 800,
+        bio: 'General practitioner for all your health needs.',
+        available: availability7Days
+    },
+
     // ── Metro General Doctors ──
+
     {
         id: 'd1', name: 'Dr. Jen Diaz', specialtyId: 'gen-med', specialtyName: 'General Medicine',
         locationIds: ['metro-hosp-main', 'metro-hosp-north', 'metro-clinic-makati'],

@@ -2,28 +2,36 @@ import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router
 import { ThemeProvider } from './theme/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { DataProvider } from './context/DataContext';
+import { HeaderProvider } from './context/HeaderContext';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Benefits } from './pages/Benefits';
 import { Forms } from './pages/Forms';
-import { Login } from './pages/Login';
 import { Profile } from './pages/Profile';
 import { Results } from './pages/Results';
 import { Medications } from './pages/Medications';
 import { Queue } from './pages/Queue';
 import { Billing } from './pages/Billing';
 import { Immunization } from './pages/Immunization';
-import { Events } from './pages/Events';
-import { EventDetail } from './pages/EventDetail';
+// import { Events } from './pages/Events';
+// import { EventDetail } from './pages/EventDetail';
+// import { HealthGuideDetail } from './pages/HealthGuideDetail';
 import { AppointmentBooking } from './pages/AppointmentBooking';
 import { AppointmentHistory } from './pages/AppointmentHistory';
 import { MedicalHistory } from './pages/MedicalHistory';
-import { Community } from './pages/Community';
+
 import { Notifications } from './pages/Notifications';
 import { ResultDetail } from './pages/ResultDetail';
 import { Visits } from './pages/Visits';
 import { Health } from './pages/Health';
 import { CarePlans } from './pages/CarePlans';
+// import { News } from './pages/News';
+// import { NewsDetail } from './pages/NewsDetail';
+import { ContentDashboard } from './pages/ContentDashboard';
+import { ContentDetail } from './pages/ContentDetail';
+// import { Events } from './pages/Events';
+// import { EventDetail } from './pages/EventDetail';
+// import { HealthGuideDetail } from './pages/HealthGuideDetail';
 import { Financial } from './pages/Financial';
 import { BookProcedure } from './pages/BookProcedure';
 import { TeleconsultLanding } from './pages/TeleconsultLanding';
@@ -37,6 +45,7 @@ import { PhilHealthDetail } from './pages/PhilHealthDetail';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DemoControls } from './components/DemoControls';
 import { ScrollToTop } from './components/ScrollToTop';
+import { DesignSystem } from './pages/DesignSystem';
 
 // Provider App imports
 import { ProviderProvider } from './provider/context/ProviderContext';
@@ -89,97 +98,107 @@ function App() {
         <ThemeProvider>
             <ToastProvider>
                 <DataProvider>
-                    <ProviderProvider>
-                        <Router>
-                            <ScrollToTop />
-                            <ErrorBoundary>
-                                <Routes>
-                                    <Route path="/login" element={<Login />} />
-                                    <Route path="/apps" element={<AppSelector />} />
+                    <HeaderProvider>
+                        <ProviderProvider>
+                            <Router>
+                                <ScrollToTop />
+                                <ErrorBoundary>
+                                    <Routes>
+                                        <Route path="/apps" element={<AppSelector />} />
 
-                                    {/* Patient Portal Routes */}
-                                    <Route path="/" element={<Navigate to="/apps" replace />} />
+                                        {/* Patient Portal Routes */}
+                                        <Route path="/" element={<Navigate to="/apps" replace />} />
 
-                                    <Route element={<Layout />}>
-                                        <Route path="/dashboard" element={<Dashboard />} />
-                                        <Route path="/appointments" element={<AppointmentHistory />} />
-                                        <Route path="/appointments/book" element={<AppointmentBooking />} />
-                                        <Route path="/medical-history" element={<MedicalHistory />} />
-                                        <Route path="/results" element={<Results />} />
-                                        <Route path="/results/:id" element={<ResultDetail />} />
-                                        <Route path="/medications" element={<Medications />} />
-                                        <Route path="/immunization" element={<Immunization />} />
-                                        <Route path="/coverage" element={<Financial />} />
-                                        <Route path="/benefits" element={<Benefits />} />
-                                        <Route path="/billing" element={<Billing />} />
-                                        <Route path="/checkout/:id" element={<Checkout />} />
-                                        <Route path="/payment-success" element={<PaymentSuccess />} />
-                                        <Route path="/visits" element={<Visits />} />
-                                        <Route path="/visits/teleconsult" element={<TeleconsultLanding />} />
-                                        <Route path="/visits/consult-now" element={<ConsultNow />} />
-                                        <Route path="/visits/teleconsult-intake" element={<TeleconsultIntake />} />
-                                        <Route path="/visits/book-procedure" element={<BookProcedure />} />
-                                        <Route path="/visits/consult-later" element={<AppointmentBooking />} />
-                                        <Route path="/health" element={<Health />} />
-                                        <Route path="/health/care-plans" element={<CarePlans />} />
-                                        <Route path="/community" element={<Community />} />
-                                        <Route path="/events" element={<Events />} />
-                                        <Route path="/events/:id" element={<EventDetail />} />
-                                        <Route path="/profile" element={<Profile />} />
-                                        <Route path="/profile/dependents" element={<Dependents />} />
-                                        <Route path="/coverage/philhealth" element={<PhilHealthDetail />} />
-                                        <Route path="/branches" element={<Branches />} />
-                                        <Route path="/forms" element={<Forms />} />
-                                        <Route path="/notifications" element={<Notifications />} />
-                                        <Route path="/queue" element={<Queue />} />
-                                    </Route>
+                                        <Route element={<Layout />}>
+                                            <Route path="/dashboard" element={<Dashboard />} />
+                                            <Route path="/appointments" element={<AppointmentHistory />} />
+                                            <Route path="/appointments/book" element={<AppointmentBooking />} />
+                                            <Route path="/medical-history" element={<MedicalHistory />} />
+                                            <Route path="/results" element={<Results />} />
+                                            <Route path="/results/:id" element={<ResultDetail />} />
+                                            <Route path="/medications" element={<Medications />} />
+                                            <Route path="/immunization" element={<Immunization />} />
+                                            <Route path="/coverage" element={<Financial />} />
+                                            <Route path="/benefits" element={<Benefits />} />
+                                            <Route path="/billing" element={<Billing />} />
+                                            <Route path="/checkout/:id" element={<Checkout />} />
+                                            <Route path="/payment-success" element={<PaymentSuccess />} />
+                                            <Route path="/visits" element={<Visits />} />
+                                            <Route path="/visits/teleconsult" element={<TeleconsultLanding />} />
+                                            <Route path="/visits/consult-now" element={<ConsultNow />} />
+                                            <Route path="/visits/teleconsult-intake" element={<TeleconsultIntake />} />
+                                            <Route path="/visits/book-procedure" element={<BookProcedure />} />
+                                            {/* Separated Booking Flows */}
+                                            <Route path="/visits/book-clinic" element={<AppointmentBooking />} />
+                                            <Route path="/visits/book-teleconsult" element={<AppointmentBooking />} />
+                                            <Route path="/visits/consult-later" element={<AppointmentBooking />} />
+                                            <Route path="/health" element={<Health />} />
+                                            <Route path="/health/past-appointments" element={<AppointmentHistory />} />
+                                            <Route path="/health/care-plans" element={<CarePlans />} />
+                                            <Route path="/news" element={<ContentDashboard />} />
+                                            <Route path="/news/:id" element={<ContentDetail />} />
+                                            <Route path="/events" element={<ContentDashboard />} /> {/* Logic inside will handle tab selection if passed via state/context */}
+                                            <Route path="/events/:id" element={<ContentDetail />} />
+                                            <Route path="/guides" element={<ContentDashboard />} />
+                                            <Route path="/guides/:id" element={<ContentDetail />} />
+                                            <Route path="/content/:id" element={<ContentDetail />} />
+                                            <Route path="/profile" element={<Profile />} />
+                                            <Route path="/profile/dependents" element={<Dependents />} />
+                                            <Route path="/coverage/philhealth" element={<PhilHealthDetail />} />
+                                            <Route path="/branches" element={<Branches />} />
+                                            <Route path="/forms" element={<Forms />} />
+                                            <Route path="/notifications" element={<Notifications />} />
+                                            <Route path="/queue" element={<Queue />} />
+                                            <Route path="/design" element={<DesignSystem />} />
+                                        </Route>
 
-                                    {/* Provider App Routes */}
-                                    <Route element={<ProviderLayout />}>
-                                        <Route path="/provider" element={<ProviderDashboard />} />
-                                        <Route path="/provider/dashboard" element={<ProviderDashboard />} />
-                                        <Route path="/provider/queue" element={<QueueManagement />} />
-                                        <Route path="/provider/teleconsult-queue" element={<TeleconsultQueue />} />
-                                        <Route path="/provider/scheduling" element={<SchedulingOps />} />
-                                        <Route path="/provider/nursing" element={<NursingStation />} />
-                                        <Route path="/provider/billing" element={<BillingRevenue />} />
-                                        <Route path="/provider/lab-imaging" element={<LabImaging />} />
-                                        <Route path="/provider/pharmacy" element={<PharmacyOps />} />
-                                        <Route path="/provider/facility" element={<FacilityManagement />} />
-                                        <Route path="/provider/communications" element={<Communications />} />
-                                        <Route path="/provider/events" element={<EventsManagement />} />
-                                        <Route path="/provider/users" element={<UserManagement />} />
-                                        <Route path="/provider/hr" element={<HRStaff />} />
-                                        <Route path="/provider/analytics" element={<Analytics />} />
-                                        <Route path="/provider/integrations" element={<Integrations />} />
-                                        <Route path="/provider/architecture" element={<Architecture />} />
-                    <Route path="/provider/forms" element={<FormsManagement />} />
-                    <Route path="/provider/notifications" element={<ProviderNotifications />} />
-                    <Route path="/provider/profile" element={<ProviderProfile />} />
-                    <Route path="/provider/settings" element={<ProviderSettings />} />
-                  </Route>
+                                        {/* Provider App Routes */}
+                                        <Route element={<ProviderLayout />}>
+                                            <Route path="/provider" element={<ProviderDashboard />} />
+                                            <Route path="/provider/dashboard" element={<ProviderDashboard />} />
+                                            <Route path="/provider/queue" element={<QueueManagement />} />
+                                            <Route path="/provider/teleconsult-queue" element={<TeleconsultQueue />} />
+                                            <Route path="/provider/scheduling" element={<SchedulingOps />} />
+                                            <Route path="/provider/nursing" element={<NursingStation />} />
+                                            <Route path="/provider/billing" element={<BillingRevenue />} />
+                                            <Route path="/provider/lab-imaging" element={<LabImaging />} />
+                                            <Route path="/provider/pharmacy" element={<PharmacyOps />} />
+                                            <Route path="/provider/facility" element={<FacilityManagement />} />
+                                            <Route path="/provider/communications" element={<Communications />} />
+                                            <Route path="/provider/events" element={<EventsManagement />} />
+                                            <Route path="/provider/users" element={<UserManagement />} />
+                                            <Route path="/provider/hr" element={<HRStaff />} />
+                                            <Route path="/provider/analytics" element={<Analytics />} />
+                                            <Route path="/provider/integrations" element={<Integrations />} />
+                                            <Route path="/provider/architecture" element={<Architecture />} />
+                                            <Route path="/provider/forms" element={<FormsManagement />} />
+                                            <Route path="/provider/notifications" element={<ProviderNotifications />} />
+                                            <Route path="/provider/profile" element={<ProviderProfile />} />
+                                            <Route path="/provider/settings" element={<ProviderSettings />} />
+                                        </Route>
 
-                                    {/* Doctor App Routes */}
-                                    <Route element={<DoctorLayout />}>
-                                        <Route path="/doctor" element={<DoctorDashboard />} />
-                                        <Route path="/doctor/queue" element={<DoctorQueue />} />
-                                        <Route path="/doctor/encounter" element={<PatientEncounter />} />
-                                        <Route path="/doctor/teleconsult" element={<DoctorTeleconsult />} />
-                                        <Route path="/doctor/results" element={<DoctorResults />} />
-                                        <Route path="/doctor/schedule" element={<DoctorSchedule />} />
-                                        <Route path="/doctor/prescriptions" element={<DoctorPrescriptions />} />
-                                        <Route path="/doctor/tasks" element={<DoctorTasks />} />
-                                        <Route path="/doctor/messages" element={<DoctorMessages />} />
-                                        <Route path="/doctor/immunizations" element={<ImmunizationManagement />} />
-                                        <Route path="/doctor/loa" element={<LOAReview />} />
-                                    </Route>
+                                        {/* Doctor App Routes */}
+                                        <Route element={<DoctorLayout />}>
+                                            <Route path="/doctor" element={<DoctorDashboard />} />
+                                            <Route path="/doctor/queue" element={<DoctorQueue />} />
+                                            <Route path="/doctor/encounter" element={<PatientEncounter />} />
+                                            <Route path="/doctor/teleconsult" element={<DoctorTeleconsult />} />
+                                            <Route path="/doctor/results" element={<DoctorResults />} />
+                                            <Route path="/doctor/schedule" element={<DoctorSchedule />} />
+                                            <Route path="/doctor/prescriptions" element={<DoctorPrescriptions />} />
+                                            <Route path="/doctor/tasks" element={<DoctorTasks />} />
+                                            <Route path="/doctor/messages" element={<DoctorMessages />} />
+                                            <Route path="/doctor/immunizations" element={<ImmunizationManagement />} />
+                                            <Route path="/doctor/loa" element={<LOAReview />} />
+                                        </Route>
 
-                                    <Route path="*" element={<Navigate to="/apps" replace />} />
-                                </Routes>
-                            </ErrorBoundary>
-                            <DemoControls />
-                        </Router>
-                    </ProviderProvider>
+                                        <Route path="*" element={<Navigate to="/apps" replace />} />
+                                    </Routes>
+                                </ErrorBoundary>
+                                <DemoControls />
+                            </Router>
+                        </ProviderProvider>
+                    </HeaderProvider>
                 </DataProvider>
             </ToastProvider>
         </ThemeProvider>

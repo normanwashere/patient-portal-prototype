@@ -223,12 +223,12 @@
 .call-controls {
     display: flex;
     justify-content: center;
-    gap: 1rem;
-    padding: 1.5rem;
-    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+    gap: 1.5rem;
+    padding: 2rem;
+    padding-bottom: calc(8rem + env(safe-area-inset-bottom));
     /* Added padding to clear bottom nav */
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
 }
 
 .control-btn {

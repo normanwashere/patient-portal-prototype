@@ -4,7 +4,7 @@ import { useToast } from '../context/ToastContext';
 import { useTheme } from '../theme/ThemeContext';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Shield, ExternalLink, Info, Calendar, CheckCircle, Hospital, ClipboardList, Pill } from 'lucide-react';
-import { BackButton } from '../components/Common/BackButton';
+
 import './Profile.css';
 
 export const PhilHealthDetail: React.FC = () => {
@@ -30,7 +30,7 @@ export const PhilHealthDetail: React.FC = () => {
     return (
         <div className="profile-container detail-page">
             <header className="page-header">
-                <BackButton />
+
                 <div className="header-text">
                     <h2>PhilHealth Profile</h2>
                     <p className="page-subtitle">Konsulta coverage and account details</p>

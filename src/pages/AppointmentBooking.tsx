@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Calendar, MapPin, User, CheckCircle, Stethoscope, Building2, ChevronRight, Video } from 'lucide-react';
-import { BackButton } from '../components/Common/BackButton';
+import { Calendar, MapPin, User, CheckCircle, Stethoscope, Building2, ChevronRight, Video, Search } from 'lucide-react';
+
 import { useToast } from '../context/ToastContext';
 import { useData } from '../context/DataContext';
+import { useHeader } from '../context/HeaderContext';
 import { useTheme } from '../theme/ThemeContext';
 import { DOCTORS, SPECIALTIES } from '../data/mockAppointmentData';
 import { getTenantBranches } from '../data/mockBranches';
@@ -30,6 +31,7 @@ export const AppointmentBooking: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { showToast } = useToast();
+    const { setCustomBack } = useHeader();
     const { addAppointment } = useData();
     const { tenant } = useTheme();
     const visits = tenant.features.visits;
@@ -42,13 +44,33 @@ export const AppointmentBooking: React.FC = () => {
     // State
     // State - Lazy Initialize from location.state to avoid flicker
     const [bookingType, setBookingType] = useState<AppointmentType | null>(() => {
-        return (location.state?.type as AppointmentType) || (location.state?.locationId ? 'in-person' : null);
+        const path = location.pathname;
+        if (path.includes('book-clinic')) return 'in-person';
+        if (path.includes('book-teleconsult')) return 'teleconsult';
+
+        const searchParams = new URLSearchParams(location.search);
+        const queryType = searchParams.get('type') as AppointmentType | null;
+        return (location.state?.type as AppointmentType) || queryType || (location.state?.locationId ? 'in-person' : null);
     });
 
     const [step, setStep] = useState<BookingStep>(() => {
+        const path = location.pathname;
+        // If route is specific, skip type selection and go straight to preference
+        if (path.includes('book-clinic') || path.includes('book-teleconsult')) {
+            if (path.includes('book-clinic') && location.state?.branch === 'consult') return 'preference';
+            // For clinic, usually start at in-person-branch unless specified
+            if (path.includes('book-clinic')) return 'preference'; // actually preference is better? No, need to choose procedure vs consult if generic.
+            // Wait, "Book In-Person Consult" from Visits page usually assumes "Consultation" so we skip the procedure choice?
+            // The previous flow was: In-Person -> [Type: Consult/Procedure] -> Preference.
+            // If URL is /visits/book-clinic, we assume In-Person.
+            return 'preference';
+        }
+
+        const searchParams = new URLSearchParams(location.search);
+        const queryType = searchParams.get('type');
         if (location.state?.locationId) return 'secondary';
         if (location.state?.type === 'in-person' && location.state?.branch === 'consult') return 'preference';
-        if (location.state?.type) return 'preference';
+        if (location.state?.type || queryType) return 'preference';
         return 'type-selection';
     });
 
@@ -61,6 +83,7 @@ export const AppointmentBooking: React.FC = () => {
     const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [selectedTime, setSelectedTime] = useState<string>('');
+    const [doctorSearchQuery, setDoctorSearchQuery] = useState('');
 
     // Handle Location ID pre-selection side-effects (finding the branch object)
     useEffect(() => {
@@ -135,19 +158,22 @@ export const AppointmentBooking: React.FC = () => {
 
     // Navigation Handlers
     const handleBack = () => {
-        if (step === 'type-selection') navigate(-1);
-        else if (step === 'in-person-branch') setStep('type-selection');
-        else if (step === 'preference') {
-            if (location.state?.type === 'in-person' && location.state?.branch === 'consult') navigate(-1);
-            else if (location.state?.type) navigate(-1);
-            else if (bookingType === 'in-person') setStep('in-person-branch');
+        if (step === 'type-selection') {
+            navigate('/visits'); // Explicit exit
+        }
+        else if (step === 'in-person-branch') {
+            // If we are on a specific route, going back from here means going to Visits
+            if (location.pathname.includes('book-clinic')) navigate('/visits');
             else setStep('type-selection');
+        }
+        else if (step === 'preference') {
+            // Always exit flow if we are at the preference step (start of flow)
+            navigate('/visits');
         }
         else if (step === 'primary') setStep('preference');
         else if (step === 'secondary') {
-            // If we pre-selected location from outside, go back to preference or home?
             if (location.state?.locationId && preference === 'location') {
-                navigate(-1); // Or reset state
+                navigate('/visits'); // Or reset state
             } else {
                 setStep('primary');
             }
@@ -157,14 +183,42 @@ export const AppointmentBooking: React.FC = () => {
             else setStep('secondary');
         }
         else if (step === 'datetime') {
-            // If we searched doctor directly, go back to doctor list (which was step 'preference' technically or 'doctor' step?)
-            // Wait, if Pref=Doctor, we showed list. selection -> Date. So back -> Pref (Doctor List).
             if (preference === 'doctor') setStep('preference');
-            else setStep('doctor'); // Back to list of doctors filtered by Loc/Spec
+            else setStep('doctor');
         }
         else if (step === 'intake') setStep('datetime');
         else if (step === 'confirm') setStep('intake');
     };
+
+    // Sync custom back handler to Header
+    useEffect(() => {
+        // Define when we are at the "root" of the booking flow
+        const isAtRoot =
+            step === 'type-selection' ||
+            step === 'preference' ||
+            (step === 'in-person-branch' && location.pathname.includes('book-clinic')); // If specific route, this is root
+
+        if (isAtRoot) {
+            setCustomBack(null); // Let Layout handle "Back" (goes to /visits)
+        } else {
+            setCustomBack(handleBack);
+        }
+
+        return () => setCustomBack(null);
+    }, [step, bookingType, preference, selectedBranch, selectedSpecialty, selectedDoctor, location.state, location.pathname, handleBack]);
+
+    // React to URL query param changes
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const queryType = searchParams.get('type') as AppointmentType | null;
+        if (queryType) {
+            setBookingType(queryType);
+            setStep('preference');
+            setSelectedBranch(null);
+            setSelectedSpecialty(null);
+            setSelectedDoctor(null);
+        }
+    }, [location.search]);
 
     // --- Render Helpers ---
 
@@ -356,39 +410,88 @@ export const AppointmentBooking: React.FC = () => {
         return null;
     };
 
-    const renderDoctorFormat = () => (
-        <div className="step-content">
-            {preference !== 'doctor' && (
-                <div className="context-banner-stack">
-                    {bookingType === 'in-person' && selectedBranch && (
-                        <div className="tag"><MapPin size={14} /> {selectedBranch.name}</div>
-                    )}
-                    {selectedSpecialty && (
-                        <div className="tag"><Stethoscope size={14} /> {selectedSpecialty.name}</div>
-                    )}
-                    {bookingType === 'teleconsult' && (
-                        <div className="tag"><Video size={14} /> Teleconsult</div>
+
+
+    // ... existing renders ...
+
+    const renderDoctorFormat = () => {
+        // Filter doctors based on search
+        const filteredDoctors = getDoctors().filter(doc =>
+            doc.name.toLowerCase().includes(doctorSearchQuery.toLowerCase()) ||
+            doc.specialtyName.toLowerCase().includes(doctorSearchQuery.toLowerCase())
+        );
+
+        return (
+            <div className="step-content">
+                {preference !== 'doctor' && (
+                    <div className="context-banner-stack">
+                        {bookingType === 'in-person' && selectedBranch && (
+                            <div className="tag"><MapPin size={14} /> {selectedBranch.name}</div>
+                        )}
+                        {selectedSpecialty && (
+                            <div className="tag"><Stethoscope size={14} /> {selectedSpecialty.name}</div>
+                        )}
+                        {bookingType === 'teleconsult' && (
+                            <div className="tag"><Video size={14} /> Teleconsult</div>
+                        )}
+                    </div>
+                )}
+
+                <div className="doctor-step-header">
+                    <h3 className="step-instruction">Select a Doctor</h3>
+                    <div className="doctor-search-bar">
+                        <Search size={18} className="search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Search by name or specialty..."
+                            value={doctorSearchQuery}
+                            onChange={(e) => setDoctorSearchQuery(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                <div className="doctor-list detailed-list">
+                    {filteredDoctors.length > 0 ? filteredDoctors.map(doc => {
+                        // Find branch names for this doctor
+                        const docBranches = tenantBranches.filter(b => doc.locationIds.includes(b.id));
+
+                        return (
+                            <button key={doc.id} className={`doctor-card detailed ${selectedDoctor?.id === doc.id ? 'selected' : ''}`}
+                                onClick={() => { setSelectedDoctor(doc); setStep('datetime'); }} >
+                                <div className="doctor-card-main">
+                                    <img src={doc.image} alt={doc.name} className="doctor-avatar large" />
+                                    <div className="doctor-info">
+                                        <div className="doc-header-row">
+                                            <h4>{doc.name}</h4>
+                                            <div className="doctor-rating">⭐ {doc.rating}</div>
+                                        </div>
+                                        <span className="doctor-specialty">{doc.specialtyName}</span>
+
+                                        <div className="doctor-locations">
+                                            {docBranches.slice(0, 2).map(b => (
+                                                <span key={b.id} className="loc-badge">
+                                                    <MapPin size={10} /> {b.name.replace('Maxicare PCC - ', '').replace('Metro General ', '')}
+                                                </span>
+                                            ))}
+                                            {docBranches.length > 2 && <span className="loc-badge more">+{docBranches.length - 2} more</span>}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="doctor-card-footer">
+                                    <span className="doctor-fee">Initial Fee: ₱{doc.fee}</span>
+                                    <span className="action-text">View Availability <ChevronRight size={14} /></span>
+                                </div>
+                            </button>
+                        );
+                    }) : (
+                        <div className="no-data-placeholder">
+                            <p>No doctors found matching "{doctorSearchQuery}"</p>
+                        </div>
                     )}
                 </div>
-            )}
-            <h3 className="step-instruction">Select a Doctor</h3>
-
-            <div className="doctor-list">
-                {getDoctors().map(doc => (
-                    <button key={doc.id} className={`doctor-card ${selectedDoctor?.id === doc.id ? 'selected' : ''}`}
-                        onClick={() => { setSelectedDoctor(doc); setStep('datetime'); }} >
-                        <img src={doc.image} alt={doc.name} className="doctor-avatar" />
-                        <div className="doctor-info">
-                            <h4>{doc.name}</h4>
-                            <span className="doctor-specialty">{doc.specialtyName}</span>
-                            <span className="doctor-fee">Initial Fee: ₱{doc.fee}</span>
-                        </div>
-                        <div className="doctor-rating">⭐ {doc.rating}</div>
-                    </button>
-                ))}
             </div>
-        </div>
-    );
+        );
+    };
 
     const renderDateTime = () => {
         // Use doctor's dynamic availability or fallback
@@ -509,10 +612,7 @@ export const AppointmentBooking: React.FC = () => {
 
     return (
         <div className="booking-container">
-            <header className="page-header">
-                {step !== 'success' && (
-                    <BackButton onClick={handleBack} />
-                )}
+            <header className="booking-header">
                 <div className="header-text">
                     <h2>{getPageTitle()}</h2>
                     {step !== 'success' && (
@@ -533,15 +633,17 @@ export const AppointmentBooking: React.FC = () => {
             {step === 'intake' && renderIntake()}
             {step === 'confirm' && renderConfirm()}
 
-            {step === 'success' && (
-                <div className="step-content success-content">
-                    <CheckCircle size={64} className="success-icon" />
-                    <h3>Booking Confirmed!</h3>
-                    <p>You are booked with {selectedDoctor?.name} on {selectedDate} at {selectedTime}.</p>
-                    <button className="btn-primary" onClick={() => navigate('/appointments')}>View Appointments</button>
-                    <button className="btn-secondary" onClick={() => navigate('/')}>Back to Home</button>
-                </div>
-            )}
-        </div>
+            {
+                step === 'success' && (
+                    <div className="step-content success-content">
+                        <CheckCircle size={64} className="success-icon" />
+                        <h3>Booking Confirmed!</h3>
+                        <p>You are booked with {selectedDoctor?.name} on {selectedDate} at {selectedTime}.</p>
+                        <button className="btn-primary" onClick={() => navigate('/appointments')}>View Appointments</button>
+                        <button className="btn-secondary" onClick={() => navigate('/')}>Back to Home</button>
+                    </div>
+                )
+            }
+        </div >
     );
 };

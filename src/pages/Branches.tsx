@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
-import { BackButton } from '../components/Common/BackButton';
+
 import { getTenantBranches } from '../data/mockBranches';
 import { BranchCard } from '../components/BranchCard/BranchCard';
 import './Branches.css';
@@ -28,7 +28,7 @@ export const Branches: React.FC = () => {
     return (
         <div className="branches-container container">
             <header className="page-header-standard">
-                <BackButton />
+
                 <h2 className="title-standard">Our Locations</h2>
                 <p className="subtitle-standard">{tenant.tagline || 'Find a branch near you'}</p>
             </header>

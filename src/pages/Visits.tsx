@@ -1,24 +1,41 @@
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Video, CalendarDays, Building2 } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import { ServiceCard } from '../components/ServiceCard/ServiceCard';
 import { useBadges } from '../hooks/useBadges';
-import { BackButton } from '../components/Common/BackButton';
+
 import './Visits.css';
 
 export const Visits: React.FC = () => {
     const { tenant } = useTheme();
     const navigate = useNavigate();
+    const location = useLocation();
     const { visits } = tenant.features;
     const { careBadge } = useBadges();
 
     // Check if any visit type is available
     const hasAnyVisit = visits.teleconsultEnabled || visits.clinicVisitEnabled;
 
+    const teleconsultRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        const state = location.state as { focus?: string } | null;
+        if (state?.focus === 'teleconsult' && teleconsultRef.current) {
+            teleconsultRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Optional: visual highlight
+            teleconsultRef.current.style.transition = 'box-shadow 0.3s ease';
+            teleconsultRef.current.style.boxShadow = '0 0 0 4px var(--color-primary-transparent)';
+            setTimeout(() => {
+                if (teleconsultRef.current) teleconsultRef.current.style.boxShadow = 'none';
+            }, 2000);
+        }
+    }, [location.state]);
+
     return (
         <div className="visits-container">
             <header className="page-header">
-                <BackButton />
+                {/* BackButton removed - handled by Layout */}
                 <div className="header-text">
                     <h2>Care Services</h2>
                     <p className="page-subtitle">Schedule and manage your healthcare needs</p>
@@ -64,7 +81,7 @@ export const Visits: React.FC = () => {
                         title="Book In-Person Consult"
                         description="Schedule a visit at our facility."
                         icon={<Building2 size={24} />}
-                        onClick={() => navigate('/appointments/book', { state: { type: 'in-person', branch: 'consult' } })}
+                        onClick={() => navigate('/visits/book-clinic')}
                         colorTheme="green"
                         actionLabel="Book Now"
                         backgroundImage="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600"
@@ -77,7 +94,7 @@ export const Visits: React.FC = () => {
                         title="Book Teleconsult for Later"
                         description="Schedule a video consultation."
                         icon={<Video size={24} />}
-                        onClick={() => navigate('/appointments/book', { state: { type: 'teleconsult' } })}
+                        onClick={() => navigate('/visits/book-teleconsult')}
                         colorTheme="blue"
                         actionLabel="Schedule"
                         backgroundImage="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600"

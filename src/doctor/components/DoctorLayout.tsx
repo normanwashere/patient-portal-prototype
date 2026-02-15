@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
+import { OfflineBanner } from '../../components/Common/OfflineBanner';
+import { Breadcrumbs } from '../../components/Common/Breadcrumbs';
 import {
   CalendarClock,
   Users,
@@ -220,7 +222,7 @@ export const DoctorLayout = () => {
                 Switch to Provider App
               </Link>
               <Link
-                to="/login"
+                to="/apps"
                 className="doctor-mobile-menu-item doctor-mobile-menu-item--logout"
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -347,11 +349,11 @@ export const DoctorLayout = () => {
                   {visibleItems.map((item) => {
                     const badgeCount =
                       item.hasBadge === 'queue' ? queueCount :
-                      item.hasBadge === 'results' ? pendingResultCount :
-                      item.hasBadge === 'tasks' ? taskBadgeCount :
-                      item.hasBadge === 'teleconsult' ? teleconsultQueueCount :
-                      item.hasBadge === 'messages' ? messageCount :
-                      0;
+                        item.hasBadge === 'results' ? pendingResultCount :
+                          item.hasBadge === 'tasks' ? taskBadgeCount :
+                            item.hasBadge === 'teleconsult' ? teleconsultQueueCount :
+                              item.hasBadge === 'messages' ? messageCount :
+                                0;
                     return (
                       <NavLink
                         key={item.to}
@@ -397,6 +399,8 @@ export const DoctorLayout = () => {
 
       {/* Main Content */}
       <main className="doctor-main">
+        <OfflineBanner />
+        <Breadcrumbs />
         <Outlet />
       </main>
 
@@ -414,11 +418,11 @@ export const DoctorLayout = () => {
           .map((item) => {
             const badgeCount =
               item.badgeKey === 'queue' ? queueCount :
-              item.badgeKey === 'results' ? pendingResultCount :
-              item.badgeKey === 'tasks' ? taskBadgeCount :
-              item.badgeKey === 'teleconsult' ? teleconsultQueueCount :
-              item.badgeKey === 'messages' ? messageCount :
-              0;
+                item.badgeKey === 'results' ? pendingResultCount :
+                  item.badgeKey === 'tasks' ? taskBadgeCount :
+                    item.badgeKey === 'teleconsult' ? teleconsultQueueCount :
+                      item.badgeKey === 'messages' ? messageCount :
+                        0;
             return (
               <NavLink
                 key={item.to}

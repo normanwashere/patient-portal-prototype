@@ -312,7 +312,7 @@ const INITIAL_STEPS: QueueStep[] = [
 ];
 
 import { useTheme } from '../theme/ThemeContext';
-import { METRO_DATA, MERALCO_DATA, HEALTHFIRST_DATA } from '../data/tenantData';
+import { METRO_DATA, MERALCO_DATA, HEALTHFIRST_DATA, MAXICARE_DATA } from '../data/tenantData';
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { showToast } = useToast();
@@ -348,6 +348,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 break;
             case 'metroGeneral':
                 tenantData = METRO_DATA;
+                break;
+            case 'maxicare':
+                tenantData = MAXICARE_DATA;
                 break;
             default:
                 // Custom / dynamic tenants get a demo patient seeded
@@ -401,7 +404,53 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setClaims(currentPatient.claims || []);
         setUserProfile(currentPatient.userProfile || null);
         setDependents(currentPatient.dependents || []);
+        setUserProfile(currentPatient.userProfile || null);
+        setDependents(currentPatient.dependents || []);
     }, [tenant.id, currentPatientId]);
+
+    // Sync Listener
+    React.useEffect(() => {
+        let unsubscribe: () => void;
+        import('../utils/sync').then(({ syncManager }) => {
+            unsubscribe = syncManager.subscribe((event) => {
+                if (event.type === 'APPOINTMENT_UPDATED') {
+                    setAppointments(prev => prev.map(a =>
+                        a.id === event.payload.id ? { ...a, status: event.payload.status } : a
+                    ));
+                }
+                if (event.type === 'QUEUE_UPDATED') {
+                    // payload: { patientId, toStation }
+                    // In a real app we check patientId. For demo, we assume "current patient" is the one being moved if IDs don't match strictly 
+                    // or we just look for mapping.
+                    // Our steps have IDs like 'consult', 'labs' etc.
+                    // The provider sends stationType: 'Consultation', 'Lab', 'Pharmacy'
+                    const { toStation } = event.payload;
+
+                    setSteps(prev => {
+                        const newSteps = [...prev];
+                        // Map Provider Station to Patient Step ID
+                        const map: Record<string, string> = {
+                            'Check-In': 'triage',
+                            'Consultation': 'consult',
+                            'Lab': 'urinalysis', // simplified
+                            'Imaging': 'xray',
+                            'Pharmacy': 'pharmacy',
+                            'Billing': 'billing',
+                            'Done': 'completed'
+                        };
+                        const stepId = map[toStation] || toStation.toLowerCase();
+
+                        return newSteps.map(s => {
+                            if (s.id === stepId) return { ...s, status: 'IN_SESSION' };
+                            if (toStation === 'Done') return { ...s, status: 'COMPLETED' };
+                            return s;
+                        });
+                    });
+                }
+            });
+        });
+        return () => { if (unsubscribe) unsubscribe(); };
+    }, []);
 
     const switchPatient = React.useCallback((patientId: string) => {
         setCurrentPatientId(patientId);
@@ -433,7 +482,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const addAppointment = React.useCallback((appt: Omit<Appointment, 'id' | 'status'>) => {
         const newAppt: Appointment = { ...appt, id: Math.random().toString(36).substr(2, 9), status: 'Upcoming' };
         setAppointments(prev => [newAppt, ...prev]);
-    }, []);
+        import('../utils/sync').then(({ syncManager }) => {
+            syncManager.broadcast({ type: 'APPOINTMENT_ADDED', payload: { ...newAppt, patientName: userProfile?.name } });
+        });
+    }, [userProfile]);
 
     const requestRefill = React.useCallback((medId: string) => {
         setMedications(prev => prev.map(m => m.id === medId ? { ...m, status: 'Refill Requested' } : m));

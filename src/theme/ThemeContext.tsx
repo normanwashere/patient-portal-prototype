@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type { TenantConfig, TenantFeatures } from '../types/tenant';
 import { tenants as defaultTenants, defaultTenant } from './tenantConfig';
 
-const BUILTIN_IDS = ['metroGeneral', 'meralcoWellness', 'healthFirst'];
+const BUILTIN_IDS = ['metroGeneral', 'meralcoWellness', 'healthFirst', 'maxicare'];
 
 interface ThemeContextType {
     tenant: TenantConfig;
@@ -19,7 +19,8 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [tenants, setTenants] = useState<Record<string, TenantConfig>>({ ...defaultTenants });
     const [tenantId, setTenantIdRaw] = useState<string>(() => {
         const params = new URLSearchParams(window.location.search);
-        return params.get('tenant') || 'metroGeneral';
+        const persisted = localStorage.getItem('tenant_id');
+        return params.get('tenant') || persisted || 'metroGeneral';
     });
 
     const tenant = tenants[tenantId] || defaultTenant;
@@ -27,6 +28,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const setTenantId = useCallback((id: string) => {
         setTenantIdRaw(id);
+        localStorage.setItem('tenant_id', id);
     }, []);
 
     const addTenant = useCallback((config: TenantConfig) => {

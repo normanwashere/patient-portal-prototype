@@ -294,3 +294,77 @@ export const HEALTHFIRST_DATA: any = {
         }
     ]
 };
+
+// ==========================================
+// ORG 4: MAXICARE
+// ==========================================
+export const MAXICARE_DATA: any = {
+    patients: [
+        {
+            userProfile: {
+                id: 'p-max-1',
+                name: 'Mateo Maxicare',
+                memberId: 'MAX-88990011',
+                company: 'MAXICARE HEALTH CORP',
+                validity: '01/2026 - 12/2026',
+                membershipType: 'Gold Member',
+                emergencyContact: { name: 'Maria Maxicare', relation: 'Spouse', phone: '0917-000-8888' },
+                philHealth: {
+                    membershipNumber: '11-223344556-7',
+                    status: 'Active',
+                    category: 'Private Sector Employee',
+                    lastContribution: 'Jan 2026',
+                    konsultaProvider: 'Maxicare Primary Care Center - BGC',
+                    fpeStatus: 'Completed',
+                    mbl: '₱ 50,000.00',
+                    mblUsed: '₱ 0.00',
+                    benefitCategories: [
+                        { id: 'ph-m1', name: 'Primary Care Package', limit: '₱ 5,000.00', used: '₱ 0.00', icon: '🩺' }
+                    ]
+                },
+                hmoCards: [
+                    {
+                        id: 'hmo-m1',
+                        provider: 'Maxicare',
+                        memberNo: '1122-3344-MAX',
+                        planType: 'Platinum Plus',
+                        validity: '2026-12-31',
+                        coverageAmount: '₱ 250,000.00',
+                        usedAmount: '₱ 12,500.00',
+                        mbl: '₱ 250,000.00',
+                        mblUsed: '₱ 12,500.00',
+                        status: 'Active',
+                        benefitCategories: [
+                            { id: 'b1', name: 'Dental Care', limit: '₱ 5,000.00', used: '₱ 0.00', icon: '🦷' },
+                            { id: 'b2', name: 'Optical Allowance', limit: '₱ 3,500.00', used: '₱ 0.00', icon: '👓' },
+                            { id: 'b3', name: 'Annual Check-up', limit: 'Unlimited', used: '1 Visit', icon: '🩺' }
+                        ]
+                    }
+                ],
+                wellnessBenefits: [
+                    { id: 'w-m1', type: 'Gym Membership', balance: 'Active', description: 'Anytime Fitness Access', validity: '2026' }
+                ]
+            },
+            dependents: [],
+            appointments: [
+                { id: 'appt-m1', doctor: 'Dr. Sarah Smith', specialty: 'General Practice', date: addDays(2), time: '10:00 AM', status: 'Upcoming', type: 'Teleconsult', location: 'Maxicare Telemed' },
+                { id: 'appt-m2', doctor: 'Dr. John Doe', specialty: 'Cardiology', date: subDays(14), time: '02:00 PM', status: 'Completed', type: 'In-Person', location: 'Maxicare PCC BGC' }
+            ],
+            medications: [
+                { id: 'med-m1', name: 'Amlodipine', dosage: '5mg', instruction: 'Once daily', remaining: 30, refillDate: addDays(25), status: 'Active' }
+            ],
+            results: [
+                { id: 'res-m1', title: 'Complete Blood Count', type: 'Laboratory', date: subDays(14), doctor: 'Dr. Doe', status: 'Final' },
+                { id: 'res-m2', title: 'Lipid Profile', type: 'Laboratory', date: subDays(14), doctor: 'Dr. Doe', status: 'Final' }
+            ],
+            notifications: [
+                { id: 'not-m1', title: 'Consultation Ready', message: 'You can now join the queue for immediate consult.', date: 'Just now', read: false, type: 'info', link: '/visits' }
+            ],
+            invoices: [
+                { id: 'inv-m1', date: subDays(14), description: 'Cardiology Consult', provider: 'Maxicare PCC', amount: 0, status: 'Paid', type: 'Consultation' } // HMO covered
+            ],
+            procedures: [],
+            loaRequests: []
+        }
+    ]
+};

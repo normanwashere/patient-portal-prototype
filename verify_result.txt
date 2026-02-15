@@ -1,0 +1,25 @@
+Total Content Items: 58
+
+Checking Tenant: maxicare
+    [PASS] event: 4 items
+    [PASS] guide: 9 items
+    [PASS] news: 3 items
+    [PASS] campaign: 3 items
+
+Checking Tenant: metroGeneral
+    [PASS] event: 3 items
+    [PASS] guide: 3 items
+    [PASS] news: 3 items
+    [PASS] campaign: 3 items
+
+Checking Tenant: meralcoWellness
+    [PASS] event: 3 items
+    [PASS] guide: 3 items
+    [PASS] news: 3 items
+    [PASS] campaign: 3 items
+
+Checking Tenant: healthFirst
+    [PASS] event: 3 items
+    [PASS] guide: 3 items
+    [PASS] news: 3 items
+    [PASS] campaign: 3 items

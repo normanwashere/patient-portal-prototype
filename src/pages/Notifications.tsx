@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { Bell, CheckCircle, Info, AlertTriangle, CheckCheck } from 'lucide-react';
-import { BackButton } from '../components/Common/BackButton';
+
 import './Notifications.css';
 
 export const Notifications: React.FC = () => {
@@ -55,17 +55,17 @@ export const Notifications: React.FC = () => {
     return (
         <div className="notifications-page">
             <header className="page-header">
-                <BackButton />
+
                 <div className="header-text">
                     <h2>Notifications</h2>
                     <p className="page-subtitle">Stay updated with your healthcare activity</p>
+                    {newNotifications.length > 0 && (
+                        <button className="btn-mark-read" onClick={handleMarkAllRead} style={{ marginTop: '0.5rem' }}>
+                            <CheckCheck size={16} style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'text-top' }} />
+                            Mark all as read
+                        </button>
+                    )}
                 </div>
-                {newNotifications.length > 0 && (
-                    <button className="btn-mark-read" onClick={handleMarkAllRead}>
-                        <CheckCheck size={16} style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'text-top' }} />
-                        Mark all as read
-                    </button>
-                )}
             </header>
 
             {notifications.length === 0 ? (

@@ -3,7 +3,7 @@ import {
     ClipboardList, Target, CheckCircle2, Calendar,
     ChevronDown, ChevronUp, User, Activity,
 } from 'lucide-react';
-import { BackButton } from '../components/Common/BackButton';
+
 import './HubPage.css';
 
 /* ── Mock Care Plan Data ───────────────────────────────────── */
@@ -340,7 +340,12 @@ const styles = {
 
 /* ── Care Plan Card Component ─────────────────────────────── */
 
-const CarePlanCard: React.FC<{ plan: CarePlan }> = ({ plan }) => {
+const CarePlanCard: React.FC<{
+    plan: CarePlan;
+    onToggleGoal: (goalIndex: number) => void;
+    onLogIntervention: (interventionIndex: number) => void;
+    onMessageDoctor: () => void;
+}> = ({ plan, onToggleGoal, onLogIntervention, onMessageDoctor }) => {
     const [expanded, setExpanded] = useState(plan.status === 'Active');
     const completedGoals = plan.goals.filter(g => g.completed).length;
 
@@ -394,7 +399,11 @@ const CarePlanCard: React.FC<{ plan: CarePlan }> = ({ plan }) => {
                         Goals
                     </div>
                     {plan.goals.map((goal, i) => (
-                        <div key={i} style={styles.goalItem}>
+                        <div
+                            key={i}
+                            style={{ ...styles.goalItem, cursor: 'pointer' }}
+                            onClick={() => onToggleGoal(i)}
+                        >
                             <CheckCircle2
                                 size={16}
                                 style={goal.completed ? styles.goalIconDone : styles.goalIconPending}
@@ -402,6 +411,7 @@ const CarePlanCard: React.FC<{ plan: CarePlan }> = ({ plan }) => {
                             <span style={{
                                 textDecoration: goal.completed ? 'line-through' : 'none',
                                 opacity: goal.completed ? 0.7 : 1,
+                                flex: 1
                             }}>
                                 {goal.label}
                             </span>
@@ -414,17 +424,51 @@ const CarePlanCard: React.FC<{ plan: CarePlan }> = ({ plan }) => {
                     </div>
                     <ul style={styles.interventionList}>
                         {plan.interventions.map((item, i) => (
-                            <li key={i} style={styles.interventionItem}>
-                                <Activity size={14} style={styles.interventionDot} />
-                                {item}
+                            <li key={i} style={{ ...styles.interventionItem, justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', gap: '0.45rem' }}>
+                                    <Activity size={14} style={styles.interventionDot} />
+                                    <span>{item}</span>
+                                </div>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onLogIntervention(i); }}
+                                    style={{
+                                        fontSize: '0.75rem',
+                                        padding: '2px 8px',
+                                        borderRadius: '4px',
+                                        border: '1px solid var(--color-primary)',
+                                        background: 'transparent',
+                                        color: 'var(--color-primary)',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Log
+                                </button>
                             </li>
                         ))}
                     </ul>
 
-                    <div style={styles.reviewBanner}>
-                        <Calendar size={15} />
-                        Next Review: {plan.nextReview}
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                        <div style={{ ...styles.reviewBanner, marginTop: 0, flex: 1 }}>
+                            <Calendar size={15} />
+                            Next Review: {plan.nextReview}
+                        </div>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onMessageDoctor(); }}
+                            style={{
+                                flex: 1,
+                                border: '1px solid var(--color-border)',
+                                background: 'var(--color-surface)',
+                                borderRadius: '8px',
+                                color: 'var(--color-text)',
+                                fontWeight: 600,
+                                fontSize: '0.85rem',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Message Doctor
+                        </button>
                     </div>
+
                 </div>
             )}
         </div>
@@ -434,21 +478,59 @@ const CarePlanCard: React.FC<{ plan: CarePlan }> = ({ plan }) => {
 /* ── Main Care Plans Page ─────────────────────────────────── */
 
 export const CarePlans: React.FC = () => {
+    const [plans, setPlans] = useState<CarePlan[]>(mockCarePlans);
     const [filter, setFilter] = useState<string>('All');
     const filters = ['All', 'Active', 'Completed', 'Scheduled'];
 
-    const filtered = filter === 'All' ? mockCarePlans : mockCarePlans.filter(p => p.status === filter);
+    const handleToggleGoal = (planId: string, goalIndex: number) => {
+        setPlans(prev => prev.map(plan => {
+            if (plan.id !== planId) return plan;
 
-    const activeCount = mockCarePlans.filter(p => p.status === 'Active').length;
-    const completedCount = mockCarePlans.filter(p => p.status === 'Completed').length;
-    const scheduledCount = mockCarePlans.filter(p => p.status === 'Scheduled').length;
-    const totalGoals = mockCarePlans.reduce((acc, p) => acc + p.goals.length, 0);
-    const completedGoals = mockCarePlans.reduce((acc, p) => acc + p.goals.filter(g => g.completed).length, 0);
+            const newGoals = [...plan.goals];
+            newGoals[goalIndex] = { ...newGoals[goalIndex], completed: !newGoals[goalIndex].completed };
+
+            const completedCount = newGoals.filter(g => g.completed).length;
+            const progressPercent = Math.round((completedCount / newGoals.length) * 100);
+
+            return { ...plan, goals: newGoals, progressPercent };
+        }));
+    };
+
+    const handleLogIntervention = (planId: string, interventionIndex: number) => {
+        const plan = plans.find(p => p.id === planId);
+        if (plan) {
+            alert(`Log entry recorded for: ${plan.interventions[interventionIndex]}`);
+        }
+    };
+
+    const handleMessageDoctor = (planId: string) => {
+        const plan = plans.find(p => p.id === planId);
+        if (plan) {
+            // In a real app, this would navigate to a thread with the doctor
+            // For now, checks if 'teleconsultEnabled' is true to simulate availability
+            // or just alerts. 
+            // Better: Navigate to /messages/new (simulated)
+
+            const confirmMsg = `Start a message thread with ${plan.assignedBy} regarding your ${plan.name}?`;
+            if (window.confirm(confirmMsg)) {
+                alert(`Message thread created with ${plan.assignedBy}.Redirecting to Messages...`);
+                // navigate('/messages'); // active route if it existed
+            }
+        }
+    };
+
+    const filtered = filter === 'All' ? plans : plans.filter(p => p.status === filter);
+
+    const activeCount = plans.filter(p => p.status === 'Active').length;
+    const completedCount = plans.filter(p => p.status === 'Completed').length;
+    const scheduledCount = plans.filter(p => p.status === 'Scheduled').length;
+    const totalGoals = plans.reduce((acc, p) => acc + p.goals.length, 0);
+    const completedGoals = plans.reduce((acc, p) => acc + p.goals.filter(g => g.completed).length, 0);
 
     return (
         <div className="hub-page">
             <header className="page-header">
-                <BackButton to="/health" />
+
                 <div className="header-text">
                     <h2>My Care Plans</h2>
                     <p className="page-subtitle">Track your treatment goals and progress</p>
@@ -492,7 +574,13 @@ export const CarePlans: React.FC = () => {
                 </div>
             ) : (
                 filtered.map(plan => (
-                    <CarePlanCard key={plan.id} plan={plan} />
+                    <CarePlanCard
+                        key={plan.id}
+                        plan={plan}
+                        onToggleGoal={(idx) => handleToggleGoal(plan.id, idx)}
+                        onLogIntervention={(idx) => handleLogIntervention(plan.id, idx)}
+                        onMessageDoctor={() => handleMessageDoctor(plan.id)}
+                    />
                 ))
             )}
         </div>

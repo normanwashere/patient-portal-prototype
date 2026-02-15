@@ -211,3 +211,16 @@
         gap: 0.25rem;
     }
 }
+
+/* Desktop: 2-column appointment cards, wider container */
+@media (min-width: 1024px) {
+    .appointment-history-container {
+        max-width: 1200px;
+    }
+
+    .appointment-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}

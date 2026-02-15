@@ -9,42 +9,43 @@ export const BannerCarousel: React.FC = () => {
     const [touchEnd, setTouchEnd] = useState(0);
 
     // Dynamic banners: Events, Features, Campaigns
+    // Dynamic banners: Real Maxicare News & Updates
     const banners = [
         {
             id: 1,
-            badge: "New Feature",
-            title: "Teleconsult 24/7",
-            desc: "Consult top specialists from the comfort of your home.",
-            btn: "Try Now",
-            image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=2070&auto=format&fit=crop",
-            action: () => navigate('/visits/teleconsult')
+            badge: "Health Tips",
+            title: "Diabetes-Friendly Love",
+            desc: "Celebrate love smartly with these heart-healthy tips.",
+            btn: "Read Article",
+            image: "https://images.unsplash.com/photo-1516616370751-86d6bd8b0651?q=80&w=2070&auto=format&fit=crop", // Couple/Healthy
+            action: () => window.open('https://www.maxicare.com.ph/latest-announcements/how-to-say-i-love-you-in-a-diabetes-friendly-way/', '_blank')
         },
         {
             id: 2,
-            badge: "Upcoming Event",
-            title: "Flu Vaccine Drive",
-            desc: "Feb 15 • Main Lobby • 20% off for members.",
+            badge: "Digital Services",
+            title: "MyMaxicare Portal",
+            desc: "Achieve the freedom to take charge of your health.",
             btn: "Learn More",
-            image: "https://images.unsplash.com/photo-1633613286991-611fe299c4be?q=80&w=2070&auto=format&fit=crop",
-            action: () => navigate('/community')
+            image: "https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=1974&auto=format&fit=crop", // Mobile/Tech
+            action: () => window.open('https://www.maxicare.com.ph/latest-announcements/achieve-the-freedom-to-be-in-charge-with-mymaxicare/', '_blank')
         },
         {
             id: 3,
-            badge: "Join Movement",
-            title: "\"I Am Well\" Campaign",
-            desc: "Make a personal commitment to wellness and self-care.",
-            btn: "Join Now",
-            image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop",
-            action: () => navigate('/community')
+            badge: "Awards",
+            title: "Great Place to Work®",
+            desc: "Proudly maintaining our certification as a top employer.",
+            btn: "See News",
+            image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop", // Team/Office
+            action: () => window.open('https://www.maxicare.com.ph/latest-announcements/maxicare-group-consistently-maintains-great-place-to-work-certification/', '_blank')
         },
         {
             id: 4,
-            badge: "Activity",
-            title: "Yoga for Wellness",
-            desc: "Every Sat 6 AM • Rooftop Garden • Free for members.",
-            btn: "See Activities",
-            image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2070&auto=format&fit=crop",
-            action: () => navigate('/community')
+            badge: "Wellness",
+            title: "Crush 2026 Goals",
+            desc: "Start your fitness journey with Maxicare today!",
+            btn: "Get Started",
+            image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop", // Fitness
+            action: () => navigate('/news/crush-2026')
         }
     ];
 

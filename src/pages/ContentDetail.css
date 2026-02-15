@@ -1,0 +1,413 @@
+/* ContentDetail.css */
+
+.content-detail-container {
+    padding-bottom: 6rem;
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+/* 1. Transparent Header */
+.cd-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+    /* Allow clicks through to image if needed, but buttons enable events */
+}
+
+.cd-header-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1e293b;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    pointer-events: auto;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.cd-header-btn:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+.cd-header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* 2. Hero Image */
+.cd-hero {
+    position: relative;
+    width: 100%;
+    height: 20rem;
+    /* h-80 equivalent */
+    overflow: hidden;
+}
+
+.cd-hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cd-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.2), transparent);
+}
+
+/* 3. Content Body */
+.cd-body {
+    padding: 2rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .cd-body {
+        max-width: 48rem;
+        margin: 0 auto;
+    }
+}
+
+.cd-badge {
+    display: inline-block;
+    background-color: #eff6ff;
+    color: var(--color-primary);
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.cd-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+    margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+    .cd-title {
+        font-size: 1.875rem;
+    }
+}
+
+.cd-metadata {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.cd-meta-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.cd-meta-icon {
+    margin-right: 0.5rem;
+}
+
+/* Author Block */
+.cd-author-block {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #f8fafc;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    border: 1px solid #f1f5f9;
+}
+
+.cd-author-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.cd-author-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #e2e8f0;
+}
+
+.cd-author-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cd-author-name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.cd-author-role {
+    font-size: 0.625rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.cd-follow-btn {
+    background-color: var(--color-primary);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.375rem 1rem;
+    border-radius: 9999px;
+    transition: background-color 0.2s;
+}
+
+.cd-follow-btn:hover {
+    background-color: var(--color-primary-dark);
+}
+
+/* Highlights */
+.cd-highlights {
+    background-color: #eff6ff;
+    /* blue-50 */
+    background-color: rgba(239, 246, 255, 0.8);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #dbeafe;
+}
+
+.cd-highlights-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.cd-highlights-icon {
+    color: var(--color-primary);
+}
+
+.cd-highlights-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0;
+}
+
+.cd-highlights-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.cd-highlight-item {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: #1e293b;
+    line-height: 1.5;
+}
+
+.cd-bullet {
+    color: var(--color-primary);
+    font-size: 1.125rem;
+    line-height: 1;
+}
+
+/* Content Text */
+.cd-text {
+    font-size: 0.95rem;
+    /* Equivalent to prose-sm roughly */
+    line-height: 1.7;
+    color: #334155;
+    margin-bottom: 3rem;
+}
+
+.cd-lead {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #374151;
+    font-style: italic;
+    border-left: 4px solid rgba(59, 130, 246, 0.2);
+    padding-left: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.cd-text p {
+    margin-bottom: 1.5rem;
+}
+
+.cd-text h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.cd-text ul {
+    padding-left: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.cd-text li {
+    margin-bottom: 0.5rem;
+}
+
+/* Related Guides */
+.cd-related {
+    margin-bottom: 2rem;
+}
+
+.cd-related-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1rem;
+}
+
+.cd-related-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.cd-related-view-all {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.cd-related-scroll {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    /* Hide scrollbar */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    margin: 0 -1.5rem;
+    padding: 0 1.5rem 1rem;
+}
+
+@media (min-width: 768px) {
+    .cd-related-scroll {
+        margin: 0;
+        padding: 0 0 1rem;
+    }
+}
+
+.cd-related-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.cd-related-card {
+    min-width: 200px;
+    width: 200px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.cd-related-img-wrapper {
+    aspect-ratio: 16/9;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+}
+
+.cd-related-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s;
+}
+
+.cd-related-card:hover .cd-related-img {
+    transform: scale(1.05);
+}
+
+.cd-related-category {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.cd-related-card-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 4. Bottom Actions */
+.cd-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border-top: 1px solid #f1f5f9;
+    padding: 0.75rem 2rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    z-index: 50;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cd-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    color: #94a3b8;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.cd-action-btn:hover {
+    color: var(--color-primary);
+}
+
+.cd-action-label {
+    font-size: 0.625rem;
+    font-weight: 500;
+}

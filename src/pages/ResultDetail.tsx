@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Download, Share2, TrendingUp, TrendingDown, Minus, Calendar, User, MapPin, AlertTriangle, FileText } from 'lucide-react';
-import { BackButton } from '../components/Common/BackButton';
+
 import { useData } from '../context/DataContext';
 import './ResultDetail.css';
 
@@ -40,35 +40,35 @@ export const ResultDetail: React.FC = () => {
         provider: string; doctor: string; status: string; isCritical: boolean;
         values: LabValue[];
     } = matched
-        ? {
-            id: matched.id,
-            testName: matched.title ?? 'Lab Result',
-            category: matched.type ?? 'Laboratory',
-            date: matched.date ?? '',
-            provider: 'MediLab Diagnostics',
-            doctor: matched.doctor ?? 'Unknown',
-            status: 'Final',
-            isCritical: !!matched.isCritical,
-            values: (matched as any).values ?? DEFAULT_VALUES,
-        }
-        : {
-            id: id ?? '1',
-            testName: 'Complete Blood Count (CBC)',
-            category: 'Laboratory',
-            date: 'February 10, 2024',
-            provider: 'MediLab Diagnostics',
-            doctor: 'Dr. Jen Diaz',
-            status: 'Final',
-            isCritical: false,
-            values: DEFAULT_VALUES,
-        };
+            ? {
+                id: matched.id,
+                testName: matched.title ?? 'Lab Result',
+                category: matched.type ?? 'Laboratory',
+                date: matched.date ?? '',
+                provider: 'MediLab Diagnostics',
+                doctor: matched.doctor ?? 'Unknown',
+                status: 'Final',
+                isCritical: !!matched.isCritical,
+                values: (matched as any).values ?? DEFAULT_VALUES,
+            }
+            : {
+                id: id ?? '1',
+                testName: 'Complete Blood Count (CBC)',
+                category: 'Laboratory',
+                date: 'February 10, 2024',
+                provider: 'MediLab Diagnostics',
+                doctor: 'Dr. Jen Diaz',
+                status: 'Final',
+                isCritical: false,
+                values: DEFAULT_VALUES,
+            };
 
     if (!matched && results.length > 0) {
         // Result not found in data
         return (
             <div className="result-detail-container">
                 <header className="page-header">
-                    <BackButton to="/results" />
+
                     <div className="header-text" style={{ flex: 1 }}>
                         <h2>Result Not Found</h2>
                     </div>
@@ -124,7 +124,7 @@ export const ResultDetail: React.FC = () => {
     return (
         <div className="result-detail-container">
             <header className="page-header">
-                <BackButton />
+
                 <div className="header-text" style={{ flex: 1 }}>
                     <h2 style={{ lineHeight: '1.2' }}>Laboratory Results</h2>
                     <p className="page-subtitle" style={{ margin: 0 }}>Reference #{id?.slice(-8).toUpperCase()}</p>

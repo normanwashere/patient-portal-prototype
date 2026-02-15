@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, Shield, Gift, Activity, Plus } from 'lucide-react';
-import { BackButton } from '../components/Common/BackButton';
+
 import { useData } from '../context/DataContext';
 import { useTheme } from '../theme/ThemeContext';
 import { ServiceCard } from '../components/ServiceCard/ServiceCard';
@@ -44,16 +44,16 @@ export const Financial: React.FC = () => {
     };
 
     return (
-        <div className="profile-container">
+        <div className="financial-container">
             <header className="page-header">
-                <BackButton />
+
                 <div className="header-text">
                     <h2>Coverage & Claims</h2>
                     <p className="page-subtitle">
                         {hasHmo && hasPhilHealth ? 'Manage your HMO, PhilHealth and authorizations' :
-                         hasHmo ? 'Manage your HMO coverage and authorizations' :
-                         hasPhilHealth ? 'Manage your PhilHealth coverage' :
-                         'Manage your billing and payments'}
+                            hasHmo ? 'Manage your HMO coverage and authorizations' :
+                                hasPhilHealth ? 'Manage your PhilHealth coverage' :
+                                    'Manage your billing and payments'}
                     </p>
                 </div>
             </header>
@@ -68,7 +68,7 @@ export const Financial: React.FC = () => {
                     <div className="coverage-scroll-container">
                         {/* PhilHealth Card */}
                         {hasPhilHealth && (
-                            <div className="mini-hmo-card ph-mini" onClick={() => navigate('/coverage/philhealth')}>
+                            <div className="mini-hmo-card ph-mini" onClick={() => navigate('/coverage/philhealth', { state: { from: '/coverage' } })}>
                                 <div className="mini-card-header">
                                     <Shield size={16} />
                                     <span>PhilHealth UHC</span>

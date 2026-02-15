@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { Calendar, MapPin, Clock, Users, ChevronRight } from 'lucide-react';
+import { CalendarDays, MapPin, Clock, Users, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { BackButton } from '../components/Common/BackButton';
-import { EVENTS_DATA } from '../data/events';
+
+import { ALL_CONTENT } from '../data/content';
+import type { EventContent } from '../data/content';
 import './Events.css';
 
 export const Events: React.FC = () => {
     const navigate = useNavigate();
     const [filter, setFilter] = useState<string>('All');
 
-    const events = EVENTS_DATA;
+    const events = ALL_CONTENT.filter(c => c.type === 'event') as EventContent[];
 
     const types = ['All', 'Screening', 'Webinar', 'Vaccination Drive', 'Wellness', 'Health Fair'];
     const filtered = filter === 'All' ? events : events.filter(e => e.type === filter);
@@ -29,7 +30,7 @@ export const Events: React.FC = () => {
     return (
         <div className="events-container">
             <header className="page-header">
-                <BackButton />
+
                 <div className="header-text">
                     <h2>Events & Activities</h2>
                     <p className="page-subtitle">Discover health events and community programs</p>
@@ -52,7 +53,7 @@ export const Events: React.FC = () => {
                             <div className="featured-info">
                                 <h4>{event.title}</h4>
                                 <div className="event-meta">
-                                    <span><Calendar size={12} /> {event.date}</span>
+                                    <span><CalendarDays size={12} /> {event.date}</span>
                                     <span><MapPin size={12} /> {event.location}</span>
                                 </div>
                             </div>
@@ -90,7 +91,7 @@ export const Events: React.FC = () => {
                             </div>
                             <h4>{event.title}</h4>
                             <div className="event-details">
-                                <span><Calendar size={14} /> {event.date}</span>
+                                <span><CalendarDays size={14} /> {event.date}</span>
                                 <span><Clock size={14} /> {event.time}</span>
                             </div>
                             <div className="event-footer">
@@ -104,7 +105,7 @@ export const Events: React.FC = () => {
 
             {filtered.length === 0 && (
                 <div className="empty-state">
-                    <Calendar size={48} />
+                    <CalendarDays size={48} />
                     <p>No events found for this category.</p>
                 </div>
             )}

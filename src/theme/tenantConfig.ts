@@ -25,6 +25,7 @@ export const tenants: Record<string, TenantConfig> = {
             philHealth: true,
             queue: true,
             appointments: true,
+            carePlans: true,
             multiLocation: true,
             admissions: true,
             cdss: true,
@@ -64,6 +65,7 @@ export const tenants: Record<string, TenantConfig> = {
             philHealth: false,   // No PhilHealth integration
             queue: true,
             appointments: true,
+            carePlans: true, // Wellness center has care plans
             multiLocation: false,
             admissions: false,
             cdss: true,
@@ -103,6 +105,7 @@ export const tenants: Record<string, TenantConfig> = {
             philHealth: true,    // PhilHealth / Konsulta only
             queue: true,
             appointments: true,
+            carePlans: false, // Basic clinic, no care plans
             multiLocation: true,
             admissions: false,
             cdss: false,
@@ -114,6 +117,46 @@ export const tenants: Record<string, TenantConfig> = {
                 clinicVisitEnabled: true,
                 clinicF2fSchedulingEnabled: true,
                 clinicLabFulfillmentEnabled: false, // NO LABS
+            },
+        },
+    },
+
+    // Org 4: MAXICARE (Super Clinic: HMO + Labs + Consult Now)
+    maxicare: {
+        id: 'maxicare',
+        name: 'Maxicare Primary Care',
+        tagline: 'Healthcare at its Finest',
+        logoUrl: 'https://www.maxicare.com.ph/wp-content/uploads/2022/11/new-home-logo.png',
+        loginBackgroundUrl: 'https://images.unsplash.com/photo-1632053001880-99424c57cb8e?q=80&w=2000&auto=format&fit=crop',
+        colors: {
+            // "Navy Blue, Cyan, White"
+            primary: '#1e3a8a',    // Blue 900 (Navy)
+            secondary: '#0ea5e9',  // Sky 500
+            background: '#f0f9ff', // Sky 50 (Official Maxicare Light Blue)
+            surface: '#ffffff',    // White
+            text: '#1e3a8a',       // Blue 900
+            textMuted: '#64748b',  // Slate 500
+            border: '#bae6fd',     // Sky 200
+        },
+        features: {
+            sso: true,
+            loa: true,
+            hmo: true,             // Core feature
+            philHealth: true,
+            queue: true,
+            appointments: true,
+            carePlans: true,
+            multiLocation: true,
+            admissions: false,
+            cdss: true,
+            aiAssistant: true,
+            visits: {
+                teleconsultEnabled: true,
+                teleconsultNowEnabled: true, // Super Clinic feature
+                teleconsultLaterEnabled: true,
+                clinicVisitEnabled: true,
+                clinicF2fSchedulingEnabled: true,
+                clinicLabFulfillmentEnabled: true, // Super Clinic feature
             },
         },
     },

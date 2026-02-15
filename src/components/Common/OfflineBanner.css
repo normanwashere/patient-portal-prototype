@@ -1,0 +1,15 @@
+.offline-banner {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    text-align: center;
+    padding: 0.625rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
+    z-index: 1000;
+    position: relative;
+}

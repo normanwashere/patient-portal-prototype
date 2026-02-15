@@ -24,6 +24,7 @@ export interface TenantFeatures {
   loa: boolean;
   queue: boolean;
   appointments: boolean;
+  carePlans?: boolean; // V12: Chronic Disease Management & Care Plans
 
   // V11: Insurance / Coverage integration flags
   hmo?: boolean;            // HMO card integration (benefits, LOA requests, claims)

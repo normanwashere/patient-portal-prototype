@@ -24,7 +24,7 @@ export const BackButton: React.FC<BackButtonProps> = ({ to, className = '', onCl
 
     return (
         <button className={`back-btn-standard ${className}`} onClick={handleBack} aria-label="Go back">
-            <ChevronLeft size={24} />
+            <ChevronLeft size={20} />
         </button>
     );
 };

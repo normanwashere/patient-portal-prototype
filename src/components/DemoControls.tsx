@@ -79,6 +79,7 @@ const FEATURE_LABELS: { key: keyof TenantFeatures; label: string; group: 'core' 
     { key: 'multiLocation', label: 'Multi-Location', group: 'core' },
     { key: 'admissions', label: 'Admissions', group: 'core' },
     { key: 'cdss', label: 'CDSS Alerts', group: 'core' },
+    { key: 'carePlans', label: 'Care Plans', group: 'core' },
     { key: 'aiAssistant', label: 'AI Assistant', group: 'core' },
 ];
 
@@ -393,13 +394,16 @@ export const DemoControls: React.FC = () => {
                                     {tenant.features.visits.clinicLabFulfillmentEnabled && <span className="feature-tag on">Labs</span>}
                                     {tenant.features.loa && <span className="feature-tag on">LOA</span>}
                                     {tenant.features.cdss && <span className="feature-tag on">CDSS</span>}
+                                    {tenant.features.carePlans && <span className="feature-tag on">CarePlans</span>}
                                     {tenant.features.aiAssistant && <span className="feature-tag on">AI</span>}
                                     {!tenant.features.hmo && <span className="feature-tag off" onClick={() => liveToggleFeature('hmo')} style={{ cursor: 'pointer' }}>HMO</span>}
                                     {!tenant.features.philHealth && <span className="feature-tag off" onClick={() => liveToggleFeature('philHealth')} style={{ cursor: 'pointer' }}>PhilH</span>}
                                     {!tenant.features.visits.teleconsultEnabled && <span className="feature-tag off">Telecon</span>}
                                     {!tenant.features.visits.clinicLabFulfillmentEnabled && <span className="feature-tag off">Labs</span>}
                                     {!tenant.features.loa && <span className="feature-tag off">LOA</span>}
+                                    {!tenant.features.loa && <span className="feature-tag off">LOA</span>}
                                     {!tenant.features.cdss && <span className="feature-tag off">CDSS</span>}
+                                    {!tenant.features.carePlans && <span className="feature-tag off">CarePlans</span>}
                                 </div>
 
                                 {showFeatureDetails && (

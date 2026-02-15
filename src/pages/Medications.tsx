@@ -2,7 +2,7 @@ import React from 'react';
 import { Pill, AlertCircle, RefreshCw, Calendar, Check } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
-import { BackButton } from '../components/Common/BackButton';
+
 import './Results.css';
 
 export const Medications: React.FC = () => {
@@ -24,7 +24,7 @@ export const Medications: React.FC = () => {
     return (
         <div className="results-container">
             <header className="page-header">
-                <BackButton />
+
                 <div className="header-text">
                     <h2>My Medications</h2>
                     <p className="page-subtitle">Prescriptions and scheduled treatments</p>

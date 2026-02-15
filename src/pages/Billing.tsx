@@ -3,7 +3,6 @@ import { Download, CheckCircle, FileText, ChevronRight, ReceiptText } from 'luci
 import { useToast } from '../context/ToastContext';
 import { useData } from '../context/DataContext';
 import { useNavigate } from 'react-router-dom';
-import { BackButton } from '../components/Common/BackButton';
 import './Billing.css';
 
 export const Billing: React.FC = () => {
@@ -50,8 +49,7 @@ export const Billing: React.FC = () => {
     return (
         <div className="billing-container">
             <header className="page-header">
-                <BackButton />
-                <div className="header-text">
+                <div className="flex items-center gap-3 mb-6">
                     <h2>Billing & Payments</h2>
                     <p className="page-subtitle">Manage your hospital bills and payment history</p>
                 </div>

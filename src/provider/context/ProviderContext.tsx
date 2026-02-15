@@ -4,6 +4,7 @@ import {
   useState,
   useMemo,
   useCallback,
+  useEffect,
   type ReactNode,
 } from 'react';
 import {
@@ -303,6 +304,35 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [queueMode, setQueueMode] = useState<QueueMode>('LINEAR');
   const [doctorMode, setDoctorModeState] = useState<DoctorMode>('in-clinic');
 
+  // Sync Listener
+  useEffect(() => {
+    let unsubscribe: () => void;
+    import('../../utils/sync').then(({ syncManager }) => {
+      unsubscribe = syncManager.subscribe((event) => {
+        if (event.type === 'APPOINTMENT_ADDED') {
+          // Check if exists
+          setAppointments(prev => {
+            if (prev.find(a => a.id === event.payload.id)) return prev;
+            // Adapt Patient App appointment to Provider App appointment
+            const pAppt = event.payload;
+            const mapped: Appointment = {
+              id: pAppt.id,
+              patientName: pAppt.patientName || 'Walk-in', // Patient app might not send name if it's in profile
+              type: pAppt.type || 'Consultation',
+              status: pAppt.status,
+              time: pAppt.time,
+              practitioner: pAppt.doctor, // Map doctor to practitioner
+              reason: pAppt.specialty,
+              location: pAppt.location
+            } as any; // Cast to avoid strict type mismatch for demo
+            return [mapped, ...prev];
+          });
+        }
+      });
+    });
+    return () => { if (unsubscribe) unsubscribe(); };
+  }, []);
+
   const [staff, setStaff] = useState<StaffUser[]>(MOCK_STAFF);
   const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>(MOCK_CLINICAL_NOTES);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>(MOCK_PRESCRIPTIONS);
@@ -396,6 +426,10 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
         };
       })
     );
+    // Broadcast Queue Sync
+    import('../../utils/sync').then(({ syncManager }) => {
+      syncManager.broadcast({ type: 'QUEUE_UPDATED', payload: { patientId, toStation } });
+    });
     _audit('transfer', 'Queue', `Transferred patient to ${toStation}`);
   }, [_audit]);
 
@@ -635,13 +669,26 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, []);
 
   // ── Appointments ──
+  // ── Appointments ──
   const updateAppointmentStatus = useCallback((id: string, status: string) => {
-    setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status: status as Appointment['status'] } : a)));
+    setAppointments((prev) => {
+      const updated = prev.map((a) => (a.id === id ? { ...a, status: status as Appointment['status'] } : a));
+      return updated;
+    });
+    // Broadcast sync event
+    import('../../utils/sync').then(({ syncManager }) => {
+      syncManager.broadcast({ type: 'APPOINTMENT_UPDATED', payload: { id, status } });
+    });
     _audit('apt_status', 'Scheduling', `Appointment ${id} → ${status}`);
   }, [_audit]);
 
   const addAppointment = useCallback((apt: Omit<Appointment, 'id'>) => {
-    setAppointments((prev) => [{ ...apt, id: genId('apt') } as Appointment, ...prev]);
+    const newAppt = { ...apt, id: genId('apt') } as Appointment;
+    setAppointments((prev) => [newAppt, ...prev]);
+    // Broadcast sync event
+    import('../../utils/sync').then(({ syncManager }) => {
+      syncManager.broadcast({ type: 'APPOINTMENT_ADDED', payload: newAppt });
+    });
     _audit('add_apt', 'Scheduling', `New appointment for ${apt.specialty ?? 'patient'}`);
   }, [_audit]);
 
@@ -832,7 +879,7 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const totalUnreadMessages = useMemo(() =>
     conversations.reduce((acc, c) => acc + c.unreadCount, 0),
-  [conversations]);
+    [conversations]);
 
   // ═══════ Teleconsult Queue Actions ═══════
 

@@ -47,6 +47,10 @@
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+    overflow-y: auto;
+    /* Custom Scrollbar for subtle look */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
 }
 
 .sidebar-item {

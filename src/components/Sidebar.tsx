@@ -103,21 +103,21 @@ export const Sidebar: React.FC = () => {
                     <NavItem to="/appointments?view=upcoming" icon={Calendar} label="Upcoming Appointments" badge={careBadge} />
 
                     {tenant.features.visits.clinicVisitEnabled && (
-                        <Link to="/appointments/book?type=in-person" className={clsx('sidebar-item sub-item', isActive('/appointments/book') && location.search.includes('type=in-person') && 'active')}>
+                        <Link to="/visits/book-clinic" className={clsx('sidebar-item sub-item', isActive('/visits/book-clinic') && 'active')}>
                             <Building2 size={18} />
                             <span>Book In-Person Consult</span>
                         </Link>
                     )}
 
                     {tenant.features.visits.teleconsultEnabled && (
-                        <Link to="/appointments/book?type=teleconsult" className={clsx('sidebar-item sub-item', isActive('/appointments/book') && location.search.includes('type=teleconsult') && 'active')}>
+                        <Link to="/visits/book-teleconsult" className={clsx('sidebar-item sub-item', isActive('/visits/book-teleconsult') && 'active')}>
                             <Video size={18} />
                             <span>Book Teleconsult</span>
                         </Link>
                     )}
 
                     {tenant.features.visits.teleconsultEnabled && (
-                        <Link to="/visits/teleconsult-intake" className={clsx('sidebar-item sub-item', isActive('/visits/teleconsult-intake') && 'active')}>
+                        <Link to="/visits" state={{ focus: 'teleconsult' }} className={clsx('sidebar-item sub-item', isActive('/visits/teleconsult') && 'active')}>
                             <Video size={18} />
                             <span>Teleconsult Now</span>
                         </Link>
@@ -129,15 +129,15 @@ export const Sidebar: React.FC = () => {
                     </Link>
                 </NavGroup>
 
-                {/* 5. Community Pillar -> /community */}
-                <NavGroup id="community" label="Community" icon={Users} to="/community" badge={communityBadge}>
-                    <NavItem to="/community" icon={Star} label="Featured" badge={communityBadge} />
+                {/* 5. News Pillar -> /news */}
+                <NavGroup id="community" label="News" icon={Users} to="/news" badge={communityBadge}>
+                    <NavItem to="/news" icon={Star} label="Featured" badge={communityBadge} />
                     <NavItem to="/events" icon={Calendar} label="All Events" />
                 </NavGroup>
 
                 {/* 2. Records Pillar (Moved logic) */}
                 <NavGroup id="records" label="Records" icon={FileText} to="/health" badge={recordsBadge}>
-                    <NavItem to="/appointments?view=past" icon={Clock} label="Past Appts" />
+                    <NavItem to="/health/past-appointments" icon={Clock} label="Past Appts" />
                     <NavItem to="/medical-history" icon={Activity} label="Medical History" />
                     <NavItem to="/results" icon={TestTube} label="Lab Results" badge={newLabsCount} />
                     <NavItem to="/medications" icon={Pill} label="Medications" badge={newMedsCount} />

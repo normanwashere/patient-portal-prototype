@@ -33,6 +33,7 @@
 
   /* Design Tokens */
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Lexend', var(--font-family);
   --radius: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
@@ -87,6 +88,10 @@ button {
 a {
   text-decoration: none;
   color: inherit;
+}
+
+.font-display {
+  font-family: var(--font-display);
 }
 
 /* =========================================
@@ -209,4 +214,30 @@ a {
 
 main>div {
   animation: pageFadeIn 0.4s ease-out;
+}
+
+/* =============================================
+   Global Font-Size Floor — Accessibility
+   Prevents text from rendering below 11px.
+   Addresses 50+ CSS rules using 0.55-0.65rem.
+   ============================================= */
+
+/* Badges, pills, status labels, metadata */
+.widget-badge,
+.type-pill,
+.event-badge,
+.status-badge,
+.nav-badge-overlay,
+.nav-badge-dot,
+.badge-uhc,
+.drawer-badge,
+.service-card-badge-footer,
+[class*="badge"],
+[class*="pill"] {
+  font-size: max(var(--font-size-badge, 0.6875rem), 11px) !important;
+}
+
+/* Bottom nav item labels */
+.nav-item {
+  font-size: max(0.65rem, 11px);
 }

@@ -49,6 +49,9 @@
     flex-direction: column;
     gap: 1rem;
     animation: slideUpFade 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 80vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
 }
 
 @keyframes slideUpFade {
@@ -429,11 +432,13 @@ input:checked+.slider:before {
     transition: border-color 0.2s;
     box-sizing: border-box;
 }
+
 .demo-input:focus {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
 }
+
 .demo-input::placeholder {
     color: #94a3b8;
 }
@@ -443,6 +448,7 @@ input:checked+.slider:before {
     gap: 0.5rem;
     flex-wrap: wrap;
 }
+
 .color-swatch {
     width: 28px;
     height: 28px;
@@ -454,9 +460,11 @@ input:checked+.slider:before {
     justify-content: center;
     transition: all 0.2s;
 }
+
 .color-swatch:hover {
     transform: scale(1.15);
 }
+
 .color-swatch.active {
     border-color: #1e293b;
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
@@ -467,6 +475,7 @@ input:checked+.slider:before {
     flex-direction: column;
     gap: 0.4rem;
 }
+
 .preset-btn {
     text-align: left;
     padding: 0.5rem 0.75rem;
@@ -479,17 +488,21 @@ input:checked+.slider:before {
     flex-direction: column;
     gap: 2px;
 }
+
 .preset-btn strong {
     font-size: 0.8rem;
     color: #1e293b;
 }
+
 .preset-btn span {
     font-size: 0.65rem;
     color: #94a3b8;
 }
+
 .preset-btn:hover {
     background: #f8fafc;
 }
+
 .preset-btn.active {
     border-color: var(--color-primary);
     background: rgba(2, 132, 199, 0.05);
@@ -500,6 +513,7 @@ input:checked+.slider:before {
     flex-direction: column;
     gap: 0.35rem;
 }
+
 .feature-check {
     display: flex;
     align-items: center;
@@ -508,15 +522,18 @@ input:checked+.slider:before {
     color: #334155;
     cursor: pointer;
 }
+
 .feature-check input[type="checkbox"] {
     accent-color: var(--color-primary);
     width: 14px;
     height: 14px;
 }
+
 .feature-check.disabled {
     opacity: 0.4;
     pointer-events: none;
 }
+
 .feature-divider {
     height: 1px;
     background: rgba(0, 0, 0, 0.06);
@@ -528,6 +545,7 @@ input:checked+.slider:before {
     gap: 0.5rem;
     margin-top: 0.25rem;
 }
+
 .btn-cancel-tenant {
     flex: 1;
     padding: 0.6rem;
@@ -539,9 +557,11 @@ input:checked+.slider:before {
     font-weight: 600;
     cursor: pointer;
 }
+
 .btn-cancel-tenant:hover {
     background: #f8fafc;
 }
+
 .btn-create-tenant {
     flex: 1;
     padding: 0.6rem;
@@ -557,10 +577,12 @@ input:checked+.slider:before {
     justify-content: center;
     gap: 0.3rem;
 }
+
 .btn-create-tenant:disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }
+
 .btn-create-tenant:hover:not(:disabled) {
     filter: brightness(1.1);
 }
@@ -571,9 +593,11 @@ input:checked+.slider:before {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
 }
+
 .tenant-card-wrap {
     position: relative;
 }
+
 .tenant-remove-btn {
     position: absolute;
     top: -4px;
@@ -592,6 +616,7 @@ input:checked+.slider:before {
     opacity: 0;
     transition: opacity 0.2s;
 }
+
 .tenant-card-wrap:hover .tenant-remove-btn {
     opacity: 1;
 }
@@ -613,6 +638,7 @@ input:checked+.slider:before {
     transition: all 0.2s;
     margin-top: 0.5rem;
 }
+
 .create-tenant-btn:hover {
     background: rgba(0, 0, 0, 0.03);
     color: var(--color-primary);
@@ -625,6 +651,7 @@ input:checked+.slider:before {
     flex-wrap: wrap;
     gap: 0.3rem;
 }
+
 .feature-tag {
     font-size: 0.6rem;
     font-weight: 700;
@@ -633,10 +660,12 @@ input:checked+.slider:before {
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
+
 .feature-tag.on {
     background: rgba(16, 185, 129, 0.12);
     color: #059669;
 }
+
 .feature-tag.off {
     background: rgba(239, 68, 68, 0.08);
     color: #dc2626;
@@ -654,6 +683,7 @@ input:checked+.slider:before {
     background: rgba(0, 0, 0, 0.02);
     border-radius: 0.5rem;
 }
+
 .feature-row {
     display: flex;
     justify-content: space-between;

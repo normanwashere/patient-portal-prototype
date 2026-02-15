@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Video, CalendarDays, Clock, ArrowLeft } from 'lucide-react';
+import { Video, CalendarDays, Clock } from 'lucide-react';
 import { ServiceCard } from '../components/ServiceCard/ServiceCard';
 import { useTheme } from '../theme/ThemeContext';
 import './HubPage.css'; // Reusing hub styles
@@ -13,19 +13,10 @@ export const TeleconsultLanding: React.FC = () => {
     return (
         <div className="hub-page">
             <header className="page-header">
-                <button className="back-btn" onClick={() => navigate(-1)} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '1rem',
-                    color: 'var(--color-text-muted)',
-                    fontSize: '0.9rem',
-                    fontWeight: 500
-                }}>
-                    <ArrowLeft size={18} /> Back to Care
-                </button>
-                <h2>Teleconsultation</h2>
-                <p className="page-subtitle">Choose how you want to connect with a doctor</p>
+                <div className="header-text">
+                    <h2>Teleconsultation</h2>
+                    <p className="page-subtitle">Choose how you want to connect with a doctor</p>
+                </div>
             </header>
 
             <div className="hub-grid">

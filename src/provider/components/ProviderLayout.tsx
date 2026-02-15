@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
+import { OfflineBanner } from '../../components/Common/OfflineBanner';
+import { Breadcrumbs } from '../../components/Common/Breadcrumbs';
 import {
   LayoutDashboard,
   Users,
@@ -102,32 +104,16 @@ function formatRole(role: string): string {
   return map[role] ?? role.replace(/_/g, ' ');
 }
 
-function pathToBreadcrumb(pathname: string): { label: string; path?: string }[] {
-  const segments = pathname.replace(PREFIX, '').split('/').filter(Boolean);
-  const result: { label: string; path?: string }[] = [{ label: 'Provider', path: PREFIX }];
-  let acc = PREFIX;
-  for (const seg of segments) {
-    acc += `/${seg}`;
-    result.push({
-      label: seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, ' '),
-      path: acc,
-    });
-  }
-  return result;
-}
-
 export const ProviderLayout = () => {
   const { currentStaff, switchApp, internalMessages } = useProvider();
   const navigate = useNavigate();
   const { tenant } = useTheme();
-  const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
   const unreadCount = internalMessages.filter((m) => !m.read).length;
-  const breadcrumbs = pathToBreadcrumb(location.pathname);
 
   return (
     <div className="provider-shell">
@@ -238,150 +224,135 @@ export const ProviderLayout = () => {
 
       {/* Main content area */}
       <div className="provider-content-wrapper">
-        {/* Header */}
-        <header className="provider-header">
-          <div className="provider-header-left">
-            <button
-              type="button"
-              className="provider-hamburger"
-              onClick={() => setMobileSidebarOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu size={24} />
-            </button>
-
-            {/* Breadcrumb */}
-            <ol className="provider-breadcrumb">
-              {breadcrumbs.map((b, i) => {
-                const isLast = i === breadcrumbs.length - 1;
-                return (
-                  <li key={i}>
-                    {i > 0 && <span className="provider-breadcrumb-sep">/</span>}
-                    {b.path && !isLast ? (
-                      <Link to={b.path} className="provider-breadcrumb-link">
-                        {b.label}
-                      </Link>
-                    ) : (
-                      <span className={clsx('provider-breadcrumb-link', isLast && 'provider-breadcrumb-current')}>
-                        {b.label}
-                      </span>
-                    )}
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-
-          <div className="provider-header-right">
-            {/* Search */}
-            <div className="provider-search-wrap">
-              <Search size={18} className="provider-search-icon" />
-              <input
-                type="search"
-                placeholder="Search patients, orders..."
-                className="provider-search-input"
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                aria-label="Search"
-              />
-            </div>
-
-            {/* Notifications */}
-            <Link to={`${PREFIX}/notifications`} className="provider-header-btn provider-notif-btn">
-              <Bell size={20} />
-              {unreadCount > 0 && (
-                <span className="provider-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
-              )}
-            </Link>
-
-            {/* User dropdown */}
-            <div className="provider-user-wrap">
+        {/* Main Content Area */}
+        <div className="provider-main">
+          <OfflineBanner />
+          <header className="provider-header">
+            <div className="provider-header-left">
               <button
                 type="button"
-                className="provider-user-trigger"
-                onClick={() => setUserDropdownOpen((o) => !o)}
-                aria-expanded={userDropdownOpen}
-                aria-haspopup="true"
+                className="provider-hamburger"
+                onClick={() => setMobileSidebarOpen(true)}
+                aria-label="Open menu"
               >
-                <span className="provider-role-badge">{formatRole(currentStaff.role)}</span>
-                <img
-                  src={currentStaff.photoUrl}
-                  alt={currentStaff.name}
-                  className="provider-avatar"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentStaff.name);
-                  }}
-                />
-                <span className="provider-user-name">{currentStaff.name}</span>
-                <ChevronDown size={18} className="provider-user-chevron" />
+                <Menu size={24} />
               </button>
 
-              {userDropdownOpen && (
-                <>
-                  <div
-                    className="provider-dropdown-backdrop"
-                    aria-hidden="true"
-                    onClick={() => setUserDropdownOpen(false)}
-                  />
-                  <div className="provider-user-dropdown" role="menu">
-                    <div className="provider-dropdown-header">
-                      <img
-                        src={currentStaff.photoUrl}
-                        alt=""
-                        className="provider-dropdown-avatar"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            'https://ui-avatars.com/api/?name=' +
-                            encodeURIComponent(currentStaff.name);
-                        }}
-                      />
-                      <div>
-                        <span className="provider-dropdown-name">{currentStaff.name}</span>
-                        <span className="provider-dropdown-role">{formatRole(currentStaff.role)}</span>
-                      </div>
-                    </div>
-                    <Link to={`${PREFIX}/profile`} className="provider-dropdown-item" onClick={() => setUserDropdownOpen(false)}>
-                      Profile
-                    </Link>
-                    <Link to={`${PREFIX}/settings`} className="provider-dropdown-item" onClick={() => setUserDropdownOpen(false)}>
-                      Settings
-                    </Link>
-                    <Link to="/apps" className="provider-dropdown-item provider-dropdown-logout" onClick={() => setUserDropdownOpen(false)}>
-                      Sign Out
-                    </Link>
-                  </div>
-                </>
-              )}
+              {/* Breadcrumb */}
+              <Breadcrumbs className="mb-0 ml-4 hidden md:flex" />
             </div>
-          </div>
-        </header>
 
-        {/* Main content */}
-        <main className="provider-main" id="provider-main-content">
-          <Outlet />
-        </main>
+            <div className="provider-header-right">
+              {/* Search */}
+              <div className="provider-search-wrap">
+                <Search size={18} className="provider-search-icon" />
+                <input
+                  type="search"
+                  placeholder="Search patients, orders..."
+                  className="provider-search-input"
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  aria-label="Search"
+                />
+              </div>
 
-        {/* Mobile bottom bar */}
-        <nav className="provider-bottom-bar" aria-label="Quick navigation">
-          <NavLink to={`${PREFIX}/dashboard`} end className={({ isActive }) => clsx('provider-bottom-item', isActive && 'active')}>
-            <LayoutDashboard size={22} />
-            <span>Dashboard</span>
-          </NavLink>
-          <NavLink to={`${PREFIX}/queue`} className={({ isActive }) => clsx('provider-bottom-item', isActive && 'active')}>
-            <Users size={22} />
-            <span>Queue</span>
-          </NavLink>
-          <NavLink to={`${PREFIX}/scheduling`} className={({ isActive }) => clsx('provider-bottom-item', isActive && 'active')}>
-            <CalendarDays size={22} />
-            <span>Schedule</span>
-          </NavLink>
-          <Link to={`${PREFIX}/notifications`} className="provider-bottom-item">
-            <Bell size={22} />
-            <span>Alerts</span>
-            {unreadCount > 0 && <span className="provider-bottom-badge">{unreadCount}</span>}
-          </Link>
-        </nav>
+              {/* Notifications */}
+              <Link to={`${PREFIX}/notifications`} className="provider-header-btn provider-notif-btn">
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="provider-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                )}
+              </Link>
+
+              {/* User dropdown */}
+              <div className="provider-user-wrap">
+                <button
+                  type="button"
+                  className="provider-user-trigger"
+                  onClick={() => setUserDropdownOpen((o) => !o)}
+                  aria-expanded={userDropdownOpen}
+                  aria-haspopup="true"
+                >
+                  <span className="provider-role-badge">{formatRole(currentStaff.role)}</span>
+                  <img
+                    src={currentStaff.photoUrl}
+                    alt={currentStaff.name}
+                    className="provider-avatar"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentStaff.name);
+                    }}
+                  />
+                  <span className="provider-user-name">{currentStaff.name}</span>
+                  <ChevronDown size={18} className="provider-user-chevron" />
+                </button>
+
+                {userDropdownOpen && (
+                  <>
+                    <div
+                      className="provider-dropdown-backdrop"
+                      aria-hidden="true"
+                      onClick={() => setUserDropdownOpen(false)}
+                    />
+                    <div className="provider-user-dropdown" role="menu">
+                      <div className="provider-dropdown-header">
+                        <img
+                          src={currentStaff.photoUrl}
+                          alt=""
+                          className="provider-dropdown-avatar"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              'https://ui-avatars.com/api/?name=' +
+                              encodeURIComponent(currentStaff.name);
+                          }}
+                        />
+                        <div>
+                          <span className="provider-dropdown-name">{currentStaff.name}</span>
+                          <span className="provider-dropdown-role">{formatRole(currentStaff.role)}</span>
+                        </div>
+                      </div>
+                      <Link to={`${PREFIX}/profile`} className="provider-dropdown-item" onClick={() => setUserDropdownOpen(false)}>
+                        Profile
+                      </Link>
+                      <Link to={`${PREFIX}/settings`} className="provider-dropdown-item" onClick={() => setUserDropdownOpen(false)}>
+                        Settings
+                      </Link>
+                      <Link to="/apps" className="provider-dropdown-item provider-dropdown-logout" onClick={() => setUserDropdownOpen(false)}>
+                        Sign Out
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </header>
+
+          {/* Main content */}
+          <main className="provider-main" id="provider-main-content">
+            <Outlet />
+          </main>
+
+          {/* Mobile bottom bar */}
+          <nav className="provider-bottom-bar" aria-label="Quick navigation">
+            <NavLink to={`${PREFIX}/dashboard`} end className={({ isActive }) => clsx('provider-bottom-item', isActive && 'active')}>
+              <LayoutDashboard size={22} />
+              <span>Dashboard</span>
+            </NavLink>
+            <NavLink to={`${PREFIX}/queue`} className={({ isActive }) => clsx('provider-bottom-item', isActive && 'active')}>
+              <Users size={22} />
+              <span>Queue</span>
+            </NavLink>
+            <NavLink to={`${PREFIX}/scheduling`} className={({ isActive }) => clsx('provider-bottom-item', isActive && 'active')}>
+              <CalendarDays size={22} />
+              <span>Schedule</span>
+            </NavLink>
+            <Link to={`${PREFIX}/notifications`} className="provider-bottom-item">
+              <Bell size={22} />
+              <span>Alerts</span>
+              {unreadCount > 0 && <span className="provider-bottom-badge">{unreadCount}</span>}
+            </Link>
+          </nav>
+        </div>
       </div>
     </div>
   );

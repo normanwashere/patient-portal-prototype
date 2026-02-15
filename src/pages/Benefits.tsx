@@ -4,7 +4,6 @@ import { FileText, Plus, X, CreditCard, Shield, QrCode, ClipboardList, Wallet, R
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../theme/ThemeContext';
-import { BackButton } from '../components/Common/BackButton';
 import './Benefits.css';
 
 // Importing assets if needed, but we'll use a placeholder for QR now or generated one
@@ -162,7 +161,7 @@ export const Benefits: React.FC = () => {
         <div className="benefits-container">
             <header className="page-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <BackButton to="/coverage" />
+                    {/* BackButton removed - handled by Layout */}
                     <div>
                         <h2>LOA & Benefits</h2>
                         <p className="page-subtitle" style={{ marginTop: '0.25rem' }}>Management and history of authorizations</p>

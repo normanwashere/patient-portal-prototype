@@ -1113,3 +1113,36 @@
 .ph-mini .mini-progress-bar .fill {
     background: #0072bc;
 }
+
+/* Desktop: 2-column layout — identity left, settings right */
+@media (min-width: 1024px) {
+    .profile-container {
+        max-width: 960px;
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    /* Left column: header + HMO card stay visible */
+    .profile-header-premium,
+    .hmo-card-v2,
+    .ph-id-card {
+        grid-column: 1;
+    }
+
+    /* Right column: everything else */
+    .profile-quick-actions,
+    .profile-section-v2,
+    .btn-logout-v2,
+    .coverage-alert {
+        grid-column: 2;
+    }
+
+    /* Make HMO card stick while scrolling */
+    .hmo-card-v2,
+    .ph-id-card {
+        position: sticky;
+        top: 2.5rem;
+    }
+}

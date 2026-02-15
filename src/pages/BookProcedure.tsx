@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     Zap,
     ChevronRight,
+    ChevronLeft,
     CheckCircle,
     Calendar,
     MapPin,
@@ -11,9 +12,11 @@ import {
     Stethoscope,
     Activity
 } from 'lucide-react';
-import { BackButton } from '../components/Common/BackButton';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isToday, startOfWeek, endOfWeek } from 'date-fns';
+
 import { useToast } from '../context/ToastContext';
 import { useData } from '../context/DataContext';
+import { useHeader } from '../context/HeaderContext';
 import { useTheme } from '../theme/ThemeContext';
 import { getTenantBranches } from '../data/mockBranches';
 import type { Branch } from '../data/mockBranches';
@@ -58,9 +61,33 @@ const CATEGORIES: ProcedureCategory[] = [
     }
 ];
 
+const PROCEDURE_PREP: Record<string, string> = {
+    'Complete Blood Count (CBC)': 'No fasting required.',
+    'Fast Blood Sugar (FBS)': 'Fasting is required for 8-10 hours prior to the test. Water is allowed.',
+    'Lipid Profile': 'Fasting is required for 10-12 hours prior to the test.',
+    'Urinalysis': 'Mid-stream catch is recommended. No special fasting required.',
+    'Fecalysis': 'Sample should be collected in a sterile container provided by the lab.',
+    'Chest X-Ray': 'Remove all metal objects and jewelry. Wear 2-piece clothing if possible.',
+    'Abdominal Ultrasound': 'Fast for 6-8 hours. Wear comfortable 2-piece clothing.',
+    'CT Scan - Head': 'Remove hairpins, jewelry, and glasses. Inform tech if you have metal implants.',
+    'MRI - Lumbar': 'Remove all metal objects. Inform doctor if you have a pacemaker.',
+    'ECG': 'Avoid rubbing lotion or oil on chest area before the test.',
+    '2D Echo with Doppler': 'No special preparation required.',
+    'Treadmill Stress Test': 'Wear comfortable running shoes and clothes. Light meal 2 hours before.',
+    'Endoscopy': 'Fast for 6-8 hours. You will need a companion to drive you home.',
+    'Colonoscopy': 'Low fiber diet 3 days before. Take prescribed laxatives as directed.',
+    'Hemo-Dialysis Session': 'Bring your latest lab results and dialyzer if applicable.'
+};
+
+const AVAILABLE_SLOTS = [
+    '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM',
+    '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM'
+];
+
 export const BookProcedure: React.FC = () => {
     const navigate = useNavigate();
     const { showToast } = useToast();
+    const { setCustomBack } = useHeader();
     const { bookProcedure } = useData();
     const { tenant } = useTheme();
     const tenantBranches = getTenantBranches(tenant.id, tenant.name);
@@ -72,8 +99,32 @@ export const BookProcedure: React.FC = () => {
     const [selectedProcedure, setSelectedProcedure] = React.useState<string>('');
     const [selectedDate, setSelectedDate] = React.useState<string>('');
     const [selectedTime, setSelectedTime] = React.useState<string>('');
+    const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
+
+    const calendarDays = React.useMemo(() => {
+        const start = startOfWeek(startOfMonth(currentMonth));
+        const end = endOfWeek(endOfMonth(currentMonth));
+        return eachDayOfInterval({ start, end });
+    }, [currentMonth]);
+
+    const handleDateSelect = (date: Date) => {
+        setSelectedDate(date.toISOString());
+        setSelectedTime(''); // Reset time on date change
+    };
 
     const TOTAL_STEPS = 5;
+
+    // Custom Back Handler
+    // Only intercept back button if we are deeper in the flow (Step > 1)
+    // Otherwise, let Layout handle the navigation to /visits
+    React.useEffect(() => {
+        if (step > 1 && step < 6) {
+            setCustomBack(() => setStep(s => s - 1));
+        } else {
+            setCustomBack(null);
+        }
+        return () => setCustomBack(null);
+    }, [step, setCustomBack]);
 
     const handleSuccess = () => {
         if (selectedProcedure && selectedBranch) {
@@ -92,9 +143,7 @@ export const BookProcedure: React.FC = () => {
     return (
         <div className="booking-container">
             <header className="page-header">
-                {step < 6 && (
-                    <BackButton onClick={() => step > 1 ? setStep(step - 1) : navigate(-1)} />
-                )}
+
                 <div className="header-text">
                     <h2>{step === 6 ? 'Confirmed' : 'Book a Procedure'}</h2>
                 </div>
@@ -262,45 +311,68 @@ export const BookProcedure: React.FC = () => {
                         <h3 className="step-instruction">Schedule your visit</h3>
 
                         <div className="datetime-section">
-                            <div className="confirm-card glass-card">
-                                <div className="confirm-row">
-                                    <Calendar size={18} />
-                                    <div>
-                                        <span className="label">Preferred Date</span>
-                                        <input
-                                            type="date"
-                                            className="date-input"
-                                            onChange={(e) => setSelectedDate(e.target.value)}
-                                        />
+                            {/* Calendar & Time Selection */}
+                            <div className="booking-grid-layout">
+                                <div className="calendar-card glass-card">
+                                    <div className="calendar-header">
+                                        <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="icon-btn-small"><ChevronLeft size={20} /></button>
+                                        <h4>{format(currentMonth, 'MMMM yyyy')}</h4>
+                                        <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="icon-btn-small"><ChevronRight size={20} /></button>
+                                    </div>
+                                    <div className="calendar-grid-header">
+                                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <span key={d}>{d}</span>)}
+                                    </div>
+                                    <div className="calendar-grid">
+                                        {calendarDays.map((day, i) => {
+                                            const isSelected = selectedDate && isSameDay(new Date(selectedDate), day);
+                                            const isPast = day < new Date(new Date().setHours(0, 0, 0, 0));
+                                            return (
+                                                <button
+                                                    key={i}
+                                                    className={`day-cell ${isSelected ? 'selected' : ''} ${isToday(day) ? 'today' : ''} ${isPast ? 'disabled' : ''}`}
+                                                    disabled={isPast}
+                                                    onClick={() => !isPast && handleDateSelect(day)}
+                                                >
+                                                    {format(day, 'd')}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
-                                <div className="confirm-row">
-                                    <Clock size={18} />
-                                    <div>
-                                        <span className="label">Preferred Time</span>
-                                        <select className="date-input" onChange={(e) => setSelectedTime(e.target.value)}>
-                                            <option value="">Select Time</option>
-                                            <option>08:00 AM</option>
-                                            <option>09:00 AM</option>
-                                            <option>10:00 AM</option>
-                                            <option>01:00 PM</option>
-                                            <option>02:00 PM</option>
-                                            <option>03:00 PM</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="confirm-row">
-                                    <MapPin size={18} />
-                                    <div>
-                                        <span className="label">Location</span>
-                                        <span className="value">{selectedBranch?.name}</span>
-                                    </div>
+
+                                <div className="slots-card glass-card">
+                                    <h4>Available Slots</h4>
+                                    <p className="slots-date-label">
+                                        {selectedDate ? format(new Date(selectedDate), 'EEEE, MMMM d') : 'Select a date'}
+                                    </p>
+
+                                    {selectedDate ? (
+                                        <div className="slots-grid">
+                                            {AVAILABLE_SLOTS.map(t => (
+                                                <button
+                                                    key={t}
+                                                    className={`time-slot ${selectedTime === t ? 'selected' : ''}`}
+                                                    onClick={() => setSelectedTime(t)}
+                                                >
+                                                    {t}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="no-slots-placeholder">
+                                            <Calendar size={32} />
+                                            <p>Please select a date to view available appointment slots.</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="prep-notice">
-                                <Zap size={16} />
-                                <p><strong>Preparation:</strong> Some procedures require fasting or special intake. We will send guidelines via SMS after confirmation.</p>
+                                <Zap size={16} className="text-amber-500" />
+                                <div>
+                                    <strong>Preparation:</strong>
+                                    <p>{PROCEDURE_PREP[selectedProcedure] || 'No specific preparation required. We will send reminders via SMS.'}</p>
+                                </div>
                             </div>
 
                             <button

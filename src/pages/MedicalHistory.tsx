@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FileText, Calendar, User, Download, Search } from 'lucide-react';
-import { BackButton } from '../components/Common/BackButton';
+// BackButton handled by Layout.tsx
 import './MedicalHistory.css';
 
 type RecordType = 'all' | 'consultation' | 'procedure' | 'admission';
@@ -47,22 +47,23 @@ export const MedicalHistory: React.FC = () => {
     return (
         <div className="medical-history-container">
             <header className="page-header">
-                <BackButton />
                 <div className="header-text">
                     <h2>Medical History</h2>
                     <p className="page-subtitle">Detailed records of your past visits and conditions</p>
                 </div>
             </header>
 
-            {/* Search Bar */}
-            <div className="search-bar">
-                <Search size={18} className="search-icon" />
-                <input
-                    type="text"
-                    placeholder="Search records..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
+            {/* Search Bar & Filter */}
+            <div>
+                <div className="search-bar" style={{ marginBottom: '1rem' }}>
+                    <Search size={18} className="search-icon" />
+                    <input
+                        type="text"
+                        placeholder="Search records..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
             </div>
 
             {/* Filter Chips */}

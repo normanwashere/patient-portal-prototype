@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import { BackButton } from '../components/Common/BackButton';
+
 import { CreditCard, ShieldCheck, Wallet, ChevronRight, Check } from 'lucide-react';
 import './Billing.css';
 
@@ -29,7 +29,7 @@ export const Checkout: React.FC = () => {
     return (
         <div className="billing-container checkout-page">
             <header className="page-header">
-                <BackButton />
+
                 <div className="header-text">
                     <h2 style={{ fontSize: '1.25rem' }}>Payment Summary</h2>
                     <p className="page-subtitle">Review and confirm your payment</p>

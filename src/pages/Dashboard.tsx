@@ -5,9 +5,9 @@ import {
     ChevronRight,
     TestTube,
     Pill,
-    CreditCard,
     Heart,
-    Syringe
+    Syringe,
+    ClipboardList
 } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import { useData } from '../context/DataContext';
@@ -68,7 +68,7 @@ export const Dashboard: React.FC = () => {
                     </button>
 
                     {/* 2. Lab Results */}
-                    <button className="quick-action-btn" onClick={() => navigate('/results')}>
+                    <button className="quick-action-btn" onClick={() => navigate('/results', { state: { from: '/dashboard' } })}>
                         <div className="icon-badge-box">
                             <TestTube size={20} />
                             {newLabsCount > 0 && <span className="btn-badge">{newLabsCount}</span>}
@@ -77,7 +77,7 @@ export const Dashboard: React.FC = () => {
                     </button>
 
                     {/* 3. Medications */}
-                    <button className="quick-action-btn" onClick={() => navigate('/medications')}>
+                    <button className="quick-action-btn" onClick={() => navigate('/medications', { state: { from: '/dashboard' } })}>
                         <div className="icon-badge-box">
                             <Pill size={20} />
                             {newMedsCount > 0 && <span className="btn-badge">{newMedsCount}</span>}
@@ -85,22 +85,29 @@ export const Dashboard: React.FC = () => {
                         <span>Medications</span>
                     </button>
 
-                    {/* 4. Billing */}
-                    <button className="quick-action-btn" onClick={() => navigate('/billing')}>
-                        <CreditCard size={20} />
-                        <span>Billing</span>
-                    </button>
+                    {/* 4. My Care Plan */}
+                    {(tenant.features.carePlans ?? true) && (
+                        <button className="quick-action-btn" onClick={() => navigate('/health/care-plans', { state: { from: '/dashboard' } })}>
+                            <div className="icon-badge-box">
+                                <ClipboardList size={20} />
+                            </div>
+                            <span>My Care Plan</span>
+                        </button>
+                    )}
 
-                    {/* 5. Benefits (HMO) */}
+                    {/* 5. Benefits (HMO) - Hidden as per user preference or keep as additional?
+                        User asked to *replace* billing. HMO Benefits is separate. 
+                        Keeping HMO Benefits as it was separate from Billing.
+                    */}
                     {tenant.features.hmo && (
-                        <button className="quick-action-btn" onClick={() => navigate('/benefits')}>
+                        <button className="quick-action-btn" onClick={() => navigate('/benefits', { state: { from: '/dashboard' } })}>
                             <Heart size={20} />
                             <span>HMO Benefits</span>
                         </button>
                     )}
 
                     {/* 6. Vaccines */}
-                    <button className="quick-action-btn" onClick={() => navigate('/immunization')}>
+                    <button className="quick-action-btn" onClick={() => navigate('/immunization', { state: { from: '/dashboard' } })}>
                         <Syringe size={20} />
                         <span>Vaccines</span>
                     </button>
@@ -111,7 +118,7 @@ export const Dashboard: React.FC = () => {
             <section className="hospitals-section">
                 <div className="section-header-row">
                     <h3 className="section-title">Find Hospitals and Clinics</h3>
-                    <button className="view-all-link" onClick={() => navigate('/branches')}>
+                    <button className="view-all-link" onClick={() => navigate('/branches', { state: { from: '/dashboard' } })}>
                         View all <ChevronRight size={16} />
                     </button>
                 </div>

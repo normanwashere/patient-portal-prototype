@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useData, type Dependent } from '../context/DataContext';
-import { BackButton } from '../components/Common/BackButton';
+
 import { UserPlus, Shield, ChevronRight, User, Heart, UserCircle, X } from 'lucide-react';
 import './Profile.css';
 
@@ -26,7 +26,7 @@ export const Dependents: React.FC = () => {
     return (
         <div className="profile-container detail-page">
             <header className="page-header">
-                <BackButton />
+
                 <div className="header-text">
                     <h2 style={{ fontSize: '1.25rem' }}>Manage Dependents</h2>
                     <p className="page-subtitle">Family members covered under your plan</p>

@@ -100,7 +100,7 @@ export const Profile: React.FC = () => {
                     <span>Dependents</span>
                 </button>
                 {tenant.features.philHealth && (
-                    <button className="quick-action-btn" onClick={() => navigate('/coverage/philhealth')}>
+                    <button className="quick-action-btn" onClick={() => navigate('/coverage/philhealth', { state: { from: '/profile' } })}>
                         <HeartPulse size={20} />
                         <span>PhilHealth</span>
                     </button>
