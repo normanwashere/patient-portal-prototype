@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import {
   Search,
   Users,
-  FileText,
   ClipboardList,
   Pill,
   TestTube2,
@@ -19,7 +18,6 @@ import {
   Printer,
   Filter,
   Download,
-  Heart,
 } from 'lucide-react';
 import { useProvider } from '../context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
@@ -186,7 +184,7 @@ function getInitials(name: string) {
 export function Records() {
   const { tenant } = useTheme();
   const {
-    clinicalNotes, prescriptions, labOrders, appointments,
+    clinicalNotes, prescriptions, labOrders,
     immunizationRecords, triageRecords,
   } = useProvider();
   const { showToast } = useToast();
@@ -552,7 +550,7 @@ export function Records() {
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                             {pImm.map(im => (
                               <span key={im.id} style={{ padding: '4px 8px', borderRadius: 6, background: '#fef3c7', color: '#92400e', fontSize: 10, fontWeight: 600 }}>
-                                {im.vaccine} ({im.doseNumber})
+                                {im.vaccine} ({im.dose})
                               </span>
                             ))}
                           </div>
@@ -569,12 +567,11 @@ export function Records() {
                             const latest = pTriage[0];
                             return (
                               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 11 }}>
-                                <span><strong>BP:</strong> {latest.vitals.bp}</span>
-                                <span><strong>HR:</strong> {latest.vitals.hr} bpm</span>
-                                <span><strong>Temp:</strong> {latest.vitals.temp}°C</span>
-                                <span><strong>SpO₂:</strong> {latest.vitals.spo2}%</span>
-                                <span><strong>RR:</strong> {latest.vitals.rr}</span>
-                                {latest.vitals.weight && <span><strong>Wt:</strong> {latest.vitals.weight} kg</span>}
+                                <span><strong>BP:</strong> {latest.bloodPressure}</span>
+                                <span><strong>HR:</strong> {latest.heartRate} bpm</span>
+                                <span><strong>Temp:</strong> {latest.temperature}°C</span>
+                                <span><strong>SpO₂:</strong> {latest.oxygenSaturation}%</span>
+                                <span><strong>RR:</strong> {latest.respiratoryRate}</span>
                               </div>
                             );
                           })()}
@@ -890,8 +887,8 @@ export function Records() {
                           {imm.vaccine}
                         </span>
                       </td>
-                      <td style={S.td}>{imm.doseNumber}</td>
-                      <td style={S.td}>{imm.dateGiven}</td>
+                      <td style={S.td}>{imm.dose}</td>
+                      <td style={S.td}>{imm.administeredDate}</td>
                       <td style={S.td}><span style={{ fontFamily: 'monospace', fontSize: 11 }}>{imm.batchNumber}</span></td>
                       <td style={S.td}>{imm.site}</td>
                       <td style={S.td}><span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><User size={10} />{imm.administeredBy}</span></td>

@@ -44,8 +44,8 @@ const BRANCH_MAIN = 'metro-hosp-main';
 const BRANCH_NAME = 'Metro General Hospital - Main';
 const BRANCH_NORTH = 'metro-hosp-north';
 const BRANCH_NORTH_NAME = 'Metro General Hospital - North';
-const BRANCH_MC_AYALA = 'mc-pcc-ayala';
-const BRANCH_MC_AYALA_NAME = 'Maxicare PCC - Ayala North Exchange';
+const _BRANCH_MC_AYALA = 'mc-pcc-ayala';
+const _BRANCH_MC_AYALA_NAME = 'Maxicare PCC - Ayala North Exchange';
 const BRANCH_MC_BGC = 'mc-pcc-bgc';
 const BRANCH_MC_BGC_NAME = 'Maxicare PCC - BGC';
 const BRANCH_MC_BRIDGE = 'mc-pcc-bridgetowne';
@@ -1265,7 +1265,7 @@ export const MOCK_LAB_ORDERS: LabOrder[] = [
     priority: 'Routine',
     status: 'Resulted',
     orderedDate: '2026-01-30',
-    resultDate: '2026-02-03',
+    resultedDate: '2026-02-03',
     notes: 'Hgb 15.1, Hct 45.2%, WBC 6.5, Plt 230 — all normal.',
   },
   // ── Additional Maxicare labs for p-mc2 (Mark Anthony Lim) ──
@@ -1280,8 +1280,7 @@ export const MOCK_LAB_ORDERS: LabOrder[] = [
     priority: 'Routine',
     status: 'Resulted',
     orderedDate: '2026-01-30',
-    resultDate: '2026-02-03',
-    specimenType: 'Blood',
+    resultedDate: '2026-02-03',
     notes: 'Result: 88 mg/dL — normal fasting glucose.',
   },
   {
@@ -1295,8 +1294,7 @@ export const MOCK_LAB_ORDERS: LabOrder[] = [
     priority: 'Routine',
     status: 'Resulted',
     orderedDate: '2026-01-30',
-    resultDate: '2026-02-03',
-    specimenType: 'Blood',
+    resultedDate: '2026-02-03',
     isAbnormal: true,
     notes: 'TC 242, TG 180, LDL 162, HDL 38. LDL elevated — lifestyle + statin discussion.',
   },
@@ -1311,8 +1309,7 @@ export const MOCK_LAB_ORDERS: LabOrder[] = [
     priority: 'Routine',
     status: 'Resulted',
     orderedDate: '2026-01-30',
-    resultDate: '2026-02-03',
-    specimenType: 'Blood',
+    resultedDate: '2026-02-03',
     notes: 'ALT 28, AST 22 — within normal limits.',
   },
   {
@@ -1326,7 +1323,7 @@ export const MOCK_LAB_ORDERS: LabOrder[] = [
     priority: 'Routine',
     status: 'Resulted',
     orderedDate: '2026-01-30',
-    resultDate: '2026-02-03',
+    resultedDate: '2026-02-03',
     notes: 'Heart and lungs normal. No acute findings.',
   },
   {
@@ -1340,7 +1337,6 @@ export const MOCK_LAB_ORDERS: LabOrder[] = [
     priority: 'Routine',
     status: 'Ordered',
     orderedDate: '2026-02-11',
-    specimenType: 'Blood',
     notes: 'Baseline metabolic screening per Dr. Ong.',
   },
   {
@@ -1354,7 +1350,6 @@ export const MOCK_LAB_ORDERS: LabOrder[] = [
     priority: 'Routine',
     status: 'Ordered',
     orderedDate: '2026-02-11',
-    specimenType: 'Blood',
     notes: 'Patient reports occasional joint pain after meals.',
   },
   {
@@ -1368,7 +1363,6 @@ export const MOCK_LAB_ORDERS: LabOrder[] = [
     priority: 'Routine',
     status: 'Ordered',
     orderedDate: '2026-02-11',
-    specimenType: 'Urine',
     notes: 'Follow-up screening.',
   },
 ];
@@ -1663,15 +1657,15 @@ export const MOCK_QUEUE_PATIENTS: QueuePatient[] = [
     [{ station: 'Check-In', enteredAt: '2026-02-12T09:30:00', exitedAt: '2026-02-12T09:35:00' }, { station: 'Triage', enteredAt: '2026-02-12T09:35:00', exitedAt: '2026-02-12T09:45:00' }, { station: 'Consult', enteredAt: '2026-02-12T09:45:00' }], 'cr-mc4', 'Room D'),
   // Cynthia Abad: Imaging — X-ray ordered after consult
   qpBase('qp-mc11', 'p-mc15', 'Cynthia Abad', 'MC-011', 'Imaging', 'IN_SESSION', '2026-02-12T09:20:00', 22, 'Normal', 'Chest X-ray (PA/Lateral)', undefined, undefined,
-    [{ id: 'ord-mc11a', type: 'X-Ray', label: 'Chest X-Ray', targetStation: 'Imaging', status: 'in-progress' }], 0,
+    [{ id: 'ord-mc11a', type: 'X-Ray', label: 'Chest X-Ray', targetStation: 'Imaging', status: 'in-progress', orderedAt: '2026-02-12T09:10:00' }], 0,
     [{ station: 'Check-In', enteredAt: '2026-02-12T08:30:00', exitedAt: '2026-02-12T08:35:00' }, { station: 'Triage', enteredAt: '2026-02-12T08:35:00', exitedAt: '2026-02-12T08:42:00' }, { station: 'Consult', enteredAt: '2026-02-12T08:42:00', exitedAt: '2026-02-12T09:10:00' }, { station: 'Imaging', enteredAt: '2026-02-12T09:15:00' }]),
   // Eduardo Bautista: Billing — final step before discharge
   qpBase('qp-mc12', 'p-mc16', 'Eduardo Bautista', 'MC-012', 'Billing', 'QUEUED', '2026-02-12T09:55:00', 8, 'Normal', 'Settlement — consultation & labs', undefined, undefined,
-    [{ id: 'ord-mc12a', type: 'Lab-CBC', label: 'CBC', targetStation: 'Lab', status: 'completed' }, { id: 'ord-mc12b', type: 'Lab-Chemistry', label: 'FBS', targetStation: 'Lab', status: 'completed' }], -1,
+    [{ id: 'ord-mc12a', type: 'Lab-CBC', label: 'CBC', targetStation: 'Lab', status: 'completed', orderedAt: '2026-02-12T08:15:00' }, { id: 'ord-mc12b', type: 'Lab-Chemistry', label: 'FBS', targetStation: 'Lab', status: 'completed', orderedAt: '2026-02-12T08:15:00' }], -1,
     [{ station: 'Check-In', enteredAt: '2026-02-12T07:30:00', exitedAt: '2026-02-12T07:35:00' }, { station: 'Triage', enteredAt: '2026-02-12T07:35:00', exitedAt: '2026-02-12T07:43:00' }, { station: 'Consult', enteredAt: '2026-02-12T07:43:00', exitedAt: '2026-02-12T08:15:00' }, { station: 'Lab', enteredAt: '2026-02-12T08:20:00', exitedAt: '2026-02-12T09:00:00' }, { station: 'Return-Consult', enteredAt: '2026-02-12T09:05:00', exitedAt: '2026-02-12T09:30:00' }, { station: 'Pharmacy', enteredAt: '2026-02-12T09:30:00', exitedAt: '2026-02-12T09:45:00' }, { station: 'Billing', enteredAt: '2026-02-12T09:45:00' }]),
   // Maricel Torres: Return-Consult Room B — labs done, returning to Dr. Diaz
   qpBase('qp-mc13', 'p-mc17', 'Maricel Torres', 'MC-013', 'Return-Consult', 'READY', '2026-02-12T09:10:00', 20, 'Normal', 'Return — urinalysis & CBC results review', 'Dr. Jen Diaz', undefined,
-    [{ id: 'ord-mc13a', type: 'Lab-CBC', label: 'CBC', targetStation: 'Lab', status: 'completed' }, { id: 'ord-mc13b', type: 'Lab-Urinalysis', label: 'Urinalysis', targetStation: 'Lab', status: 'completed' }], -1,
+    [{ id: 'ord-mc13a', type: 'Lab-CBC', label: 'CBC', targetStation: 'Lab', status: 'completed', orderedAt: '2026-02-12T08:35:00' }, { id: 'ord-mc13b', type: 'Lab-Urinalysis', label: 'Urinalysis', targetStation: 'Lab', status: 'completed', orderedAt: '2026-02-12T08:35:00' }], -1,
     [{ station: 'Check-In', enteredAt: '2026-02-12T07:50:00', exitedAt: '2026-02-12T07:55:00' }, { station: 'Triage', enteredAt: '2026-02-12T07:55:00', exitedAt: '2026-02-12T08:03:00' }, { station: 'Consult', enteredAt: '2026-02-12T08:03:00', exitedAt: '2026-02-12T08:35:00' }, { station: 'Lab', enteredAt: '2026-02-12T08:40:00', exitedAt: '2026-02-12T09:20:00' }, { station: 'Return-Consult', enteredAt: '2026-02-12T09:25:00' }], 'cr-mc2', 'Room B'),
 ];
 

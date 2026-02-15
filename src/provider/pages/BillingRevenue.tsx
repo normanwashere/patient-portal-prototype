@@ -88,7 +88,7 @@ const PAYMENT_METHODS: PaymentTransaction['method'][] = ['Cash', 'GCash', 'Maya'
    surgeries, emergency care (OECB). Uses CF1–CF4 forms, case-rate reimbursement,
    XML batch submission via Transmittal Control Numbers. */
 type EClaimStatus = 'Draft' | 'Submitted' | 'In Process' | 'Return' | 'Approved' | 'Denied' | 'Paid';
-type EClaimType = 'Inpatient' | 'Outpatient Emergency' | 'Z-Package' | 'Maternity' | 'Hemodialysis';
+type EClaimType = 'Inpatient' | 'Outpatient Emergency' | 'Outpatient Primary Care' | 'Z-Package' | 'Maternity' | 'Hemodialysis';
 
 interface EClaimRecord {
   id: string;
@@ -640,7 +640,7 @@ export function BillingRevenue() {
   const { tenant } = useTheme();
   const {
     paymentTransactions, addPayment, refundPayment,
-    clinicalNotes, labOrders, prescriptions, dispensing, appointments,
+    clinicalNotes, labOrders, prescriptions, dispensing,
   } = useProvider();
   const { showToast } = useToast();
 
@@ -870,7 +870,7 @@ export function BillingRevenue() {
       return;
     }
     const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const desc = lineItems.filter(li => li.selected).map(li => li.description).join(', ');
+    const _desc = lineItems.filter(li => li.selected).map(li => li.description).join(', ');
     const tx: Omit<PaymentTransaction, 'id' | 'referenceNumber'> = {
       invoiceId: `INV-${Date.now().toString(36).toUpperCase()}`,
       patientName: selectedPatientName,
@@ -1072,7 +1072,7 @@ export function BillingRevenue() {
     showToast('First Patient Encounter scheduled', 'success');
   };
 
-  const handleIssueGamotRx = (id: string) => {
+  const handleIssueGamotRx = (_id: string) => {
     showToast('GAMOT digital prescription generated — QR code sent to patient', 'success');
   };
 
@@ -1557,7 +1557,7 @@ export function BillingRevenue() {
               </select>
               <select style={s.filterSelect} value={eclaimTypeFilter} onChange={(e) => setEclaimTypeFilter(e.target.value)}>
                 <option value="all">All Types</option>
-                {(['Inpatient', 'Outpatient Emergency', 'Z-Package', 'Maternity', 'Hemodialysis'] as EClaimType[]).map(t => <option key={t} value={t}>{t}</option>)}
+                {(['Inpatient', 'Outpatient Emergency', 'Outpatient Primary Care', 'Z-Package', 'Maternity', 'Hemodialysis'] as EClaimType[]).map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
 
