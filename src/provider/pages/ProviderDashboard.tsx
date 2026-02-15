@@ -230,15 +230,6 @@ export const ProviderDashboard = () => {
     return { ...s.badge, background: 'var(--color-info-light)', color: 'var(--color-info)' };
   };
 
-  const formatTimestamp = (ts: string) => {
-    const d = new Date(ts);
-    const now = new Date();
-    const diff = (now.getTime() - d.getTime()) / 60000;
-    if (diff < 60) return `${Math.round(diff)}m ago`;
-    if (diff < 1440) return `${Math.round(diff / 60)}h ago`;
-    return d.toLocaleDateString();
-  };
-
   /* ── Role-specific quick actions ── */
   const quickActions = useMemo(() => {
     switch (role) {

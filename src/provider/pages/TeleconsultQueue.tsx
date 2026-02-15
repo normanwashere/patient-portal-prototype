@@ -14,7 +14,7 @@
  *   no-show / cancelled
  */
 
-import { useState, useMemo, useCallback, type CSSProperties } from 'react';
+import { useState, useMemo, type CSSProperties } from 'react';
 import {
   Video, Phone, Clock, User, UserCheck, Activity,
   Coffee, Stethoscope, Building2, Calendar, CalendarClock, Search,
@@ -170,7 +170,7 @@ function ConnectionBadge({ online, quality }: { online: boolean; quality?: strin
 export const TeleconsultQueue = () => {
   const { tenant } = useTheme();
   const {
-    tcSessions, tcDoctors, tcStats,
+    tcSessions, tcDoctors,
     addTcSession, updateTcSessionStatus, assignTcDoctor, startTcSession, endTcSession,
     markTcNoShow, cancelTcSession, updateTcDoctorStatus, checkInTcDoctor,
   } = useProvider();

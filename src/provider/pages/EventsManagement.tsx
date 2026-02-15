@@ -123,7 +123,7 @@ export const EventsManagement = () => {
   /* ── Content type categories ── */
   const EVENT_TYPES: ManagedEvent['type'][] = ['Screening', 'Webinar', 'Vaccination Drive', 'Wellness', 'Health Fair', 'Activity'];
   const CONTENT_TYPES: ManagedEvent['type'][] = ['Article', 'Campaign', 'Feature'];
-  const ALL_TYPES = [...EVENT_TYPES, ...CONTENT_TYPES];
+  const _ALL_TYPES = [...EVENT_TYPES, ...CONTENT_TYPES]; void _ALL_TYPES;
   const eventTypeSet = useMemo(() => new Set(tenantEvents.map(e => e.type)), [tenantEvents]);
   const isContentType = (type: string) => CONTENT_TYPES.includes(type as ManagedEvent['type']);
 

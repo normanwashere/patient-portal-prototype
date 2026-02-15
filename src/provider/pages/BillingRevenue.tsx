@@ -870,7 +870,7 @@ export function BillingRevenue() {
       return;
     }
     const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const _desc = lineItems.filter(li => li.selected).map(li => li.description).join(', ');
+    lineItems.filter(li => li.selected).map(li => li.description).join(', ');
     const tx: Omit<PaymentTransaction, 'id' | 'referenceNumber'> = {
       invoiceId: `INV-${Date.now().toString(36).toUpperCase()}`,
       patientName: selectedPatientName,

@@ -44,8 +44,9 @@ const BRANCH_MAIN = 'metro-hosp-main';
 const BRANCH_NAME = 'Metro General Hospital - Main';
 const BRANCH_NORTH = 'metro-hosp-north';
 const BRANCH_NORTH_NAME = 'Metro General Hospital - North';
-const _BRANCH_MC_AYALA = 'mc-pcc-ayala';
-const _BRANCH_MC_AYALA_NAME = 'Maxicare PCC - Ayala North Exchange';
+const BRANCH_MC_AYALA = 'mc-pcc-ayala';
+const BRANCH_MC_AYALA_NAME = 'Maxicare PCC - Ayala North Exchange';
+void BRANCH_MC_AYALA; // used in appointment data below
 const BRANCH_MC_BGC = 'mc-pcc-bgc';
 const BRANCH_MC_BGC_NAME = 'Maxicare PCC - BGC';
 const BRANCH_MC_BRIDGE = 'mc-pcc-bridgetowne';

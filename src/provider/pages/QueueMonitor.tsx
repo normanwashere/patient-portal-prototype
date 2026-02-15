@@ -15,7 +15,7 @@ import { useParams } from 'react-router-dom';
 import {
   Monitor, Clock, CheckCircle, UserPlus, Stethoscope,
   FlaskConical, Layers, Pill, CreditCard, DoorOpen,
-  ArrowRight, AlertTriangle, Maximize2, Coffee, Play,
+  ArrowRight, AlertTriangle, Coffee, Play,
 } from 'lucide-react';
 import { useProvider } from '../context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';

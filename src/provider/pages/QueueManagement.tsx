@@ -23,7 +23,6 @@ import {
   FlaskConical,
   Pill,
   CreditCard,
-  Monitor,
   DoorOpen,
   Coffee,
   ExternalLink,
