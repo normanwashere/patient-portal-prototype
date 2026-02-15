@@ -4,7 +4,7 @@
 
 .app-shell {
     min-height: 100vh;
-    background: linear-gradient(180deg, #f0fdf8 0%, #f8fafc 50%, #f0f9ff 100%);
+    background: linear-gradient(180deg, var(--color-bg-tint-medium, #f0f7ff) 0%, var(--color-background, #f8fafc) 50%, var(--color-bg-tint-soft, #f0f9ff) 100%);
     display: flex;
 }
 
@@ -40,8 +40,8 @@
     position: sticky;
     top: 0;
     z-index: 40;
-    height: 72px;
-    /* Increased from 64px */
+    min-height: 72px;
+    padding-top: env(safe-area-inset-top, 0px);
 }
 
 .header-content {
@@ -53,10 +53,20 @@
 }
 
 .tenant-logo {
-    height: 52px;
-    /* Increased from 48px, optimized for 72px header */
+    height: auto;
+    max-height: 52px;
+    max-width: 180px;
     width: auto;
+    object-fit: contain;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: visible;
+    flex-shrink: 1;
 }
 
 .header-actions {

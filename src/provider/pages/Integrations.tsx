@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Link2,
   Activity,
@@ -28,7 +28,11 @@ import {
   Play,
   BarChart3,
   MonitorUp,
+  X,
+  Loader2,
+  Check,
 } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 
 /* ───────── inline styles ───────── */
@@ -61,7 +65,7 @@ const S: Record<string, React.CSSProperties> = {
     borderRadius: '8px 8px 0 0', display: 'flex', alignItems: 'center', gap: 8,
     whiteSpace: 'nowrap' as const, flexShrink: 0,
   },
-  tabActive: { color: 'var(--color-primary)', borderBottomColor: 'var(--color-primary)' },
+  tabActive: { color: 'var(--color-primary)', borderBottom: '2px solid var(--color-primary)' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20, marginBottom: 32 },
   card: {
     background: 'var(--color-surface)', borderRadius: 12, padding: 0,
@@ -119,7 +123,7 @@ const S: Record<string, React.CSSProperties> = {
     padding: '12px 14px', fontSize: 13, color: 'var(--color-text)',
     borderBottom: '1px solid var(--color-border)',
   },
-  mono: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-muted)', wordBreak: 'break-all' as const },
+  mono: { fontFamily: 'monospace', fontSize: 12, color: 'var(--color-text-muted)', wordBreak: 'break-all' as const, overflowWrap: 'anywhere' as const },
   dirBadge: {
     display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px',
     borderRadius: 4, fontSize: 11, fontWeight: 600,
@@ -132,6 +136,73 @@ const S: Record<string, React.CSSProperties> = {
     borderRadius: 8, fontSize: 14, background: 'var(--color-surface)',
     color: 'var(--color-text)', boxSizing: 'border-box' as const,
   },
+  /* ── Modal styles ── */
+  overlay: {
+    position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.45)',
+    zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: 20, backdropFilter: 'blur(4px)',
+  },
+  modal: {
+    background: 'var(--color-surface)', borderRadius: 16, width: '100%', maxWidth: 560,
+    maxHeight: '85vh', display: 'flex', flexDirection: 'column' as const,
+    boxShadow: '0 20px 60px rgba(0,0,0,0.2)', overflow: 'hidden',
+  },
+  modalHeader: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '18px 24px', borderBottom: '1px solid var(--color-border)',
+  },
+  modalTitle: { fontSize: 18, fontWeight: 700, color: 'var(--color-text)', margin: 0, display: 'flex', alignItems: 'center', gap: 10 },
+  modalClose: {
+    width: 32, height: 32, borderRadius: 8, border: 'none', background: 'var(--color-background)',
+    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    color: 'var(--color-text-muted)',
+  },
+  modalBody: { padding: 24, overflowY: 'auto' as const, flex: 1 },
+  modalFooter: {
+    padding: '14px 24px', borderTop: '1px solid var(--color-border)',
+    display: 'flex', justifyContent: 'flex-end', gap: 10,
+  },
+  formGroup: { marginBottom: 16 },
+  formLabel: { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6 },
+  formInput: {
+    width: '100%', padding: '10px 14px', border: '1px solid var(--color-border)',
+    borderRadius: 8, fontSize: 14, background: 'var(--color-background)',
+    color: 'var(--color-text)', boxSizing: 'border-box' as const,
+  },
+  formSelect: {
+    width: '100%', padding: '10px 14px', border: '1px solid var(--color-border)',
+    borderRadius: 8, fontSize: 14, background: 'var(--color-background)',
+    color: 'var(--color-text)', boxSizing: 'border-box' as const,
+  },
+  toggle: {
+    display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+  },
+  toggleTrack: {
+    width: 44, height: 24, borderRadius: 12, padding: 2, transition: 'background 0.2s',
+    display: 'flex', alignItems: 'center',
+  },
+  toggleKnob: {
+    width: 20, height: 20, borderRadius: 10, background: 'white',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.2)', transition: 'transform 0.2s',
+  },
+  logEntry: {
+    padding: '8px 12px', borderRadius: 6, fontSize: 12, fontFamily: 'monospace',
+    background: 'var(--color-background)', marginBottom: 6, lineHeight: 1.6,
+    border: '1px solid var(--color-border)', color: 'var(--color-text)',
+    wordBreak: 'break-all' as const, overflowWrap: 'anywhere' as const,
+  },
+  logTime: { color: 'var(--color-text-muted)', marginRight: 8 },
+  logLevel: { fontWeight: 700, marginRight: 8 },
+  jsonBlock: {
+    background: '#1e293b', color: '#e2e8f0', padding: 16, borderRadius: 10,
+    fontSize: 12, fontFamily: 'monospace', overflow: 'auto', maxHeight: 340,
+    lineHeight: 1.7, whiteSpace: 'pre' as const,
+  },
+  testResult: {
+    display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11,
+    fontWeight: 700, padding: '4px 10px', borderRadius: 6,
+  },
+  spinAnim: { animation: 'spin 1s linear infinite' },
 };
 
 /* ───────── status config ───────── */
@@ -397,6 +468,100 @@ const HL7_MESSAGES: HL7Message[] = [
   { id: 'MSG-20260213-0833', type: 'ORM', event: 'O01', description: 'Pharmacy Order', timestamp: '2026-02-13 08:33:00', direction: 'Outbound', status: 'Success', source: 'EMR', destination: 'Pharmacy' },
 ];
 
+/* ───────── Mock log generators ───────── */
+const generateLogs = (intg: Integration) => {
+  const times = ['08:44:32', '08:42:15', '08:40:01', '08:38:22', '08:35:10', '08:30:00', '08:25:44', '08:20:18', '08:15:03', '08:10:55'];
+  const levels = ['INFO', 'INFO', 'INFO', 'DEBUG', 'INFO', 'WARN', 'INFO', 'INFO', 'DEBUG', 'ERROR'];
+  const msgs = [
+    `Connection established to ${intg.endpoint}`,
+    `${intg.protocol} handshake completed — auth: ${intg.authMethod}`,
+    `Sync batch processed: 42 records in 1.2s`,
+    `Polling interval: 30s — next sync at ${intg.lastSync}`,
+    `Health check OK — latency 12ms`,
+    `Retry attempt 1/3 — timeout after 5000ms`,
+    `Message queue depth: 0 — all messages delivered`,
+    `TLS certificate valid — expires 2027-03-15`,
+    `Cache refreshed — 128 entries loaded`,
+    intg.status === 'Error' ? `ERROR: Connection refused at ${intg.endpoint} — ECONNREFUSED` : `Heartbeat received — system nominal`,
+  ];
+  return times.map((t, i) => ({ time: `2026-02-13 ${t}`, level: levels[i], message: msgs[i] }));
+};
+
+const FHIR_MOCK_JSON: Record<string, string> = {
+  Patient: `{
+  "resourceType": "Patient",
+  "id": "pat-001",
+  "active": true,
+  "name": [{ "use": "official", "family": "Dela Cruz", "given": ["Juan", "A."] }],
+  "gender": "male",
+  "birthDate": "1988-06-15",
+  "telecom": [{ "system": "phone", "value": "+63-917-555-1001" }],
+  "address": [{ "city": "Manila", "country": "PH" }]
+}`,
+  Observation: `{
+  "resourceType": "Observation",
+  "id": "obs-cbc-001",
+  "status": "final",
+  "code": { "coding": [{ "system": "http://loinc.org", "code": "58410-2", "display": "CBC panel" }] },
+  "subject": { "reference": "Patient/pat-001" },
+  "effectiveDateTime": "2026-02-13T08:30:00+08:00",
+  "valueQuantity": { "value": 5.2, "unit": "10*3/uL" }
+}`,
+  MedicationRequest: `{
+  "resourceType": "MedicationRequest",
+  "id": "medrq-001",
+  "status": "active",
+  "intent": "order",
+  "medicationCodeableConcept": { "text": "Losartan 50mg" },
+  "subject": { "reference": "Patient/pat-001" },
+  "dosageInstruction": [{ "text": "Take 1 tablet by mouth once daily" }]
+}`,
+  Encounter: `{
+  "resourceType": "Encounter",
+  "id": "enc-001",
+  "status": "finished",
+  "class": { "code": "AMB", "display": "ambulatory" },
+  "subject": { "reference": "Patient/pat-001" },
+  "period": { "start": "2026-02-13T09:00:00+08:00", "end": "2026-02-13T09:30:00+08:00" }
+}`,
+  DiagnosticReport: `{
+  "resourceType": "DiagnosticReport",
+  "id": "dr-001",
+  "status": "final",
+  "code": { "text": "Complete Blood Count" },
+  "subject": { "reference": "Patient/pat-001" },
+  "conclusion": "All values within normal limits."
+}`,
+  Condition: `{
+  "resourceType": "Condition",
+  "id": "cond-001",
+  "clinicalStatus": { "coding": [{ "code": "active" }] },
+  "code": { "coding": [{ "system": "http://hl7.org/fhir/sid/icd-10", "code": "I10", "display": "Essential Hypertension" }] },
+  "subject": { "reference": "Patient/pat-001" }
+}`,
+  AllergyIntolerance: `{
+  "resourceType": "AllergyIntolerance",
+  "id": "allergy-001",
+  "clinicalStatus": { "coding": [{ "code": "active" }] },
+  "code": { "coding": [{ "display": "Penicillin" }] },
+  "patient": { "reference": "Patient/pat-001" },
+  "reaction": [{ "manifestation": [{ "text": "Urticaria" }], "severity": "moderate" }]
+}`,
+  Immunization: `{
+  "resourceType": "Immunization",
+  "id": "imm-001",
+  "status": "completed",
+  "vaccineCode": { "text": "COVID-19 (Pfizer-BioNTech)" },
+  "patient": { "reference": "Patient/pat-001" },
+  "occurrenceDateTime": "2021-05-10"
+}`,
+};
+
+const EXTRA_HL7: HL7Message[] = [
+  { id: 'MSG-20260213-0845', type: 'ADT', event: 'A04', description: 'Patient Registration', timestamp: '2026-02-13 08:45:02', direction: 'Inbound', status: 'Success', source: 'Registration', destination: 'EMR' },
+  { id: 'MSG-20260213-0846', type: 'ORM', event: 'O01', description: 'Stat CBC Order', timestamp: '2026-02-13 08:46:18', direction: 'Outbound', status: 'Success', source: 'EMR', destination: 'LIS' },
+];
+
 /* ───────── helper ───────── */
 const StatusBadge = ({ status }: { status: IntegrationStatus }) => {
   const cfg = STATUS_CONFIG[status];
@@ -430,9 +595,81 @@ const DirectionBadge = ({ direction }: { direction: 'Inbound' | 'Outbound' }) =>
 /* ─────────────────────────────── component ─────────────────────────────── */
 
 export const Integrations = () => {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabId>('all');
   const [search, setSearch] = useState('');
   const [hl7Search, setHl7Search] = useState('');
+
+  /* ── Interactive state ── */
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<Record<string, 'success' | 'error'>>({});
+  const [logsIntegration, setLogsIntegration] = useState<Integration | null>(null);
+  const [configIntegration, setConfigIntegration] = useState<Integration | null>(null);
+  const [exploreFhir, setExploreFhir] = useState<string | null>(null);
+  const [hl7Refreshing, setHl7Refreshing] = useState(false);
+  const [hl7Messages, setHl7Messages] = useState<HL7Message[]>(HL7_MESSAGES);
+  const [hl7ExtraIdx, setHl7ExtraIdx] = useState(0);
+
+  /* Config form state */
+  const [cfgEndpoint, setCfgEndpoint] = useState('');
+  const [cfgAuth, setCfgAuth] = useState('');
+  const [cfgPollInterval, setCfgPollInterval] = useState('30');
+  const [cfgRetryCount, setCfgRetryCount] = useState('3');
+  const [cfgEnabled, setCfgEnabled] = useState(true);
+
+  /* ── Test Connection handler ── */
+  const handleTestConnection = useCallback((intg: Integration) => {
+    if (testingId) return;
+    setTestingId(intg.id);
+    // Clear previous result for this integration
+    setTestResults(prev => { const n = { ...prev }; delete n[intg.id]; return n; });
+    const delay = 1500 + Math.random() * 1000;
+    setTimeout(() => {
+      const result = intg.status === 'Error' ? 'error' : 'success';
+      setTestResults(prev => ({ ...prev, [intg.id]: result }));
+      setTestingId(null);
+      // Auto-clear after 3s
+      setTimeout(() => setTestResults(prev => { const n = { ...prev }; delete n[intg.id]; return n; }), 3000);
+    }, delay);
+  }, [testingId]);
+
+  /* ── Open Configure modal ── */
+  const handleOpenConfig = useCallback((intg: Integration) => {
+    setCfgEndpoint(intg.endpoint);
+    setCfgAuth(intg.authMethod);
+    setCfgPollInterval('30');
+    setCfgRetryCount('3');
+    setCfgEnabled(intg.status !== 'Not Configured');
+    setConfigIntegration(intg);
+  }, []);
+
+  const handleSaveConfig = useCallback(() => {
+    showToast(`Configuration saved for ${configIntegration?.name}`, 'success');
+    setConfigIntegration(null);
+  }, [configIntegration, showToast]);
+
+  /* ── HL7 Refresh handler ── */
+  const handleHl7Refresh = useCallback(() => {
+    setHl7Refreshing(true);
+    setTimeout(() => {
+      if (hl7ExtraIdx < EXTRA_HL7.length) {
+        const newMsg = EXTRA_HL7[hl7ExtraIdx];
+        setHl7Messages(prev => [newMsg, ...prev]);
+        setHl7ExtraIdx(prev => prev + 1);
+      } else {
+        // Generate a dynamic new message
+        const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
+        const newMsg: HL7Message = {
+          id: `MSG-${Date.now()}`, type: 'ORU', event: 'R01',
+          description: 'Lab Result Update', timestamp: `2026-02-13 ${ts}`,
+          direction: 'Inbound', status: 'Success', source: 'LIS', destination: 'EMR',
+        };
+        setHl7Messages(prev => [newMsg, ...prev]);
+      }
+      setHl7Refreshing(false);
+      showToast('Message feed refreshed', 'success');
+    }, 800);
+  }, [hl7ExtraIdx, showToast]);
 
   const tabs: { id: TabId; label: string; icon: typeof Link2 }[] = [
     { id: 'all', label: 'All', icon: Link2 },
@@ -451,7 +688,7 @@ export const Integrations = () => {
     return matchesTab && matchesSearch;
   });
 
-  const filteredHl7 = HL7_MESSAGES.filter((m) => {
+  const filteredHl7 = hl7Messages.filter((m) => {
     if (!hl7Search) return true;
     const q = hl7Search.toLowerCase();
     return (
@@ -581,13 +818,28 @@ export const Integrations = () => {
 
               {/* card footer */}
               <div style={S.cardFooter}>
-                <button style={{ ...S.btn, ...S.btnPrimary }}>
-                  <Play size={12} /> Test Connection
-                </button>
-                <button style={{ ...S.btn, ...S.btnOutline }}>
+                {testingId === intg.id ? (
+                  <button style={{ ...S.btn, ...S.btnPrimary, opacity: 0.8 }} disabled>
+                    <Loader2 size={12} style={S.spinAnim} /> Testing...
+                  </button>
+                ) : testResults[intg.id] ? (
+                  <span style={{
+                    ...S.testResult,
+                    background: testResults[intg.id] === 'success' ? '#dcfce7' : '#fef2f2',
+                    color: testResults[intg.id] === 'success' ? '#166534' : '#991b1b',
+                  }}>
+                    {testResults[intg.id] === 'success' ? <Check size={12} /> : <XCircle size={12} />}
+                    {testResults[intg.id] === 'success' ? 'Connected' : 'Failed'}
+                  </span>
+                ) : (
+                  <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => handleTestConnection(intg)}>
+                    <Play size={12} /> Test Connection
+                  </button>
+                )}
+                <button style={{ ...S.btn, ...S.btnOutline }} onClick={() => setLogsIntegration(intg)}>
                   <FileText size={12} /> View Logs
                 </button>
-                <button style={{ ...S.btn, ...S.btnOutline }}>
+                <button style={{ ...S.btn, ...S.btnOutline }} onClick={() => handleOpenConfig(intg)}>
                   <Settings size={12} /> Configure
                 </button>
               </div>
@@ -641,6 +893,7 @@ export const Integrations = () => {
                     <button
                       style={{ ...S.btn, ...S.btnOutline, padding: '5px 10px', fontSize: 11 }}
                       title={`Explore ${r.resource}`}
+                      onClick={() => setExploreFhir(r.resource)}
                     >
                       <ChevronRight size={12} /> Explore
                     </button>
@@ -663,8 +916,8 @@ export const Integrations = () => {
               Real-time feed of HL7 v2.x messages processed by the interface engine — ADT, ORM, ORU, SIU message types.
             </p>
           </div>
-          <button style={{ ...S.btn, ...S.btnPrimary }}>
-            <RefreshCw size={13} /> Refresh
+          <button style={{ ...S.btn, ...S.btnPrimary }} onClick={handleHl7Refresh} disabled={hl7Refreshing}>
+            <RefreshCw size={13} style={hl7Refreshing ? S.spinAnim : undefined} /> {hl7Refreshing ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
 
@@ -721,6 +974,115 @@ export const Integrations = () => {
           </div>
         )}
       </div>
+
+      {/* ════════════ View Logs Modal ════════════ */}
+      {logsIntegration && (
+        <div style={S.overlay} onClick={() => setLogsIntegration(null)}>
+          <div style={S.modal} onClick={e => e.stopPropagation()}>
+            <div style={S.modalHeader}>
+              <h3 style={S.modalTitle}><FileText size={18} /> {logsIntegration.name} — Logs</h3>
+              <button style={S.modalClose} onClick={() => setLogsIntegration(null)}><X size={16} /></button>
+            </div>
+            <div style={S.modalBody}>
+              <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 14 }}>
+                Last 10 log entries — endpoint: <code style={S.mono}>{logsIntegration.endpoint}</code>
+              </p>
+              {generateLogs(logsIntegration).map((log, i) => (
+                <div key={i} style={S.logEntry}>
+                  <span style={S.logTime}>{log.time}</span>
+                  <span style={{
+                    ...S.logLevel,
+                    color: log.level === 'ERROR' ? '#dc2626' : log.level === 'WARN' ? '#d97706' : log.level === 'DEBUG' ? '#6b7280' : '#059669',
+                  }}>[{log.level}]</span>
+                  {log.message}
+                </div>
+              ))}
+            </div>
+            <div style={S.modalFooter}>
+              <button style={{ ...S.btn, ...S.btnOutline }} onClick={() => setLogsIntegration(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ Configure Modal ════════════ */}
+      {configIntegration && (
+        <div style={S.overlay} onClick={() => setConfigIntegration(null)}>
+          <div style={S.modal} onClick={e => e.stopPropagation()}>
+            <div style={S.modalHeader}>
+              <h3 style={S.modalTitle}><Settings size={18} /> Configure — {configIntegration.name}</h3>
+              <button style={S.modalClose} onClick={() => setConfigIntegration(null)}><X size={16} /></button>
+            </div>
+            <div style={S.modalBody}>
+              <div style={S.formGroup}>
+                <label style={S.formLabel}>Endpoint URL</label>
+                <input style={S.formInput} value={cfgEndpoint} onChange={e => setCfgEndpoint(e.target.value)} />
+              </div>
+              <div style={S.formGroup}>
+                <label style={S.formLabel}>Authentication Method</label>
+                <select style={S.formSelect} value={cfgAuth} onChange={e => setCfgAuth(e.target.value)}>
+                  <option>TLS + Certificate</option>
+                  <option>OAuth 2.0 + API Key</option>
+                  <option>HMAC-SHA256 + API Key</option>
+                  <option>Basic Auth + HMAC</option>
+                  <option>SMART on FHIR + OAuth 2.0</option>
+                  <option>SAML 2.0 + TLS</option>
+                </select>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div style={S.formGroup}>
+                  <label style={S.formLabel}>Polling Interval (seconds)</label>
+                  <input style={S.formInput} type="number" value={cfgPollInterval} onChange={e => setCfgPollInterval(e.target.value)} />
+                </div>
+                <div style={S.formGroup}>
+                  <label style={S.formLabel}>Retry Count</label>
+                  <input style={S.formInput} type="number" value={cfgRetryCount} onChange={e => setCfgRetryCount(e.target.value)} />
+                </div>
+              </div>
+              <div style={S.formGroup}>
+                <label style={S.formLabel}>Enabled</label>
+                <div style={S.toggle} onClick={() => setCfgEnabled(!cfgEnabled)}>
+                  <div style={{ ...S.toggleTrack, background: cfgEnabled ? 'var(--color-primary)' : '#d1d5db' }}>
+                    <div style={{ ...S.toggleKnob, transform: cfgEnabled ? 'translateX(20px)' : 'translateX(0)' }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>{cfgEnabled ? 'Active' : 'Disabled'}</span>
+                </div>
+              </div>
+            </div>
+            <div style={S.modalFooter}>
+              <button style={{ ...S.btn, ...S.btnOutline }} onClick={() => setConfigIntegration(null)}>Cancel</button>
+              <button style={{ ...S.btn, ...S.btnPrimary }} onClick={handleSaveConfig}><Check size={13} /> Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ FHIR Explore Modal ════════════ */}
+      {exploreFhir && (
+        <div style={S.overlay} onClick={() => setExploreFhir(null)}>
+          <div style={S.modal} onClick={e => e.stopPropagation()}>
+            <div style={S.modalHeader}>
+              <h3 style={S.modalTitle}><Globe size={18} /> FHIR R4 — {exploreFhir}</h3>
+              <button style={S.modalClose} onClick={() => setExploreFhir(null)}><X size={16} /></button>
+            </div>
+            <div style={S.modalBody}>
+              <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 12 }}>
+                GET <code style={S.mono}>https://fhir.hospital.local/fhir/R4/{exploreFhir}/example-001</code>
+              </p>
+              <div style={{ ...S.badge, background: '#dcfce7', color: '#166534', marginBottom: 14, fontSize: 12 }}>
+                <CheckCircle2 size={12} /> 200 OK — {exploreFhir} resource
+              </div>
+              <pre style={S.jsonBlock}>{FHIR_MOCK_JSON[exploreFhir] || `{ "resourceType": "${exploreFhir}", "id": "example-001" }`}</pre>
+            </div>
+            <div style={S.modalFooter}>
+              <button style={{ ...S.btn, ...S.btnOutline }} onClick={() => setExploreFhir(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSS for spin animation */}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };

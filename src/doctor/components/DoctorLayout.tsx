@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { Outlet, NavLink, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import {
   CalendarClock,
   Users,
@@ -14,15 +14,17 @@ import {
   Bell,
   ArrowLeftRight,
   ClipboardList,
+  ClipboardPlus,
   LogOut,
-  ChevronDown,
   Building2,
   Clock,
   PhoneCall,
   MessageSquare,
+  User,
 } from 'lucide-react';
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
+import { isDoctorModuleAllowed } from '../../provider/roleAccess';
 import type { TenantFeatures } from '../../types/tenant';
 import { TeleconsultPiP } from './TeleconsultPiP';
 import { DoctorSimulation } from './DoctorSimulation';
@@ -71,6 +73,7 @@ const SIDEBAR_SECTIONS: NavSection[] = [
   {
     label: 'Management',
     items: [
+      { to: `${PREFIX}/care-plans`, icon: ClipboardPlus, label: 'Care Plans' },
       { to: `${PREFIX}/messages`, icon: MessageSquare, label: 'Messages', hasBadge: 'messages' },
       { to: `${PREFIX}/tasks`, icon: ClipboardList, label: 'Tasks', hasBadge: 'tasks' },
       { to: `${PREFIX}/immunizations`, icon: Syringe, label: 'Immunizations' },
@@ -99,6 +102,7 @@ export const DoctorLayout = () => {
     activeTeleconsultCall,
   } = useProvider();
   const navigate = useNavigate();
+  const location = useLocation();
   const { tenant } = useTheme();
   const teleconsultNowEnabled = tenant.features.visits.teleconsultNowEnabled;
   // Live queue mode toggle only when teleconsult NOW is available
@@ -116,7 +120,13 @@ export const DoctorLayout = () => {
   const teleconsultQueueCount = 3; // mock – patients waiting in teleconsult queue
   const taskBadgeCount = alertBadgeCount;
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const DOCTOR_ALWAYS_ALLOWED = ['dashboard', 'profile'];
+  const currentDoctorRouteAllowed = useMemo(() => {
+    const slug = location.pathname.replace(`${PREFIX}/`, '').split('/')[0] || 'dashboard';
+    if (DOCTOR_ALWAYS_ALLOWED.includes(slug)) return true;
+    return isDoctorModuleAllowed(currentStaff.role, slug);
+  }, [location.pathname, currentStaff.role]);
+
   const [showSimulation, setShowSimulation] = useState(false);
 
   // Expose simulation state globally for DemoControls
@@ -140,33 +150,25 @@ export const DoctorLayout = () => {
 
   return (
     <div className="doctor-shell">
-      {/* Top Header (Mobile) */}
+      {/* Top Header (Mobile) — logo left, actions right (matches patient portal standard) */}
       <header className="doctor-header">
-        <button
-          className="doctor-header-left doctor-header-left--tappable"
-          onClick={() => setMobileMenuOpen((v) => !v)}
-          aria-expanded={mobileMenuOpen}
-          aria-label="Profile menu"
-        >
-          <div className="doctor-header-info">
-            <span className="doctor-header-name">
-              {currentStaff.name}
-              <ChevronDown size={14} className={`doctor-header-chevron ${mobileMenuOpen ? 'open' : ''}`} />
-            </span>
-            <span className="doctor-header-specialty">
-              {currentStaff.specialty ?? currentStaff.department}
-            </span>
-          </div>
-        </button>
+        <div className="doctor-header-logo-section">
+          <img
+            src={tenant.logoUrl}
+            alt={tenant.name}
+            className="doctor-header-logo"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        </div>
         <div className="doctor-header-actions">
           {/* Mobile mode toggle */}
           {hasLiveQueue && (
             <button
               onClick={() => setDoctorMode(doctorMode === 'in-clinic' ? 'teleconsult' : 'in-clinic')}
+              className="doctor-header-mode-btn"
               style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-                padding: '8px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                fontSize: 12, fontWeight: 700, minHeight: 36,
                 background: doctorMode === 'teleconsult' ? 'var(--color-secondary-bg, rgba(124,58,237,0.1))' : 'var(--color-primary-transparent, rgba(59,130,246,0.08))',
                 color: doctorMode === 'teleconsult' ? 'var(--color-secondary, #7c3aed)' : 'var(--color-primary)',
               }}
@@ -196,40 +198,14 @@ export const DoctorLayout = () => {
               <span className="doctor-header-badge">{taskBadgeCount}</span>
             )}
           </Link>
-          <img
-            src={tenant.logoUrl}
-            alt={tenant.name}
-            className="doctor-header-logo"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
+          <Link
+            to={`${PREFIX}/profile`}
+            className="doctor-header-btn"
+            aria-label="Profile"
+          >
+            <User size={20} />
+          </Link>
         </div>
-
-        {/* Mobile profile dropdown */}
-        {mobileMenuOpen && (
-          <>
-            <div className="doctor-mobile-overlay" onClick={() => setMobileMenuOpen(false)} />
-            <div className="doctor-mobile-menu">
-              <Link
-                to="/provider"
-                className="doctor-mobile-menu-item"
-                onClick={() => { switchApp('provider'); setMobileMenuOpen(false); }}
-              >
-                <ArrowLeftRight size={16} />
-                Switch to Provider App
-              </Link>
-              <Link
-                to="/login"
-                className="doctor-mobile-menu-item doctor-mobile-menu-item--logout"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <LogOut size={16} />
-                Logout
-              </Link>
-            </div>
-          </>
-        )}
       </header>
 
       {/* Desktop Sidebar */}
@@ -338,7 +314,13 @@ export const DoctorLayout = () => {
           <nav className="doctor-sidebar-nav">
             {SIDEBAR_SECTIONS.map((section) => {
               const visibleItems = section.items.filter(
-                (item) => !item.visible || item.visible(tenant.features)
+                (item) => {
+                  // Check tenant feature flag
+                  if (item.visible && !item.visible(tenant.features)) return false;
+                  // Check role access
+                  const slug = item.to === PREFIX ? 'dashboard' : item.to.replace(`${PREFIX}/`, '');
+                  return isDoctorModuleAllowed(currentStaff.role, slug);
+                }
               );
               if (visibleItems.length === 0) return null;
               return (
@@ -397,7 +379,11 @@ export const DoctorLayout = () => {
 
       {/* Main Content */}
       <main className="doctor-main">
-        <Outlet />
+        {currentDoctorRouteAllowed ? (
+          <Outlet />
+        ) : (
+          <Navigate to="/doctor" replace />
+        )}
       </main>
 
       {/* Teleconsult PiP — floating mini video when call is active and user navigates away */}
@@ -410,7 +396,11 @@ export const DoctorLayout = () => {
         role="navigation"
       >
         {ALL_BOTTOM_NAV_ITEMS
-          .filter((item) => !item.visible || item.visible(tenant.features))
+          .filter((item) => {
+            if (item.visible && !item.visible(tenant.features)) return false;
+            const slug = item.to === PREFIX ? 'dashboard' : item.to.replace(`${PREFIX}/`, '');
+            return isDoctorModuleAllowed(currentStaff.role, slug);
+          })
           .map((item) => {
             const badgeCount =
               item.badgeKey === 'queue' ? queueCount :

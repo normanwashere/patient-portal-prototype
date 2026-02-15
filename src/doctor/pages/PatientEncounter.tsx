@@ -21,6 +21,13 @@ import {
   X,
   Clock,
   Star,
+  ClipboardPlus,
+  Target,
+  Plus,
+  Trash2,
+  Bot,
+  RefreshCw,
+  Heart,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useProvider } from '../../provider/context/ProviderContext';
@@ -30,33 +37,255 @@ import type { ClinicalNote, CDSSAlert } from '../../provider/types';
 import type { ReactNode } from 'react';
 import { SoapNotePanel } from '../components/SoapNotePanel';
 
-type TabKey = 'soap' | 'transcriber' | 'cdss' | 'orders' | 'prescriptions' | 'chart';
+type TabKey = 'soap' | 'transcriber' | 'cdss' | 'orders' | 'prescriptions' | 'chart' | 'careplan';
 type SoapSection = 'S' | 'O' | 'A' | 'P';
 
 const TRANSCRIPT_LINES = [
-  { speaker: 'doctor' as const, text: 'What brings you in today?', ts: '00:05' },
-  { speaker: 'patient' as const, text: "I've been having chest pains for the past week...", ts: '00:12' },
-  { speaker: 'doctor' as const, text: 'Can you describe the pain? Is it sharp or dull?', ts: '00:22' },
-  { speaker: 'patient' as const, text: "It's more of a pressure, especially when I climb stairs.", ts: '00:35' },
-  { speaker: 'doctor' as const, text: 'Does it radiate anywhere — to your arm, jaw, or back?', ts: '00:48' },
-  { speaker: 'patient' as const, text: 'Sometimes I feel it in my left arm, but it goes away after I rest.', ts: '01:02' },
-  { speaker: 'doctor' as const, text: 'Any shortness of breath, dizziness, or sweating?', ts: '01:15' },
-  { speaker: 'patient' as const, text: 'A little short of breath when climbing stairs. No dizziness or sweating.', ts: '01:28' },
-  { speaker: 'doctor' as const, text: 'Are you taking your current medications regularly?', ts: '01:42' },
-  { speaker: 'patient' as const, text: 'Yes, I take everything as prescribed. Aspirin, Atorvastatin, and Metoprolol.', ts: '01:55' },
+  { speaker: 'doctor' as const, text: 'Good morning. What brings you in today?', ts: '00:05' },
+  { speaker: 'patient' as const, text: "I've been having chest pains for the past week, Doc.", ts: '00:12' },
+  { speaker: 'doctor' as const, text: 'Can you describe the pain for me? Is it sharp, dull, or more of a pressure?', ts: '00:22' },
+  { speaker: 'patient' as const, text: "It's more of a pressure or tightness, especially when I climb stairs or walk fast.", ts: '00:35' },
+  { speaker: 'doctor' as const, text: 'Does it radiate anywhere — to your arm, jaw, neck, or back?', ts: '00:48' },
+  { speaker: 'patient' as const, text: 'Sometimes I feel it in my left arm, but it goes away after I sit down and rest for a few minutes.', ts: '01:02' },
+  { speaker: 'doctor' as const, text: 'How long does each episode typically last?', ts: '01:18' },
+  { speaker: 'patient' as const, text: 'Maybe three to five minutes. It always stops once I stop what I\'m doing.', ts: '01:28' },
+  { speaker: 'doctor' as const, text: 'Any associated shortness of breath, nausea, dizziness, or sweating during these episodes?', ts: '01:40' },
+  { speaker: 'patient' as const, text: 'A little short of breath when climbing stairs. No nausea, no dizziness, no sweating.', ts: '01:55' },
+  { speaker: 'doctor' as const, text: 'Have you ever had a heart attack, cardiac catheterization, or a stress test before?', ts: '02:08' },
+  { speaker: 'patient' as const, text: 'No, never. This is the first time I\'ve had chest problems like this.', ts: '02:18' },
+  { speaker: 'doctor' as const, text: 'Any family history of heart disease — parents or siblings with heart attacks or strokes?', ts: '02:30' },
+  { speaker: 'patient' as const, text: 'My father had a heart attack at sixty-two. My mother has high blood pressure.', ts: '02:42' },
+  { speaker: 'doctor' as const, text: 'And are you taking your current medications regularly — the Aspirin, Atorvastatin, and Metoprolol?', ts: '02:55' },
+  { speaker: 'patient' as const, text: 'Yes, I take everything as prescribed. Every day, no missed doses.', ts: '03:08' },
 ];
 
 // AI-generated content uses a special delimiter (⌁AI⌁) that we detect for subtle styling
 const AI_DELIMITER = '⌁AI⌁';
 const AI_SOAP_APPEND = {
-  subjective: `\n\n${AI_DELIMITER}\nPatient reports chest pressure for 1 week, exertional, resolves with rest. Occasional radiation to left arm. Mild exertional dyspnea. No dizziness or diaphoresis. Medication compliant — Aspirin, Atorvastatin, Metoprolol.`,
-  objective: `\n\n${AI_DELIMITER}\nVS: BP 132/82, HR 78, RR 16, Temp 36.6°C, SpO2 97%.\nCardiac: Regular rate and rhythm, S1/S2 normal, no murmurs.\nLungs: Clear to auscultation bilaterally.\nExtremities: No edema, pulses 2+ bilaterally.`,
-  assessment: `\n\n${AI_DELIMITER}\nStable angina pectoris (ICD-10: I20.9). Exertional chest pain with classic pattern. Currently on appropriate medical therapy.`,
-  plan: `\n\n${AI_DELIMITER}\n1. Continue Aspirin 81mg, Atorvastatin 40mg, Metoprolol 50mg\n2. Order stress ECG to evaluate exercise tolerance\n3. Lipid panel and troponin levels\n4. Nitroglycerin SL 0.4mg PRN for acute episodes\n5. Follow-up in 2 weeks or sooner if symptoms worsen\n6. Patient educated on warning signs requiring ER visit`,
+  subjective: `\n\n${AI_DELIMITER}\nChief complaint: Chest pressure × 1 week.\nHPI: Exertional substernal pressure, precipitated by stair climbing, relieved by rest within 5 minutes. Occasional radiation to left arm. Associated mild exertional dyspnea. Denies diaphoresis, palpitations, syncope, orthopnea, or PND.\nPMH: Known hypertension, hyperlipidemia. No prior MI or cardiac catheterization.\nMedications: Aspirin 81 mg daily, Atorvastatin 40 mg daily, Metoprolol Succinate ER 50 mg daily — patient reports full compliance.\nAllergies: Penicillin (rash), Sulfa (GI upset).`,
+  objective: `\n\n${AI_DELIMITER}\nVitals: BP 132/82 mmHg, HR 78 bpm (regular), RR 16/min, Temp 36.6°C, SpO2 97% on RA, BMI 27.4.\nGeneral: Alert, oriented, no acute distress.\nCardiac: Regular rate and rhythm, normal S1/S2, no S3/S4 gallop, no murmurs or rubs.\nLungs: Clear to auscultation bilaterally, no wheezes, rhonchi, or crackles.\nAbdomen: Soft, non-tender, no organomegaly.\nExtremities: No peripheral edema, dorsalis pedis and posterior tibial pulses 2+ bilaterally, no cyanosis.`,
+  assessment: `\n\n${AI_DELIMITER}\n1. Stable angina pectoris (ICD-10: I20.8) — exertional substernal chest pressure with classic pattern (exertion-provoked, rest-relieved, < 20 min duration). Low probability of ACS given stable presentation and absence of rest pain, hemodynamic instability, or ECG changes.\n2. Essential hypertension (ICD-10: I10) — sub-optimally controlled at 132/82 mmHg, target < 130/80.\n3. Hyperlipidemia (ICD-10: E78.5) — on moderate-intensity statin; reassess lipid targets given new angina.`,
+  plan: `\n\n${AI_DELIMITER}\n1. Continue current medications: Aspirin 81 mg daily, Atorvastatin 40 mg daily, Metoprolol Succinate ER 50 mg daily\n2. Add: Nitroglycerin SL 0.4 mg PRN chest pain (up to 3 doses q5min; call 911 if no relief after first dose)\n3. Order resting 12-lead ECG today\n4. Order exercise stress test (treadmill EST) to evaluate ischemic threshold and exercise tolerance\n5. Labs: Troponin I (to rule out ACS), Lipid panel (reassess LDL target — consider high-intensity statin), BMP, CBC\n6. Consider uptitrating Metoprolol to 100 mg daily if resting HR allows and angina frequency does not improve\n7. Lifestyle: reinforce smoking cessation (if applicable), Mediterranean diet counseling, moderate aerobic exercise 150 min/week as tolerated\n8. Return to clinic in 2 weeks for stress test results review, or sooner if symptoms escalate (rest pain, prolonged episodes > 20 min, syncope)\n9. Patient educated on ACS warning signs: rest pain unrelieved by NTG, diaphoresis, nausea, jaw/back radiation — call 911 immediately`,
 };
 
 const QUICK_ORDERS = ['CBC', 'FBS', 'Lipid Panel', 'Urinalysis', 'Chest X-Ray', 'ECG', 'Ultrasound'];
 const FREQUENCY_OPTIONS = ['Once daily', 'Twice daily', 'Three times daily', 'As needed', 'At bedtime', 'With meals'];
+
+/* ══════════════════════════════════════════
+   Care Plan AI Templates (in-encounter)
+   ══════════════════════════════════════════ */
+interface CPAISuggestion {
+  name: string;
+  specialty: string;
+  goals: string[];
+  interventions: string[];
+  notes: string;
+  duration: string;
+}
+
+const CP_AI_TEMPLATES: Record<string, CPAISuggestion> = {
+  diabetes: {
+    name: 'Type 2 Diabetes Management Plan',
+    specialty: 'Endocrinology',
+    goals: [
+      'Maintain fasting blood glucose 80–130 mg/dL (ADA pre-meal target)',
+      'Achieve HbA1c < 7.0% within 3 months (individualize per age and comorbidities)',
+      'Engage in moderate-intensity aerobic exercise ≥ 150 min/week',
+      'Achieve ≥ 95% adherence to prescribed antidiabetic regimen',
+      'Maintain BMI 18.5–24.9 or achieve ≥ 5% weight loss if overweight',
+      'Complete annual dilated retinal examination',
+      'Complete annual comprehensive foot examination',
+    ],
+    interventions: [
+      'HbA1c laboratory test every 3 months (quarterly) until at target, then every 6 months',
+      'Self-monitoring of blood glucose: FBS + 2-hour post-prandial, frequency per therapy type',
+      'Medical nutrition therapy (MNT) with registered dietitian every 6 weeks',
+      'Annual comprehensive metabolic panel, lipid panel, and urine albumin-to-creatinine ratio (UACR)',
+      'Annual dilated eye exam and monofilament foot exam',
+      'Diabetes self-management education and support (DSMES) enrollment',
+      'Quarterly clinical review: weight, BP, medication adherence, hypoglycemia assessment',
+    ],
+    notes: 'AI-generated plan based on ADA 2026 Standards of Care. Individualize HbA1c target (< 7.0% for most adults; < 8.0% if history of severe hypoglycemia, limited life expectancy, or extensive comorbidities). Recommend baseline HbA1c, lipid panel, eGFR, and UACR before initiation. Screen for depression (PHQ-9) and diabetes distress annually.',
+    duration: '6 months',
+  },
+  hypertension: {
+    name: 'Hypertension Management Plan',
+    specialty: 'Internal Medicine',
+    goals: [
+      'Achieve blood pressure < 130/80 mmHg consistently (per ACC/AHA)',
+      'Reduce dietary sodium to < 2,300 mg/day (ideally < 1,500 mg/day)',
+      'Engage in aerobic exercise ≥ 150 min/week (e.g., brisk walking)',
+      'Achieve ≥ 95% adherence to prescribed antihypertensive regimen',
+      'Achieve BMI < 25 kg/m² or ≥ 5% weight loss if overweight',
+      'Limit alcohol: ≤ 2 drinks/day (men), ≤ 1 drink/day (women)',
+    ],
+    interventions: [
+      'Home blood pressure monitoring: 2 readings morning and evening with log',
+      'Monthly in-clinic blood pressure and weight check for first 3 months',
+      'DASH diet counseling with registered dietitian',
+      'Lipid panel at baseline and annually (sooner if dyslipidemia identified)',
+      'Annual ECG, serum creatinine, eGFR, electrolytes, and urinalysis',
+      'Assess 10-year ASCVD risk (Pooled Cohort Equations) for statin consideration',
+      'Stress management referral if psychosocial stressors identified',
+    ],
+    notes: 'AI-generated based on ACC/AHA 2017 Hypertension Guidelines (reaffirmed 2024). Consider ambulatory blood pressure monitoring (ABPM) if white-coat or masked hypertension suspected. Target < 130/80 for most adults; may individualize for frail elderly. Screen for secondary causes if onset < 30 years, resistant hypertension, or acute worsening.',
+    duration: '6 months',
+  },
+  postop: {
+    name: 'Post-Surgical Recovery Plan',
+    specialty: 'General Surgery',
+    goals: [
+      'Achieve full or functional range of motion at surgical site per surgical team benchmarks',
+      'Pain level consistently < 3/10 on VAS by week 4 (minimize opioid use)',
+      'Ambulate unassisted for ≥ 20 minutes by week 6',
+      'Surgical wound fully healed with no signs of SSI (redness, warmth, purulence, dehiscence)',
+      'Resume activities of daily living (ADLs) independently by target date',
+      'Complete prescribed rehabilitation program (≥ 80% session attendance)',
+    ],
+    interventions: [
+      'Physical therapy 2–3x/week for 8 weeks (per surgical team protocol)',
+      'Surgical wound assessment at 1, 2, and 4 weeks post-op (sooner if signs of infection)',
+      'Multimodal analgesia: scheduled acetaminophen/NSAIDs, opioids PRN short-term with taper plan',
+      'Follow-up imaging (X-ray or MRI) at 6 weeks or as indicated by procedure type',
+      'DVT prophylaxis per Caprini score: pharmacologic (LMWH/DOACs) + mechanical (SCDs) as indicated',
+      'Nutrition counseling: adequate protein intake (1.2–1.5 g/kg/day) for wound healing',
+    ],
+    notes: 'AI-generated post-operative recovery framework. Customize rehabilitation milestones based on specific procedure type, patient baseline functional status, and surgeon preference. Monitor for SSI at each visit per CDC/NHSN criteria. Early mobilization is critical to reducing VTE risk and improving outcomes.',
+    duration: '3 months',
+  },
+  prenatal: {
+    name: 'Prenatal Care Plan',
+    specialty: 'OB-GYN',
+    goals: [
+      'Complete all trimester-appropriate screenings on schedule per ACOG guidelines',
+      'Maintain healthy weight gain per IOM guidelines for pre-pregnancy BMI category',
+      'Take prenatal vitamins daily: folic acid ≥ 400 mcg, iron 27 mg, DHA 200 mg',
+      'Attend childbirth and breastfeeding preparation course by 34 weeks',
+      'Maintain BP < 140/90 mmHg and glucose within normal ranges throughout pregnancy',
+      'Develop and discuss birth plan with provider by 36 weeks',
+    ],
+    interventions: [
+      'Prenatal visits: monthly until 28 weeks → biweekly 28–36 weeks → weekly 36 weeks to delivery',
+      'First trimester: dating ultrasound, NIPT or first-trimester screening, CBC, blood type/Rh/antibody, rubella/varicella immunity, STI panel, urinalysis',
+      'Glucose challenge test (GCT 50g) at 24–28 weeks; 3-hour GTT if abnormal',
+      'Anatomy ultrasound at 18–22 weeks',
+      'Tdap vaccination at 27–36 weeks gestation',
+      'Group B Streptococcus (GBS) screening at 36–37 weeks',
+      'Mental health screening (PHQ-9/Edinburgh) each trimester and postpartum',
+      'Iron and folate supplementation throughout pregnancy; reassess Hgb at 28 weeks',
+    ],
+    notes: 'AI-generated based on ACOG prenatal care guidelines. Flag high-risk factors (AMA ≥ 35, prior preeclampsia, GDM history, chronic HTN, BMI ≥ 30) for enhanced surveillance. Low-dose aspirin 81 mg starting 12–16 weeks if preeclampsia risk factors present. Rh-negative patients: RhoGAM at 28 weeks and postpartum if infant is Rh-positive.',
+    duration: '9 months',
+  },
+  asthma: {
+    name: 'Asthma Control Plan',
+    specialty: 'Pulmonology',
+    goals: [
+      'Peak expiratory flow consistently ≥ 80% personal best (green zone)',
+      'No nighttime awakenings due to asthma symptoms (well-controlled criterion)',
+      'Demonstrate correct inhaler/spacer technique at each visit',
+      'Use SABA rescue inhaler ≤ 2 days/week (excluding pre-exercise use)',
+      'No activity limitation due to asthma symptoms',
+      'Zero exacerbations requiring systemic corticosteroids, ED visits, or hospitalization',
+    ],
+    interventions: [
+      'Spirometry (FEV1, FEV1/FVC) at baseline and every 6–12 months to monitor control',
+      'Written asthma action plan: review and update at each visit (green/yellow/red zones)',
+      'Environmental trigger identification and avoidance counseling (allergens, irritants, exercise)',
+      'Inhaler technique assessment and re-education at every visit',
+      'Annual influenza vaccination; pneumococcal vaccination per ACIP schedule (PCV20 or PCV15+PPSV23)',
+      'Step therapy review at each visit: step up if uncontrolled × 2–4 weeks, step down if well-controlled × 3 months',
+      'Allergy testing (skin prick or specific IgE) if triggers unclear; consider allergen immunotherapy',
+    ],
+    notes: 'AI-generated based on GINA 2025 guidelines. Classify severity at initial visit; assess control level at every subsequent visit using validated tools (ACT or ACQ). For patients ≥ 12 years on Step 1–2, GINA recommends as-needed low-dose ICS-formoterol as preferred reliever. Consider biologic therapy referral (anti-IgE, anti-IL5, anti-IL4R) if uncontrolled on Step 4–5.',
+    duration: '6 months',
+  },
+  wellness: {
+    name: 'Preventive Wellness Plan',
+    specialty: 'Family Medicine',
+    goals: [
+      'Complete age-appropriate annual health examination',
+      'Update all recommended vaccinations per ACIP adult immunization schedule',
+      'Complete USPSTF-recommended cancer screenings for age and sex',
+      'Establish baseline cardiovascular risk profile (10-year ASCVD risk)',
+      'Achieve recommended physical activity level (≥ 150 min/week moderate aerobic)',
+      'Complete mental health and substance use screening',
+    ],
+    interventions: [
+      'Comprehensive metabolic panel, CBC, and lipid panel',
+      'ASCVD risk assessment: BP, lipid panel, fasting glucose or HbA1c, BMI',
+      'Cancer screening per USPSTF: colonoscopy starting age 45, low-dose CT lung (if eligible), cervical (age 21–65), breast (mammogram age 40+)',
+      'Mental health screening: PHQ-9 (depression), GAD-7 (anxiety), AUDIT-C (alcohol)',
+      'Body composition assessment, fitness evaluation, and fall risk (if age ≥ 65)',
+      'Lifestyle counseling: nutrition (Mediterranean/DASH), exercise prescription, sleep hygiene, stress management',
+    ],
+    notes: 'AI-generated preventive care plan based on USPSTF 2024 recommendations and ACIP immunization schedule. Adjust screening intervals and modalities based on individual risk factors, family history, and shared decision-making. Screen for prediabetes (BMI ≥ 25 or age ≥ 35). Discuss advance directives if age ≥ 50.',
+    duration: '12 months',
+  },
+  cardiac: {
+    name: 'Phase II Cardiac Rehabilitation Plan',
+    specialty: 'Cardiology',
+    goals: [
+      'Achieve target heart rate zone (60–80% HRmax) during supervised exercise',
+      'Complete 36 supervised exercise sessions (standard Phase II program)',
+      'Achieve LDL < 70 mg/dL (< 55 mg/dL if very high risk per ESC/EAS)',
+      'Complete smoking cessation program if current smoker',
+      'Achieve systolic BP < 130 mmHg during rest and appropriate BP response to exercise',
+      'Improve 6-minute walk distance by ≥ 50 meters from baseline',
+    ],
+    interventions: [
+      'ECG-monitored supervised exercise 3x/week for 12 weeks (progressive intensity)',
+      'Lipid panel at baseline, 6 weeks, and 12 weeks (assess statin efficacy)',
+      'Cardiac medication review and optimization each visit (beta-blockers, ACEi/ARB, antiplatelet, statin)',
+      'Medical nutrition therapy: Mediterranean or heart-healthy diet counseling',
+      'Psychosocial assessment: screen for depression (PHQ-9) and anxiety at intake and discharge',
+      'Smoking cessation pharmacotherapy and counseling referral if applicable',
+      'Patient education: symptom recognition, medication adherence, emergency action plan',
+    ],
+    notes: 'AI-generated cardiac rehab plan per AHA/AACVPR 2024 guidelines. Eligible diagnoses: post-MI, post-CABG, stable angina, post-PCI, HFrEF (NYHA II–III), valve repair/replacement. Pre-participation assessment must include symptom-limited exercise test. Refer to Phase III (maintenance) upon program completion.',
+    duration: '3 months',
+  },
+  ckd: {
+    name: 'Chronic Kidney Disease Management Plan',
+    specialty: 'Nephrology',
+    goals: [
+      'Maintain eGFR stability (avoid decline > 5 mL/min/1.73 m²/year — indicates rapid progression)',
+      'Achieve BP < 130/80 mmHg (< 120/80 if proteinuria and tolerated)',
+      'Reduce proteinuria: target UACR reduction ≥ 30% from baseline or maintain UACR < 300 mg/g',
+      'Follow renal diet: protein 0.8 g/kg/day for CKD G3–G5, sodium < 2,000 mg/day',
+      'Avoid nephrotoxic medications (NSAIDs, aminoglycosides, IV contrast without precautions)',
+      'Maintain hemoglobin 10–11.5 g/dL if CKD-associated anemia present',
+    ],
+    interventions: [
+      'Quarterly labs: BMP (creatinine, BUN, electrolytes), eGFR, UACR, phosphorus, intact PTH',
+      'Monthly BP monitoring with home BP log',
+      'ACEi or ARB optimization for proteinuria reduction (monitor K+ and creatinine after initiation/titration)',
+      'SGLT2 inhibitor consideration if eGFR ≥ 20 mL/min/1.73 m² and UACR ≥ 200 mg/g (KDIGO 2024)',
+      'Renal diet counseling with renal dietitian (protein, sodium, potassium, phosphorus management)',
+      'Medication review each visit: dose-adjust for eGFR, discontinue nephrotoxic agents',
+      'Anemia workup if Hgb < 10 g/dL: reticulocyte count, iron studies (ferritin, TSAT), consider ESA referral',
+      'Nephrology referral if eGFR < 30, rapid decline, or persistent hyperkalemia/acidosis',
+    ],
+    notes: 'AI-generated based on KDIGO 2024 CKD guidelines. Stage CKD using both eGFR (G1–G5) and albuminuria (A1–A3) for risk stratification. Finerenone may be considered for T2DM with CKD (FIDELIO/FIGARO trials). Prepare for RRT discussion if eGFR trending toward < 15 mL/min/1.73 m². Vaccinate against hepatitis B, influenza, pneumococcal, and COVID-19.',
+    duration: '6 months',
+  },
+};
+
+const CP_CONDITION_OPTIONS = [
+  { key: 'diabetes', label: 'Type 2 Diabetes', icon: '🩸' },
+  { key: 'hypertension', label: 'Hypertension', icon: '❤️' },
+  { key: 'cardiac', label: 'Cardiac Rehab', icon: '🫀' },
+  { key: 'postop', label: 'Post-Surgical', icon: '🏥' },
+  { key: 'prenatal', label: 'Prenatal Care', icon: '🤰' },
+  { key: 'asthma', label: 'Asthma', icon: '🫁' },
+  { key: 'ckd', label: 'CKD', icon: '🫘' },
+  { key: 'wellness', label: 'Wellness', icon: '✅' },
+];
+
+const CP_GENDER_OPTIONS = ['Male', 'Female', 'Non-binary'];
+const CP_AGE_OPTIONS = ['Pediatric (0-17)', 'Young Adult (18-35)', 'Adult (36-55)', 'Older Adult (56-70)', 'Geriatric (70+)'];
+const CP_SEVERITY_OPTIONS = ['Mild', 'Moderate', 'Severe'];
+const CP_COMORBIDITY_OPTIONS = ['Diabetes', 'Hypertension', 'Obesity', 'CKD', 'COPD', 'Heart Failure', 'Depression'];
 
 const styles: Record<string, React.CSSProperties> = {
   root: { display: 'flex', flexDirection: 'column', gap: 20, minHeight: '100%', maxWidth: 960, margin: '0 auto', width: '100%' },
@@ -207,19 +436,22 @@ const styles: Record<string, React.CSSProperties> = {
   severityBadgeDefault: { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' as const, background: '#6b7280', color: 'white' },
   actionBar: {
     display: 'flex',
-    gap: 12,
+    flexDirection: 'column' as const,
+    gap: 10,
     padding: '18px 0',
-    flexWrap: 'wrap',
   },
+  actionRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 10,
+  } as React.CSSProperties,
   btnPrimary: {
-    flex: 1,
-    minWidth: 120,
     padding: '14px 18px',
     borderRadius: 12,
     border: 'none',
     background: 'var(--color-primary)',
     color: 'white',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 600,
     cursor: 'pointer',
     display: 'flex',
@@ -233,11 +465,12 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid var(--color-border)',
     background: 'var(--color-surface)',
     color: 'var(--color-text)',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 600,
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
 };
@@ -275,6 +508,24 @@ export const PatientEncounter = () => {
   const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' && window.innerWidth >= 1024);
   const [soapForm, setSoapForm] = useState<Partial<ClinicalNote>>({});
   const [encounterElapsed, setEncounterElapsed] = useState(0);
+
+  // Care plan state
+  const carePlansEnabled = tenant.features.carePlans ?? false;
+  const [cpCondition, setCpCondition] = useState<string>('');
+  const [cpGender, setCpGender] = useState<string>('');
+  const [cpAge, setCpAge] = useState<string>('');
+  const [cpSeverity, setCpSeverity] = useState<string>('');
+  const [cpComorbidities, setCpComorbidities] = useState<string[]>([]);
+  const [cpAiProcessing, setCpAiProcessing] = useState(false);
+  const [cpAiGenerated, setCpAiGenerated] = useState(false);
+  const [cpGoals, setCpGoals] = useState<string[]>([]);
+  const [cpInterventions, setCpInterventions] = useState<string[]>([]);
+  const [cpNotes, setCpNotes] = useState('');
+  const [cpPlanName, setCpPlanName] = useState('');
+  const [cpSpecialty, setCpSpecialty] = useState('');
+  const [cpDuration, setCpDuration] = useState('');
+  const [cpNewGoal, setCpNewGoal] = useState('');
+  const [cpNewIntervention, setCpNewIntervention] = useState('');
 
   // AI transcriber state
   const [transcriptLines, setTranscriptLines] = useState<typeof TRANSCRIPT_LINES>([]);
@@ -607,7 +858,10 @@ export const PatientEncounter = () => {
   }
 
   // Resolve effective tab early (before tabList JSX is built)
-  const effectiveTab: TabKey = activeTab === 'orders' && !labsEnabled ? 'soap' : activeTab;
+  const effectiveTab: TabKey =
+    (activeTab === 'orders' && !labsEnabled) ? 'soap' :
+    (activeTab === 'careplan' && !carePlansEnabled) ? 'soap' :
+    activeTab;
 
   const tabs: { key: TabKey; label: string; icon: ReactNode }[] = [
     { key: 'soap', label: 'SOAP Notes', icon: <FileSignature size={14} /> },
@@ -615,6 +869,7 @@ export const PatientEncounter = () => {
     ...(hasCDSS ? [{ key: 'cdss' as TabKey, label: 'CDSS Alerts', icon: <AlertTriangle size={14} /> }] : []),
     ...(labsEnabled ? [{ key: 'orders' as TabKey, label: 'Orders', icon: <ClipboardList size={14} /> }] : []),
     { key: 'prescriptions', label: 'Prescriptions', icon: <Pill size={14} /> },
+    ...(carePlansEnabled ? [{ key: 'careplan' as TabKey, label: 'Care Plan', icon: <ClipboardPlus size={14} /> }] : []),
     { key: 'chart', label: 'Patient Chart', icon: <User size={14} /> },
   ];
 
@@ -1234,20 +1489,31 @@ export const PatientEncounter = () => {
         }
       }
 
-      // Common drug-drug interaction checks
-      const interactions: Record<string, { with: string[]; msg: string; rec: string }> = {
-        warfarin: { with: ['aspirin', 'ibuprofen', 'naproxen', 'clopidogrel'], msg: 'Increased bleeding risk', rec: 'Monitor INR closely. Consider gastroprotection.' },
-        metformin: { with: ['contrast'], msg: 'Lactic acidosis risk with contrast dye', rec: 'Hold Metformin 48h before/after contrast.' },
-        tramadol: { with: ['alprazolam', 'diazepam', 'lorazepam'], msg: 'CNS/respiratory depression risk', rec: 'Avoid combination. If necessary, use lowest doses and monitor closely.' },
-        amlodipine: { with: ['simvastatin'], msg: 'Increased statin toxicity risk', rec: 'Limit simvastatin to 20mg/day when combined with Amlodipine.' },
+      // Common drug-drug interaction checks (evidence-based, clinically validated)
+      const interactions: Record<string, { with: string[]; msg: string; sev: string; rec: string }> = {
+        warfarin: { with: ['aspirin', 'ibuprofen', 'naproxen', 'clopidogrel', 'celecoxib'], sev: 'major', msg: 'Increased bleeding risk — additive anticoagulant/antiplatelet effects', rec: 'Monitor INR closely (within 3–5 days). Consider PPI gastroprotection. If NSAID required, use lowest dose for shortest duration.' },
+        metformin: { with: ['contrast'], sev: 'major', msg: 'Risk of contrast-induced nephropathy leading to metformin accumulation and lactic acidosis', rec: 'Hold Metformin 48h before and after iodinated contrast procedures. Check renal function (eGFR) before resuming.' },
+        tramadol: { with: ['alprazolam', 'diazepam', 'lorazepam', 'midazolam', 'zolpidem'], sev: 'major', msg: 'CNS and respiratory depression risk (FDA Black Box Warning: opioid + benzodiazepine)', rec: 'Avoid combination if possible. If clinically necessary, use lowest effective doses and shortest duration. Monitor respiratory status.' },
+        amlodipine: { with: ['simvastatin'], sev: 'major', msg: 'CYP3A4 inhibition increases simvastatin exposure — risk of rhabdomyolysis', rec: 'FDA: limit simvastatin to max 20 mg/day when co-administered with Amlodipine. Consider switching to atorvastatin or rosuvastatin.' },
+        // Serotonin syndrome risk
+        tramadol_ssri: { with: ['sertraline', 'fluoxetine', 'paroxetine', 'escitalopram', 'citalopram', 'venlafaxine', 'duloxetine'], sev: 'major', msg: 'Serotonin syndrome risk — tramadol has serotonergic activity', rec: 'Monitor for agitation, hyperthermia, tachycardia, hyperreflexia, clonus. Consider alternative analgesic without serotonergic activity.' },
+        // Potassium-sparing combinations
+        spironolactone: { with: ['lisinopril', 'enalapril', 'ramipril', 'losartan', 'valsartan', 'irbesartan'], sev: 'moderate', msg: 'Hyperkalemia risk — both agents increase serum potassium', rec: 'Monitor serum potassium and creatinine within 1 week of initiation and regularly thereafter. Avoid K+ supplements unless documented hypokalemia.' },
+        // QT prolongation
+        azithromycin: { with: ['amiodarone', 'sotalol', 'haloperidol', 'ondansetron', 'methadone'], sev: 'major', msg: 'Additive QTc prolongation risk — torsades de pointes', rec: 'Obtain baseline ECG. Monitor QTc. Avoid combination if QTc > 500 ms. Correct electrolyte abnormalities (K+, Mg2+).' },
+        // Digoxin toxicity
+        digoxin: { with: ['amiodarone', 'verapamil', 'clarithromycin', 'erythromycin'], sev: 'major', msg: 'Increased digoxin levels — toxicity risk (nausea, visual changes, arrhythmias)', rec: 'Reduce digoxin dose by 50% when adding interacting drug. Monitor digoxin levels (target 0.5–0.9 ng/mL for HF).' },
       };
-      for (const [drug, rule] of Object.entries(interactions)) {
+      for (const [drugKey, rule] of Object.entries(interactions)) {
+        // Resolve the actual drug name from the key (e.g., "tramadol_ssri" → "tramadol")
+        const drug = drugKey.split('_')[0];
+        const severity = (rule as { sev: string }).sev === 'moderate' ? 'moderate' : 'major';
         if (medNameLower.includes(drug)) {
           const conflicting = existingMeds.filter(m => rule.with.some(w => m.includes(w)));
           if (conflicting.length > 0) {
             addCdssAlert({
               type: 'drug_interaction',
-              severity: 'major',
+              severity,
               title: 'Drug-Drug Interaction',
               message: `${medName} + ${conflicting.join(', ')}: ${rule.msg}.`,
               recommendation: rule.rec,
@@ -1262,7 +1528,7 @@ export const PatientEncounter = () => {
         if (rule.with.some(w => medNameLower.includes(w)) && existingMeds.some(m => m.includes(drug))) {
           addCdssAlert({
             type: 'drug_interaction',
-            severity: 'major',
+            severity,
             title: 'Drug-Drug Interaction',
             message: `${medName} interacts with patient's existing ${drug} prescription: ${rule.msg}.`,
             recommendation: rule.rec,
@@ -1689,34 +1955,522 @@ export const PatientEncounter = () => {
     </div>
   );
 
+  /* ══════════════════════════════════════════
+     Care Plan Panel (in-encounter)
+     ══════════════════════════════════════════ */
+  const handleCpGenerate = () => {
+    if (!cpCondition) {
+      showToast('Select a condition to generate a care plan', 'info');
+      return;
+    }
+    setCpAiProcessing(true);
+    setTimeout(() => {
+      const tpl = CP_AI_TEMPLATES[cpCondition];
+      if (!tpl) { setCpAiProcessing(false); return; }
+
+      // Base goals and interventions from template
+      let goals = [...tpl.goals];
+      let interventions = [...tpl.interventions];
+      let notesLines = [tpl.notes];
+
+      // Refine by age bracket
+      if (cpAge.includes('Geriatric') || cpAge.includes('Older')) {
+        goals.push('Annual fall risk assessment (Timed Up-and-Go, Morse Fall Scale) with prevention plan');
+        interventions.push('Comprehensive geriatric assessment including frailty index, cognitive screening (MMSE/MoCA), and polypharmacy review');
+        interventions.push('Medication reconciliation: deprescribe high-risk medications (Beers Criteria) when clinically appropriate');
+        notesLines.push('Geriatric considerations: individualize treatment targets to prioritize functional status, fall prevention, and quality of life over aggressive numerical targets. Avoid hypoglycemia and hypotension.');
+      }
+      if (cpAge.includes('Young Adult')) {
+        notesLines.push('Young adult: ensure transition of care protocols if transitioning from pediatric services. Address lifestyle factors, contraception, and mental health proactively.');
+      }
+      if (cpAge.includes('Pediatric')) {
+        goals.push('Monitor growth (height, weight, BMI percentile) and developmental milestones per AAP schedule');
+        interventions.push('All medication doses verified per weight-based pediatric dosing guidelines');
+        interventions.push('Caregiver education and shared decision-making with parent/guardian at each visit');
+        notesLines.push('Pediatric considerations applied: coordinate with parents/guardians, use age-appropriate validated tools for assessment, and ensure immunization schedule is current per ACIP.');
+      }
+
+      // Refine by gender
+      if (cpGender === 'Female' && cpCondition !== 'prenatal') {
+        interventions.push('Screen for pregnancy/reproductive planning before initiating teratogenic medications (ACEi, ARBs, statins, warfarin)');
+        if (cpAge.includes('Adult') || cpAge.includes('Young')) {
+          interventions.push('Cervical cancer screening per USPSTF schedule; breast cancer screening (mammogram) starting age 40');
+        }
+      }
+      if (cpGender === 'Male') {
+        if (cpAge.includes('Older') || cpAge.includes('Geriatric')) {
+          interventions.push('Prostate health discussion and shared decision-making for PSA screening (age 55–69 per USPSTF)');
+        }
+      }
+
+      // Refine by severity
+      if (cpSeverity === 'Severe') {
+        goals.push('Specialist evaluation and co-management within 2 weeks of plan initiation');
+        interventions.push('Escalated monitoring: weekly clinical check-ins for first 4 weeks, then biweekly');
+        interventions.push('Consider inpatient or intensive outpatient management if not responding to initial therapy');
+        notesLines.push('Severity: Severe — use more aggressive therapeutic targets, consider combination therapy early, and establish clear escalation criteria for hospitalization or subspecialist referral.');
+      } else if (cpSeverity === 'Moderate') {
+        interventions.push('Clinical review every 2–4 weeks until condition stabilizes');
+        notesLines.push('Severity: Moderate — standard pharmacologic and lifestyle interventions; reassess in 4–6 weeks and step up if insufficient response.');
+      } else if (cpSeverity === 'Mild') {
+        notesLines.push('Severity: Mild — lifestyle modifications (diet, exercise, stress reduction) are first-line. Reassess in 3 months before escalating to pharmacotherapy unless otherwise indicated.');
+      }
+
+      // Refine by comorbidities
+      if (cpComorbidities.includes('Diabetes') && cpCondition !== 'diabetes') {
+        interventions.push('HbA1c monitoring every 3 months until at target, then every 6 months');
+        goals.push('Maintain HbA1c < 7.0% (individualize based on age, hypoglycemia risk, and comorbidities)');
+        notesLines.push('Diabetes comorbidity: screen for diabetic nephropathy (annual UACR), retinopathy (annual dilated eye exam), and neuropathy (annual foot exam). Adjust medication choices to favor agents with cardiorenal benefits (SGLT2i, GLP-1 RA) where applicable.');
+      }
+      if (cpComorbidities.includes('Hypertension') && cpCondition !== 'hypertension') {
+        interventions.push('Home blood pressure monitoring with morning/evening log; in-clinic BP check at each visit');
+        goals.push('Maintain BP < 130/80 mmHg consistently');
+      }
+      if (cpComorbidities.includes('Obesity')) {
+        interventions.push('Weight management: medical nutrition therapy with dietitian, consider GLP-1 RA or bariatric referral if BMI ≥ 40 or ≥ 35 with comorbidities');
+        goals.push('Achieve ≥ 5–10% total body weight reduction within 6 months');
+      }
+      if (cpComorbidities.includes('CKD') && cpCondition !== 'ckd') {
+        interventions.push('Quarterly renal function monitoring: creatinine, eGFR, UACR, electrolytes');
+        interventions.push('Dose-adjust all renally cleared medications per current eGFR');
+        notesLines.push('CKD comorbidity: avoid NSAIDs and nephrotoxic agents. Prefer ACEi/ARB for renoprotection. Consider SGLT2i if eGFR ≥ 20 mL/min/1.73 m².');
+      }
+      if (cpComorbidities.includes('COPD')) {
+        interventions.push('Pulmonary function tests (spirometry) at baseline and annually');
+        interventions.push('Annual influenza and pneumococcal vaccination per ACIP schedule');
+        goals.push('Maintain SpO2 ≥ 88% at rest; FEV1 stability per GOLD classification');
+        notesLines.push('COPD comorbidity: avoid non-selective beta-blockers (use cardioselective if indicated). Ensure rescue inhaler available. Screen for osteoporosis if chronic corticosteroid use.');
+      }
+      if (cpComorbidities.includes('Heart Failure')) {
+        interventions.push('Daily weight monitoring; report gain > 2 lbs/day or > 5 lbs/week to care team');
+        interventions.push('Optimize GDMT: ACEi/ARB/ARNI, beta-blocker, MRA, SGLT2i as tolerated');
+        goals.push('Achieve euvolemic status with stable weight and no peripheral edema');
+        goals.push('Maintain sodium restriction < 2,000 mg/day and fluid restriction if indicated');
+        notesLines.push('Heart failure comorbidity: classify per NYHA functional class. Avoid NSAIDs, thiazolidinediones, and non-DHP CCBs (diltiazem/verapamil) in HFrEF. Referral for CRT/ICD evaluation if EF ≤ 35%.');
+      }
+      if (cpComorbidities.includes('Depression')) {
+        interventions.push('PHQ-9 screening at each clinical visit; consider GAD-7 for comorbid anxiety');
+        interventions.push('Behavioral health referral for psychotherapy (CBT) if PHQ-9 ≥ 10');
+        goals.push('Achieve ≥ 50% reduction in PHQ-9 score within 3 months of treatment initiation');
+        notesLines.push('Depression comorbidity: untreated depression impairs self-management adherence. Coordinate with behavioral health. Avoid medications that may worsen depressive symptoms.');
+      }
+
+      setCpPlanName(tpl.name);
+      setCpSpecialty(tpl.specialty);
+      setCpDuration(tpl.duration);
+      setCpGoals(goals);
+      setCpInterventions(interventions);
+      setCpNotes(notesLines.join('\n'));
+      setCpAiProcessing(false);
+      setCpAiGenerated(true);
+      showToast('AI care plan generated — review and customize before saving', 'success');
+    }, 2500);
+  };
+
+  const handleCpReset = () => {
+    setCpCondition('');
+    setCpGender('');
+    setCpAge('');
+    setCpSeverity('');
+    setCpComorbidities([]);
+    setCpAiGenerated(false);
+    setCpGoals([]);
+    setCpInterventions([]);
+    setCpNotes('');
+    setCpPlanName('');
+    setCpSpecialty('');
+    setCpDuration('');
+    setCpNewGoal('');
+    setCpNewIntervention('');
+  };
+
+  const handleCpSave = () => {
+    if (!cpPlanName || cpGoals.length === 0) {
+      showToast('Plan must have a name and at least one goal', 'info');
+      return;
+    }
+    showToast(`Care Plan "${cpPlanName}" created for ${currentPatient?.patientName ?? 'patient'}`, 'success');
+    handleCpReset();
+  };
+
+  const toggleCpComorbidity = (c: string) => {
+    setCpComorbidities(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
+  };
+
+  const cpPillStyle = (active: boolean): React.CSSProperties => ({
+    padding: '7px 14px',
+    borderRadius: 20,
+    border: active ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+    background: active ? 'var(--color-primary-light, rgba(59,130,246,0.08))' : 'var(--color-surface)',
+    color: active ? 'var(--color-primary)' : 'var(--color-text)',
+    fontSize: 12,
+    fontWeight: active ? 700 : 500,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    transition: 'all 0.15s ease',
+    whiteSpace: 'nowrap',
+  });
+
+  const cpSectionTitle: React.CSSProperties = {
+    fontSize: 12, fontWeight: 700, color: 'var(--color-text-muted)',
+    textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6,
+  };
+
+  const renderCarePlanPanel = () => (
+    <div style={styles.panel}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        {/* AI Assistant Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '12px 16px', borderRadius: 10,
+          background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(59,130,246,0.06))',
+          border: '1px solid rgba(139,92,246,0.15)',
+        }}>
+          <Bot size={20} style={{ color: '#7c3aed' }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#6d28d9' }}>AI Care Plan Assistant</div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+              Select a condition and refine with patient context for tailored suggestions
+            </div>
+          </div>
+          {cpAiGenerated && (
+            <button
+              onClick={handleCpReset}
+              style={{
+                ...styles.btnSecondary, padding: '6px 12px', fontSize: 11,
+                borderColor: 'rgba(139,92,246,0.3)', color: '#7c3aed',
+              }}
+            >
+              <RefreshCw size={12} /> Reset
+            </button>
+          )}
+        </div>
+
+        {/* Condition Selection */}
+        <div>
+          <div style={cpSectionTitle}><Target size={12} /> Condition</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {CP_CONDITION_OPTIONS.map(opt => (
+              <button
+                key={opt.key}
+                style={cpPillStyle(cpCondition === opt.key)}
+                onClick={() => { setCpCondition(cpCondition === opt.key ? '' : opt.key); setCpAiGenerated(false); }}
+              >
+                <span>{opt.icon}</span> {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Refinement Filters */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16,
+          padding: '14px 16px', background: 'var(--color-background)', borderRadius: 10,
+          border: '1px solid var(--color-border)',
+        }}>
+          {/* Gender */}
+          <div>
+            <div style={cpSectionTitle}><User size={12} /> Gender</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {CP_GENDER_OPTIONS.map(g => (
+                <button key={g} style={cpPillStyle(cpGender === g)} onClick={() => setCpGender(cpGender === g ? '' : g)}>
+                  {g}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Age Bracket */}
+          <div>
+            <div style={cpSectionTitle}><Clock size={12} /> Age Bracket</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {CP_AGE_OPTIONS.map(a => (
+                <button key={a} style={cpPillStyle(cpAge === a)} onClick={() => setCpAge(cpAge === a ? '' : a)}>
+                  {a}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Severity */}
+          <div>
+            <div style={cpSectionTitle}><AlertTriangle size={12} /> Severity</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {CP_SEVERITY_OPTIONS.map(sv => (
+                <button key={sv} style={cpPillStyle(cpSeverity === sv)} onClick={() => setCpSeverity(cpSeverity === sv ? '' : sv)}>
+                  {sv}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Comorbidities */}
+          <div>
+            <div style={cpSectionTitle}><Heart size={12} /> Comorbidities</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {CP_COMORBIDITY_OPTIONS.filter(c => c.toLowerCase() !== cpCondition).map(c => (
+                <button key={c} style={cpPillStyle(cpComorbidities.includes(c))} onClick={() => toggleCpComorbidity(c)}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Generate Button */}
+        <button
+          style={{
+            ...styles.btnPrimary, width: '100%',
+            background: 'linear-gradient(135deg, #7c3aed, var(--color-primary))',
+            opacity: (!cpCondition || cpAiProcessing) ? 0.5 : 1,
+            pointerEvents: (!cpCondition || cpAiProcessing) ? 'none' : 'auto',
+          }}
+          onClick={handleCpGenerate}
+          disabled={!cpCondition || cpAiProcessing}
+        >
+          {cpAiProcessing ? (
+            <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Generating Care Plan...</>
+          ) : (
+            <><Sparkles size={16} /> Generate Care Plan</>
+          )}
+        </button>
+
+        {/* AI Processing Indicator */}
+        {cpAiProcessing && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '12px 16px', borderRadius: 8,
+            background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)',
+          }}>
+            <Loader2 size={18} style={{ color: '#7c3aed', animation: 'spin 1s linear infinite' }} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#7c3aed' }}>AI analyzing patient context...</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+                Building personalized care plan for {cpCondition ? CP_CONDITION_OPTIONS.find(c => c.key === cpCondition)?.label : 'condition'}
+                {cpSeverity && ` (${cpSeverity})`}
+                {cpAge && ` — ${cpAge}`}
+                {cpComorbidities.length > 0 && ` + ${cpComorbidities.length} comorbidities`}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI Generated Results */}
+        {cpAiGenerated && (
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 16,
+            borderLeft: '3px solid #8b5cf6',
+            paddingLeft: 16,
+          }}>
+            {/* AI badge */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '8px 12px', borderRadius: 8,
+              background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(99,102,241,0.06))',
+              border: '1px solid rgba(139,92,246,0.15)',
+              fontSize: 12, color: '#6d28d9', fontWeight: 600,
+            }}>
+              <Sparkles size={14} /> AI-generated care plan — edit fields below before saving
+            </div>
+
+            {/* Plan Name & Specialty */}
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ flex: 2, minWidth: 200 }}>
+                <div style={cpSectionTitle}>Plan Name</div>
+                <input
+                  style={{ ...styles.textarea, minHeight: 40 }}
+                  value={cpPlanName}
+                  onChange={e => setCpPlanName(e.target.value)}
+                  placeholder="Plan name..."
+                />
+              </div>
+              <div style={{ flex: 1, minWidth: 120 }}>
+                <div style={cpSectionTitle}>Specialty</div>
+                <input
+                  style={{ ...styles.textarea, minHeight: 40 }}
+                  value={cpSpecialty}
+                  onChange={e => setCpSpecialty(e.target.value)}
+                  placeholder="Specialty..."
+                />
+              </div>
+              <div style={{ flex: 1, minWidth: 100 }}>
+                <div style={cpSectionTitle}>Duration</div>
+                <input
+                  style={{ ...styles.textarea, minHeight: 40 }}
+                  value={cpDuration}
+                  onChange={e => setCpDuration(e.target.value)}
+                  placeholder="e.g. 6 months"
+                />
+              </div>
+            </div>
+
+            {/* Goals */}
+            <div>
+              <div style={cpSectionTitle}><Target size={12} /> Goals ({cpGoals.length})</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {cpGoals.map((g, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '8px 12px', borderRadius: 8,
+                    background: 'var(--color-background)', border: '1px solid var(--color-border)',
+                    fontSize: 13,
+                  }}>
+                    <CheckCircle2 size={14} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
+                    <input
+                      style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, color: 'var(--color-text)', outline: 'none', fontFamily: 'inherit' }}
+                      value={g}
+                      onChange={e => { const n = [...cpGoals]; n[i] = e.target.value; setCpGoals(n); }}
+                    />
+                    <button
+                      onClick={() => setCpGoals(cpGoals.filter((_, idx) => idx !== i))}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--color-text-muted)' }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    style={{ ...styles.textarea, minHeight: 36, flex: 1, fontSize: 12 }}
+                    value={cpNewGoal}
+                    onChange={e => setCpNewGoal(e.target.value)}
+                    placeholder="Add a goal..."
+                    onKeyDown={e => { if (e.key === 'Enter' && cpNewGoal.trim()) { setCpGoals([...cpGoals, cpNewGoal.trim()]); setCpNewGoal(''); } }}
+                  />
+                  <button
+                    style={{ ...styles.btnSecondary, padding: '6px 12px', fontSize: 12 }}
+                    onClick={() => { if (cpNewGoal.trim()) { setCpGoals([...cpGoals, cpNewGoal.trim()]); setCpNewGoal(''); } }}
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Interventions */}
+            <div>
+              <div style={cpSectionTitle}><Activity size={12} /> Interventions ({cpInterventions.length})</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {cpInterventions.map((iv, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '8px 12px', borderRadius: 8,
+                    background: 'var(--color-background)', border: '1px solid var(--color-border)',
+                    fontSize: 13,
+                  }}>
+                    <ClipboardList size={14} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                    <input
+                      style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 13, color: 'var(--color-text)', outline: 'none', fontFamily: 'inherit' }}
+                      value={iv}
+                      onChange={e => { const n = [...cpInterventions]; n[i] = e.target.value; setCpInterventions(n); }}
+                    />
+                    <button
+                      onClick={() => setCpInterventions(cpInterventions.filter((_, idx) => idx !== i))}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--color-text-muted)' }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    style={{ ...styles.textarea, minHeight: 36, flex: 1, fontSize: 12 }}
+                    value={cpNewIntervention}
+                    onChange={e => setCpNewIntervention(e.target.value)}
+                    placeholder="Add an intervention..."
+                    onKeyDown={e => { if (e.key === 'Enter' && cpNewIntervention.trim()) { setCpInterventions([...cpInterventions, cpNewIntervention.trim()]); setCpNewIntervention(''); } }}
+                  />
+                  <button
+                    style={{ ...styles.btnSecondary, padding: '6px 12px', fontSize: 12 }}
+                    onClick={() => { if (cpNewIntervention.trim()) { setCpInterventions([...cpInterventions, cpNewIntervention.trim()]); setCpNewIntervention(''); } }}
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div>
+              <div style={cpSectionTitle}><FileSignature size={12} /> AI Notes & Recommendations</div>
+              <textarea
+                style={{ ...styles.textarea, minHeight: 80, fontSize: 12, borderLeft: '3px solid #8b5cf6', background: 'rgba(139,92,246,0.02)' }}
+                value={cpNotes}
+                onChange={e => setCpNotes(e.target.value)}
+                placeholder="Clinical notes..."
+              />
+            </div>
+
+            {/* Save Actions */}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button style={{ ...styles.btnPrimary, flex: 1 }} onClick={handleCpSave}>
+                <Save size={16} /> Create Care Plan
+              </button>
+              <button style={{ ...styles.btnSecondary }} onClick={handleCpReset}>
+                <X size={16} /> Discard
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Empty state when no AI content yet */}
+        {!cpAiGenerated && !cpAiProcessing && (
+          <div style={{
+            textAlign: 'center', padding: '20px 16px',
+            color: 'var(--color-text-muted)', fontSize: 13,
+          }}>
+            <ClipboardPlus size={32} style={{ marginBottom: 8, opacity: 0.3 }} />
+            <div>Select a condition and click "Generate" to create an AI-assisted care plan</div>
+            <div style={{ fontSize: 11, marginTop: 4 }}>Refinement filters help personalize the plan for this patient</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   const contentByTab: Record<TabKey, () => ReactNode> = {
     soap: renderSoapPanel,
     transcriber: renderTranscriberPanel,
     cdss: renderCdssPanel,
     orders: renderOrdersPanel,
     prescriptions: renderPrescriptionsPanel,
+    careplan: renderCarePlanPanel,
     chart: renderChartPanel,
   };
 
   const actionBar = (
     <div style={styles.actionBar}>
-      <button style={styles.btnPrimary} onClick={handleSignAndClose}>
-        <FileSignature size={16} /> Sign & Close
-      </button>
-      <button style={styles.btnSecondary} onClick={handleSaveDraft}>
-        <Save size={16} /> Save Draft
-      </button>
-      <button style={styles.btnSecondary} onClick={handleReferPatient}>
-        <Phone size={16} /> Refer Patient
-      </button>
-      {labsEnabled && (
-        <button style={styles.btnSecondary} onClick={() => setActiveTab('orders')}>
-          <ClipboardList size={16} /> Order Labs
+      {/* Primary actions — always full-width row */}
+      <div style={styles.actionRow}>
+        <button style={styles.btnPrimary} onClick={handleSignAndClose}>
+          <FileSignature size={16} /> Sign & Close
         </button>
-      )}
-      <button style={styles.btnSecondary} onClick={() => setActiveTab('prescriptions')}>
-        <Pill size={16} /> e-Prescribe
-      </button>
+        <button style={styles.btnSecondary} onClick={handleSaveDraft}>
+          <Save size={16} /> Save Draft
+        </button>
+      </div>
+      {/* Secondary actions — 2-col auto-flow grid */}
+      <div style={styles.actionRow}>
+        <button style={styles.btnSecondary} onClick={handleReferPatient}>
+          <Phone size={16} /> Refer Patient
+        </button>
+        {labsEnabled && (
+          <button style={styles.btnSecondary} onClick={() => setActiveTab('orders')}>
+            <ClipboardList size={16} /> Order Labs
+          </button>
+        )}
+        <button style={styles.btnSecondary} onClick={() => setActiveTab('prescriptions')}>
+          <Pill size={16} /> e-Prescribe
+        </button>
+        {carePlansEnabled && (
+          <button style={styles.btnSecondary} onClick={() => setActiveTab('careplan')}>
+            <ClipboardPlus size={16} /> Care Plan
+          </button>
+        )}
+      </div>
     </div>
   );
 
@@ -1848,6 +2602,11 @@ export const PatientEncounter = () => {
                 <button style={styles.btnSecondary} onClick={() => setActiveTab('prescriptions')}>
                   <Pill size={16} /> e-Prescribe
                 </button>
+                {carePlansEnabled && (
+                  <button style={styles.btnSecondary} onClick={() => setActiveTab('careplan')}>
+                    <ClipboardPlus size={16} /> Care Plan
+                  </button>
+                )}
               </div>
             </div>
           </div>

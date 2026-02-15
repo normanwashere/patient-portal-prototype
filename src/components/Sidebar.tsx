@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     Home, FileText, CreditCard, Stethoscope, Users,
     Clock, Activity, TestTube, Pill, Syringe,
-    Heart, Receipt, Video, Star, Calendar,
+    Heart, Receipt, Video, Star, Calendar, ClipboardList,
     ChevronDown, ChevronRight, LogOut, Bell, User, Building2, FlaskConical
 } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
@@ -142,6 +142,9 @@ export const Sidebar: React.FC = () => {
                     <NavItem to="/results" icon={TestTube} label="Lab Results" badge={newLabsCount} />
                     <NavItem to="/medications" icon={Pill} label="Medications" badge={newMedsCount} />
                     <NavItem to="/immunization" icon={Syringe} label="Immunizations" badge={newImmunizationsCount} />
+                    {tenant.features.carePlans && (
+                        <NavItem to="/health/care-plans" icon={ClipboardList} label="Care Plans" badge={2} />
+                    )}
                 </NavGroup>
 
                 {/* 3. Coverage Pillar - visible if HMO or PhilHealth enabled */}

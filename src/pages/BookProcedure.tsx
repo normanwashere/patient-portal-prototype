@@ -9,7 +9,8 @@ import {
     Clock,
     FlaskConical,
     Stethoscope,
-    Activity
+    Activity,
+    Home,
 } from 'lucide-react';
 import { BackButton } from '../components/Common/BackButton';
 import { useToast } from '../context/ToastContext';
@@ -106,6 +107,18 @@ export const BookProcedure: React.FC = () => {
             </header>
 
             <main className="booking-body">
+                {/* HomeCare cross-link — shown on step 1 only */}
+                {step === 1 && tenant.features.visits.homeCareEnabled && (
+                    <div className="hc-crosslink-banner" onClick={() => navigate('/visits/homecare')}>
+                        <Home size={18} />
+                        <div>
+                            <strong>Prefer collection at home?</strong>
+                            <span>Try HomeCare — we send a medical professional to your home or office.</span>
+                        </div>
+                        <ChevronRight size={16} className="chevron" />
+                    </div>
+                )}
+
                 {step === 1 && (
                     <div className="step-content animate-in">
                         <h3 className="step-instruction">How would you like to start?</h3>
@@ -262,33 +275,102 @@ export const BookProcedure: React.FC = () => {
                         <h3 className="step-instruction">Schedule your visit</h3>
 
                         <div className="datetime-section">
-                            <div className="confirm-card glass-card">
-                                <div className="confirm-row">
-                                    <Calendar size={18} />
-                                    <div>
-                                        <span className="label">Preferred Date</span>
-                                        <input
-                                            type="date"
-                                            className="date-input"
-                                            onChange={(e) => setSelectedDate(e.target.value)}
-                                        />
-                                    </div>
+                            {/* Calendar Grid */}
+                            <div className="calendar-picker">
+                                <div className="calendar-header-row">
+                                    <Calendar size={16} />
+                                    <span className="calendar-month">
+                                        {new Date(Date.now() + 86400000).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                    </span>
                                 </div>
-                                <div className="confirm-row">
-                                    <Clock size={18} />
-                                    <div>
-                                        <span className="label">Preferred Time</span>
-                                        <select className="date-input" onChange={(e) => setSelectedTime(e.target.value)}>
-                                            <option value="">Select Time</option>
-                                            <option>08:00 AM</option>
-                                            <option>09:00 AM</option>
-                                            <option>10:00 AM</option>
-                                            <option>01:00 PM</option>
-                                            <option>02:00 PM</option>
-                                            <option>03:00 PM</option>
-                                        </select>
-                                    </div>
+                                <div className="calendar-weekdays">
+                                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                                        <span key={d} className="cal-weekday">{d}</span>
+                                    ))}
                                 </div>
+                                <div className="calendar-grid">
+                                    {(() => {
+                                        const today = new Date();
+                                        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                                        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                                        const startPad = firstDay.getDay();
+                                        const cells = [];
+
+                                        // Empty padding cells
+                                        for (let i = 0; i < startPad; i++) {
+                                            cells.push(<span key={`pad-${i}`} className="cal-day pad" />);
+                                        }
+
+                                        for (let d = 1; d <= lastDay.getDate(); d++) {
+                                            const dateObj = new Date(today.getFullYear(), today.getMonth(), d);
+                                            const isPast = dateObj <= today;
+                                            const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+                                            const isDisabled = isPast || isWeekend;
+                                            const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                            const isSelected = selectedDate === dateStr;
+                                            // Mock availability
+                                            const hasSlots = !isDisabled && (d % 3 !== 0);
+                                            const isLimited = !isDisabled && (d % 4 === 0);
+
+                                            cells.push(
+                                                <button
+                                                    key={d}
+                                                    className={`cal-day ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''} ${!hasSlots && !isDisabled ? 'full' : ''} ${isLimited ? 'limited' : ''}`}
+                                                    disabled={isDisabled || !hasSlots}
+                                                    onClick={() => { setSelectedDate(dateStr); setSelectedTime(''); }}
+                                                >
+                                                    <span className="cal-day-num">{d}</span>
+                                                    {!isDisabled && hasSlots && !isLimited && <span className="cal-dot available" />}
+                                                    {!isDisabled && isLimited && <span className="cal-dot limited" />}
+                                                    {!isDisabled && !hasSlots && <span className="cal-dot full" />}
+                                                </button>
+                                            );
+                                        }
+
+                                        return cells;
+                                    })()}
+                                </div>
+                                <div className="calendar-legend">
+                                    <span><span className="cal-dot available" /> Available</span>
+                                    <span><span className="cal-dot limited" /> Limited</span>
+                                    <span><span className="cal-dot full" /> Full</span>
+                                </div>
+                            </div>
+
+                            {/* Time Slots */}
+                            {selectedDate && (() => {
+                                // Check if the selected date is a limited day
+                                const parsedDate = new Date(selectedDate);
+                                const dayNum = parsedDate.getDate();
+                                const isLimitedDay = dayNum % 4 === 0;
+                                const allSlots = ['08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM'];
+                                const limitedSlots = ['10:00 AM', '02:00 PM', '03:30 PM'];
+                                const slots = isLimitedDay ? limitedSlots : allSlots;
+
+                                return (
+                                    <div className="time-slots-section animate-in">
+                                        <div className="time-slots-header">
+                                            <Clock size={16} />
+                                            <span>Available times for <strong>{selectedDate}</strong></span>
+                                            {isLimitedDay && <span className="limited-badge">Limited</span>}
+                                        </div>
+                                        <div className="time-slots-grid">
+                                            {slots.map(t => (
+                                                <button
+                                                    key={t}
+                                                    className={`time-slot-btn ${selectedTime === t ? 'selected' : ''}`}
+                                                    onClick={() => setSelectedTime(t)}
+                                                >
+                                                    {t}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            {/* Location info */}
+                            <div className="confirm-card glass-card" style={{ marginTop: '0.5rem' }}>
                                 <div className="confirm-row">
                                     <MapPin size={18} />
                                     <div>

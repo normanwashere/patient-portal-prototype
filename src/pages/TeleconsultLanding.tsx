@@ -29,13 +29,13 @@ export const TeleconsultLanding: React.FC = () => {
             </header>
 
             <div className="hub-grid">
-                {/* Consult Now - Only show if feature is enabled */}
+                {/* Consult Now - Routes to /visits and highlights the Teleconsult Now card */}
                 {visits.teleconsultNowEnabled && (
                     <ServiceCard
                         title="Consult Now"
                         description="Connect immediately with an available General Practitioner (GP). Best for quick consultations and general health concerns."
                         icon={<Video size={24} />}
-                        onClick={() => navigate('/visits/consult-now')}
+                        onClick={() => navigate('/visits', { state: { highlight: 'teleconsult-now' } })}
                         colorTheme="blue"
                         actionLabel="Connect Now"
                         backgroundImage="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600"
@@ -56,7 +56,7 @@ export const TeleconsultLanding: React.FC = () => {
                 )}
             </div>
 
-            <div className="info-section" style={{ marginTop: '2rem', padding: '1.5rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+            <div className="info-section" style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--color-background, #F8FAFC)', borderRadius: '12px', border: '1px solid var(--color-border, #E2E8F0)' }}>
                 <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: '#334155' }}>
                     <Clock size={16} /> Operating Hours
                 </h4>

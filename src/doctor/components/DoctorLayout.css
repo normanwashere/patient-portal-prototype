@@ -12,7 +12,7 @@
   position: relative;
 }
 
-/* ----- Header (Mobile) ----- */
+/* ----- Header (Mobile) — logo left, profile right (matches patient portal) ----- */
 .doctor-header {
   position: sticky;
   top: 0;
@@ -20,53 +20,51 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  min-height: 56px;
-  background: color-mix(in srgb, var(--color-surface) 85%, transparent);
+  padding: 0 16px;
+  min-height: 64px;
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  /* Fallback for browsers without color-mix */
-  @supports not (background: color-mix(in srgb, white 85%, transparent)) {
-    background: var(--color-surface);
-  }
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
-.doctor-header-left {
+.doctor-header-logo-section {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex: 1;
   min-width: 0;
+  flex-shrink: 1;
 }
 
-.doctor-header-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.doctor-header-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text);
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-}
-
-.doctor-header-specialty {
-  font-size: 12px;
-  color: var(--color-text-muted);
-  line-height: 1.2;
-  margin-top: 1px;
+.doctor-header-logo {
+  height: auto;
+  max-height: 44px;
+  max-width: 140px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.08));
 }
 
 .doctor-header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   flex-shrink: 0;
+}
+
+.doctor-header-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  min-height: 36px;
+  transition: all var(--transition-fast);
 }
 
 .doctor-header-btn {
@@ -74,12 +72,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 48px;
-  min-height: 48px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border-radius: 12px;
   border: none;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.04);
   color: var(--color-text-muted);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -92,13 +90,13 @@
 }
 
 .doctor-header-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.95);
 }
 
 .doctor-header-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 2px;
+  right: 2px;
   min-width: 18px;
   height: 18px;
   border-radius: 9px;
@@ -114,111 +112,7 @@
   box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4);
 }
 
-.doctor-header-logo {
-  height: 32px;
-  width: auto;
-  max-width: 80px;
-  object-fit: contain;
-  border-radius: 6px;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.08));
-}
-
-/* ----- Mobile Profile Menu ----- */
-.doctor-header-left--tappable {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  text-align: left;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.doctor-header-left--tappable:active {
-  opacity: 0.7;
-}
-
-.doctor-header-chevron {
-  display: inline-block;
-  vertical-align: middle;
-  margin-left: 4px;
-  color: var(--color-text-muted);
-  transition: transform 0.2s ease;
-}
-
-.doctor-header-chevron.open {
-  transform: rotate(180deg);
-}
-
-.doctor-mobile-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 149;
-  background: rgba(0, 0, 0, 0.25);
-  animation: fadeIn 0.15s ease;
-}
-
-.doctor-mobile-menu {
-  position: absolute;
-  top: 100%;
-  left: 12px;
-  right: 12px;
-  z-index: 150;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.08);
-  padding: 6px;
-  animation: slideDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.doctor-mobile-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 14px 16px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--color-text);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 0.15s;
-}
-
-.doctor-mobile-menu-item:hover {
-  background: var(--color-background);
-}
-
-.doctor-mobile-menu-item:active {
-  background: var(--color-background);
-  transform: scale(0.98);
-}
-
-.doctor-mobile-menu-item--logout {
-  color: var(--color-error);
-}
-
-.doctor-mobile-menu-item--logout:hover {
-  background: rgba(239, 68, 68, 0.06);
-}
+/* Old mobile profile menu removed — replaced with dedicated profile page */
 
 /* ----- Main Content ----- */
 .doctor-main {
@@ -381,7 +275,8 @@
   }
 
   .doctor-header-logo {
-    max-width: 60px;
+    max-height: 36px;
+    max-width: 100px;
   }
 
   .doctor-nav-label {
@@ -421,16 +316,13 @@
    ============================================= */
 @media (min-width: 768px) {
   .doctor-header {
-    padding: 14px 20px;
-    min-height: 64px;
+    padding: 0 20px;
+    min-height: 68px;
   }
 
-  .doctor-header-name {
-    font-size: 16px;
-  }
-
-  .doctor-header-specialty {
-    font-size: 13px;
+  .doctor-header-logo {
+    max-height: 48px;
+    max-width: 160px;
   }
 
   .doctor-main {

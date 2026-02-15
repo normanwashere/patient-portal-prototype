@@ -1,15 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../theme/ThemeContext';
 import '../pages/DashboardCarousel.css';
+
+interface Banner {
+    id: number;
+    badge: string;
+    title: string;
+    desc: string;
+    btn: string;
+    image: string;
+    action: () => void;
+}
 
 export const BannerCarousel: React.FC = () => {
     const navigate = useNavigate();
+    const { tenant } = useTheme();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [touchStart, setTouchStart] = useState(0);
     const [touchEnd, setTouchEnd] = useState(0);
 
-    // Dynamic banners: Events, Features, Campaigns
-    const banners = [
+    // Default banners
+    const defaultBanners: Banner[] = useMemo(() => [
         {
             id: 1,
             badge: "New Feature",
@@ -17,7 +29,7 @@ export const BannerCarousel: React.FC = () => {
             desc: "Consult top specialists from the comfort of your home.",
             btn: "Try Now",
             image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=2070&auto=format&fit=crop",
-            action: () => navigate('/visits/teleconsult')
+            action: () => navigate('/visits', { state: { highlight: 'teleconsult-now' } })
         },
         {
             id: 2,
@@ -46,7 +58,49 @@ export const BannerCarousel: React.FC = () => {
             image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2070&auto=format&fit=crop",
             action: () => navigate('/community')
         }
-    ];
+    ], [navigate]);
+
+    // Maxicare-specific banners (from maxicare.com.ph announcements)
+    const maxicareBanners: Banner[] = useMemo(() => [
+        {
+            id: 1,
+            badge: "24/7 Service",
+            title: "Teleconsult with Video Call",
+            desc: "Get access to expert medical care anytime, anywhere.",
+            btn: "Call a Doctor",
+            image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=2070&auto=format&fit=crop",
+            action: () => navigate('/visits', { state: { highlight: 'teleconsult-now' } })
+        },
+        {
+            id: 2,
+            badge: "PRIMA by MaxiHealth",
+            title: "Live Your Best Life",
+            desc: "Unlimited access to 41+ Primary Care Clinics nationwide. Open to all ages.",
+            btn: "Learn More",
+            image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070&auto=format&fit=crop",
+            action: () => navigate('/community')
+        },
+        {
+            id: 3,
+            badge: "New Product",
+            title: "Maxicare LifesavER",
+            desc: "Emergency care up to ₱50,000 with outpatient coverage and life insurance.",
+            btn: "Get Protected",
+            image: "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?q=80&w=2070&auto=format&fit=crop",
+            action: () => navigate('/community')
+        },
+        {
+            id: 4,
+            badge: "HomeCare",
+            title: "Lab Tests at Home",
+            desc: "Get your needed laboratory tests done in the comfort and safety of your home.",
+            btn: "Book HomeCare",
+            image: "https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?q=80&w=2070&auto=format&fit=crop",
+            action: () => navigate('/community')
+        }
+    ], [navigate]);
+
+    const banners = tenant.id === 'maxicare' ? maxicareBanners : defaultBanners;
 
     useEffect(() => {
         const interval = setInterval(() => {

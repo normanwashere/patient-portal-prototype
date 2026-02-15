@@ -200,3 +200,21 @@
     margin: 0;
     line-height: 1.4;
 }
+
+/* Teleconsult Now highlight animation */
+.teleconsult-highlight {
+    animation: teleconsultPulse 1.5s ease-in-out 2;
+    border-radius: var(--radius-lg, 16px);
+}
+
+@keyframes teleconsultPulse {
+    0%, 100% {
+        box-shadow: none;
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 4px var(--color-primary-transparent, rgba(2, 132, 199, 0.25)),
+                    0 0 24px var(--color-primary-transparent, rgba(2, 132, 199, 0.15));
+        transform: scale(1.02);
+    }
+}

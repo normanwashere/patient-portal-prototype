@@ -109,6 +109,10 @@
     color: #db2777;
 }
 
+.community-container .event-badge.article {
+    color: var(--color-primary);
+}
+
 .community-container .featured-info {
     padding: 1rem;
 }
@@ -221,6 +225,11 @@
     color: #db2777;
 }
 
+.community-container .type-pill.article {
+    background: var(--color-primary-light, #eef2ff);
+    color: var(--color-primary);
+}
+
 .community-container .event-content h4 {
     font-size: 0.9rem;
     font-weight: 700;
@@ -267,6 +276,61 @@
 .community-container .event-card:hover .chevron {
     transform: translateX(4px);
     color: #0891b2;
+}
+
+/* ─── Filter Tabs ─── */
+.community-filter-tabs {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.community-filter-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.community-filter-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--color-border-subtle, rgba(0,0,0,0.08));
+    background: white;
+    color: var(--color-text-muted, #64748b);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.community-filter-tab:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.community-filter-tab.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.community-filter-tab .filter-count {
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.06);
+    color: inherit;
+}
+
+.community-filter-tab.active .filter-count {
+    background: rgba(255,255,255,0.25);
 }
 
 @media (max-width: 640px) {

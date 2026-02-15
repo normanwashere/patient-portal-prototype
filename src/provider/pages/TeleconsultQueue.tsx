@@ -14,7 +14,7 @@
  *   no-show / cancelled
  */
 
-import { useState, useMemo, type CSSProperties } from 'react';
+import { useState, useMemo, useCallback, type CSSProperties } from 'react';
 import {
   Video, Phone, Clock, User, UserCheck, Activity,
   Coffee, Stethoscope, Building2, Calendar, CalendarClock, Search,
@@ -24,7 +24,9 @@ import {
   BellRing, ClipboardCheck, FileText, Loader, PhoneCall,
 } from 'lucide-react';
 import { useProvider } from '../context/ProviderContext';
+import { useTheme } from '../../theme/ThemeContext';
 import { useToast } from '../../context/ToastContext';
+import { getPatientTenant } from '../data/providerMockData';
 import type { TeleconsultSession, TeleconsultDoctor, TeleconsultSessionStatus, DoctorTCStatus } from '../types';
 
 type ActiveTab = 'now' | 'later' | 'doctors' | 'schedule';
@@ -116,8 +118,8 @@ const S: Record<string, CSSProperties> = {
   td: { padding: '10px 12px', borderBottom: `1px solid ${V.border}`, color: V.text },
 
   // Assign modal
-  overlay: { position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  modal: { background: V.card, borderRadius: V.radius, padding: 24, width: '100%', maxWidth: 480, maxHeight: '80vh', overflow: 'auto' as const, boxShadow: V.shadowMd },
+  overlay: { position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  modal: { background: '#ffffff', borderRadius: V.radius, padding: 24, width: '100%', maxWidth: 480, maxHeight: '80vh', overflow: 'auto' as const, boxShadow: '0 25px 50px -12px rgba(0,0,0,.25)', border: '1px solid #e2e8f0', position: 'relative' as const, zIndex: 1001 },
   modalTitle: { fontSize: 16, fontWeight: 700, color: V.text, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 },
 };
 
@@ -166,12 +168,24 @@ function ConnectionBadge({ online, quality }: { online: boolean; quality?: strin
 
 // ── Main Component ──
 export const TeleconsultQueue = () => {
+  const { tenant } = useTheme();
   const {
     tcSessions, tcDoctors, tcStats,
     addTcSession, updateTcSessionStatus, assignTcDoctor, startTcSession, endTcSession,
     markTcNoShow, cancelTcSession, updateTcDoctorStatus, checkInTcDoctor,
   } = useProvider();
   const { showToast } = useToast();
+  const tenantId = tenant.id;
+
+  // ── Tenant-filtered data ──
+  const tenantTcSessions = useMemo(
+    () => tcSessions.filter(s => getPatientTenant(s.patientId) === tenantId),
+    [tcSessions, tenantId],
+  );
+  const tenantTcDoctors = useMemo(
+    () => tcDoctors.filter(d => !d.tenantId || d.tenantId === tenantId),
+    [tcDoctors, tenantId],
+  );
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('now');
   const [search, setSearch] = useState('');
@@ -202,7 +216,7 @@ export const TeleconsultQueue = () => {
 
   // Filter sessions
   const filteredSessions = useMemo(() => {
-    let sessions = tcSessions.filter((s) => {
+    let sessions = tenantTcSessions.filter((s) => {
       if (activeTab === 'now') return s.type === 'now';
       if (activeTab === 'later') return s.type === 'later';
       return true;
@@ -223,15 +237,15 @@ export const TeleconsultQueue = () => {
       if (b.priority === 'Urgent' && a.priority !== 'Urgent') return 1;
       return b.waitMinutes - a.waitMinutes;
     });
-  }, [tcSessions, activeTab, statusFilter, specialtyFilter, search]);
+  }, [tenantTcSessions, activeTab, statusFilter, specialtyFilter, search]);
 
-  const specialties = useMemo(() => [...new Set(tcSessions.map((s) => s.specialty))], [tcSessions]);
+  const specialties = useMemo(() => [...new Set(tenantTcSessions.map((s) => s.specialty))], [tenantTcSessions]);
 
   // ── Tab-aware session stats (aligned with Patient + Doctor App lifecycle) ──
   // Intake is pre-queue, so not counted here
   const viewStats = useMemo(() => {
     const isSessionTab = activeTab === 'now' || activeTab === 'later';
-    const pool = isSessionTab ? tcSessions.filter((s) => s.type === activeTab) : tcSessions;
+    const pool = isSessionTab ? tenantTcSessions.filter((s) => s.type === activeTab) : tenantTcSessions;
     const inQueue = pool.filter((s) => s.status === 'in-queue');
     const doctorAssigned = pool.filter((s) => s.status === 'doctor-assigned');
     const connecting = pool.filter((s) => s.status === 'connecting');
@@ -251,17 +265,29 @@ export const TeleconsultQueue = () => {
       noShow: noShow.length,
       avgWait: waitTimes.length > 0 ? Math.round(waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length) : 0,
     };
-  }, [tcSessions, activeTab]);
+  }, [tenantTcSessions, activeTab]);
+
+  // Tenant-aware TC stats (replaces global tcStats for display)
+  const tenantTcStats = useMemo(() => {
+    const nowSessions = tenantTcSessions.filter(s => s.type === 'now');
+    const laterSessions = tenantTcSessions.filter(s => s.type === 'later');
+    return {
+      nowQueueLength: nowSessions.filter(s => !['completed', 'no-show', 'cancelled'].includes(s.status)).length,
+      laterQueueLength: laterSessions.filter(s => !['completed', 'no-show', 'cancelled'].includes(s.status)).length,
+      doctorsAvailable: tenantTcDoctors.filter(d => d.checkedIn && d.status === 'available').length,
+      doctorsInSession: tenantTcDoctors.filter(d => d.checkedIn && d.status === 'in-session').length,
+    };
+  }, [tenantTcSessions, tenantTcDoctors]);
 
   // Available doctors for assignment
   const availableDoctors = useMemo(() =>
-    tcDoctors.filter((d) => d.checkedIn && (d.status === 'available')),
-  [tcDoctors]);
+    tenantTcDoctors.filter((d) => d.checkedIn && (d.status === 'available')),
+  [tenantTcDoctors]);
 
   // Scheduled doctors (for schedule tab)
   const scheduledDoctors = useMemo(() =>
-    [...tcDoctors].sort((a, b) => a.shiftStart.localeCompare(b.shiftStart)),
-  [tcDoctors]);
+    [...tenantTcDoctors].sort((a, b) => a.shiftStart.localeCompare(b.shiftStart)),
+  [tenantTcDoctors]);
 
   // ── Handlers ──
   const handleAddSession = () => {
@@ -288,7 +314,7 @@ export const TeleconsultQueue = () => {
   const handleAssign = (doctorId: string) => {
     if (!assignModalSession) return;
     assignTcDoctor(assignModalSession, doctorId);
-    const doc = tcDoctors.find((d) => d.id === doctorId);
+    const doc = tenantTcDoctors.find((d) => d.id === doctorId);
     showToast(`Assigned ${doc?.name || 'doctor'} to session`, 'success');
     setAssignModalSession(null);
   };
@@ -346,7 +372,7 @@ export const TeleconsultQueue = () => {
   // Notify / reach out to doctor
   const handleNotifyDoctor = () => {
     if (!notifyDoctorModal || !notifyMessage.trim()) return;
-    const doc = tcDoctors.find((d) => d.id === notifyDoctorModal);
+    const doc = tenantTcDoctors.find((d) => d.id === notifyDoctorModal);
     const entry = {
       doctorId: notifyDoctorModal,
       message: notifyMessage.trim(),
@@ -362,7 +388,7 @@ export const TeleconsultQueue = () => {
 
   // Notify all available doctors (broadcast)
   const handleBroadcastNotify = (message: string, type: 'sms' | 'in-app' | 'page') => {
-    const checkedInDocs = tcDoctors.filter((d) => d.checkedIn);
+    const checkedInDocs = tenantTcDoctors.filter((d) => d.checkedIn);
     const entries = checkedInDocs.map((d) => ({
       doctorId: d.id,
       message,
@@ -386,8 +412,8 @@ export const TeleconsultQueue = () => {
         { icon: FileText, val: viewStats.wrapUp, label: 'Wrap-Up', bg: V.primaryLight, color: V.primary, key: 'wrap-up' },
         { icon: CheckCircle, val: viewStats.completed, label: 'Completed', bg: '#f0fdf4', color: '#15803d', key: 'completed' },
         { icon: Timer, val: `${viewStats.avgWait}m`, label: 'Avg Wait', bg: '#f0f9ff', color: V.info, key: 'avg-wait' },
-        { icon: UserCheck, val: tcStats.doctorsAvailable, label: 'Drs Available', bg: V.successLight, color: V.success, key: 'drs-available' },
-        { icon: Activity, val: tcStats.doctorsInSession, label: 'Drs In Session', bg: 'var(--color-purple-light)', color: V.purple, key: 'drs-in-session' },
+        { icon: UserCheck, val: tenantTcStats.doctorsAvailable, label: 'Drs Available', bg: V.successLight, color: V.success, key: 'drs-available' },
+        { icon: Activity, val: tenantTcStats.doctorsInSession, label: 'Drs In Session', bg: 'var(--color-purple-light)', color: V.purple, key: 'drs-in-session' },
       ].map((s) => {
         const Icon = s.icon;
         return (
@@ -452,7 +478,11 @@ export const TeleconsultQueue = () => {
         }}>
           <div style={{ flex: 1, padding: '5px 8px', borderRadius: V.radiusSm, background: '#f0f9ff', border: '1px solid #bae6fd' }}>
             <span style={{ fontWeight: 600, color: V.info }}>Patient App:</span>{' '}
-            <span style={{ color: V.text }}>{cfg.patientSees}</span>
+            <span style={{ color: V.text }}>
+              {(session.status === 'in-queue' || session.status === 'doctor-assigned')
+                ? `"Waiting for Doctor" · +${session.waitMinutes}m`
+                : cfg.patientSees}
+            </span>
           </div>
           <div style={{ flex: 1, padding: '5px 8px', borderRadius: V.radiusSm, background: '#fdf4ff', border: '1px solid #e9d5ff' }}>
             <span style={{ fontWeight: 600, color: '#a855f7' }}>Doctor App:</span>{' '}
@@ -465,8 +495,8 @@ export const TeleconsultQueue = () => {
           <span style={{ ...S.metaBadge, background: V.primaryLight, color: V.primary }}>
             <Stethoscope size={11} /> {session.specialty}
           </span>
-          <span style={{ ...S.metaBadge, background: V.warnLight, color: V.warn }}>
-            <Clock size={11} /> {session.waitMinutes}min wait
+          <span style={{ ...S.metaBadge, background: session.waitMinutes > 30 ? V.dangerLight : session.waitMinutes > 15 ? V.warnLight : V.successLight, color: session.waitMinutes > 30 ? V.danger : session.waitMinutes > 15 ? V.warn : V.success }}>
+            <Clock size={11} /> +{session.waitMinutes}m wait
           </span>
           <ConnectionBadge online={session.patientOnline} quality={session.connectionQuality} />
           {session.type === 'later' && session.scheduledTime && (
@@ -854,10 +884,10 @@ export const TeleconsultQueue = () => {
       {/* Tabs */}
       <div style={S.tabsBar}>
         {([
-          { key: 'now' as ActiveTab, label: 'Consult Now', icon: Zap, count: tcStats.nowQueueLength },
-          { key: 'later' as ActiveTab, label: 'Consult Later', icon: CalendarClock, count: tcStats.laterQueueLength },
-          { key: 'doctors' as ActiveTab, label: 'Doctor Monitor', icon: Stethoscope, count: tcDoctors.filter((d) => d.checkedIn).length },
-          { key: 'schedule' as ActiveTab, label: 'Schedule', icon: Calendar, count: tcDoctors.length },
+          { key: 'now' as ActiveTab, label: 'Consult Now', icon: Zap, count: tenantTcStats.nowQueueLength },
+          { key: 'later' as ActiveTab, label: 'Consult Later', icon: CalendarClock, count: tenantTcStats.laterQueueLength },
+          { key: 'doctors' as ActiveTab, label: 'Doctor Monitor', icon: Stethoscope, count: tenantTcDoctors.filter((d) => d.checkedIn).length },
+          { key: 'schedule' as ActiveTab, label: 'Schedule', icon: Calendar, count: tenantTcDoctors.length },
         ]).map((t) => {
           const Icon = t.icon;
           return (
@@ -923,7 +953,7 @@ export const TeleconsultQueue = () => {
 
       {activeTab === 'doctors' && (
         <div style={S.doctorGrid}>
-          {tcDoctors.map(renderDoctorCard)}
+          {tenantTcDoctors.map(renderDoctorCard)}
         </div>
       )}
 
@@ -1053,7 +1083,7 @@ export const TeleconsultQueue = () => {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: V.textSec, display: 'block', marginBottom: 4 }}>Doctor: {tcDoctors.find((d) => d.id === doctorStatusModal)?.name}</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: V.textSec, display: 'block', marginBottom: 4 }}>Doctor: {tenantTcDoctors.find((d) => d.id === doctorStatusModal)?.name}</label>
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: V.textSec, display: 'block', marginBottom: 4 }}>New Status</label>
@@ -1089,7 +1119,7 @@ export const TeleconsultQueue = () => {
 
       {/* ── Notify / Reach Out to Doctor Modal ── */}
       {notifyDoctorModal && (() => {
-        const targetDoc = tcDoctors.find((d) => d.id === notifyDoctorModal);
+        const targetDoc = tenantTcDoctors.find((d) => d.id === notifyDoctorModal);
         const docHistory = notifyHistory.filter((n) => n.doctorId === notifyDoctorModal);
         return (
           <div style={S.overlay} onClick={() => setNotifyDoctorModal(null)}>

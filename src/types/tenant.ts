@@ -17,6 +17,8 @@ export interface VisitFeatures {
   clinicVisitEnabled: boolean;
   clinicF2fSchedulingEnabled: boolean;
   clinicLabFulfillmentEnabled: boolean;
+
+  homeCareEnabled?: boolean;           // HomeCare: lab collection at home/office
 }
 
 export interface TenantFeatures {
@@ -36,6 +38,9 @@ export interface TenantFeatures {
   // V10: Clinical intelligence flags
   cdss?: boolean;           // Clinical Decision Support System (drug checks, alerts, guidelines)
   aiAssistant?: boolean;    // AI-powered features (transcriber, SOAP generation, smart suggestions)
+
+  // V12: Care Plans
+  carePlans?: boolean;      // Care plan creation (doctor) and tracking (patient)
 
   // V8: Granular visit configuration
   visits: VisitFeatures;

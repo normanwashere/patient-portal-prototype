@@ -6,8 +6,8 @@
 
 :root {
   /* ── Core Branding (injected by ThemeContext, defaults below) ── */
-  --color-primary: #DC602A;
-  --color-secondary: #0d9488;
+  --color-primary: #0284c7;
+  --color-secondary: #06b6d4;
   --color-background: #f8fafc;
   --color-surface: #ffffff;
   --color-text: #1e293b;
@@ -20,6 +20,12 @@
   --color-primary-transparent: color-mix(in srgb, var(--color-primary), transparent 85%);
   --color-secondary-dark: color-mix(in srgb, var(--color-secondary), black 10%);
   --color-secondary-light: color-mix(in srgb, var(--color-secondary), white 90%);
+
+  /* ── Org-tinted backgrounds (overridden by ThemeContext) ── */
+  --color-bg-tint-soft: color-mix(in srgb, var(--color-primary) 3%, white);
+  --color-bg-tint: color-mix(in srgb, var(--color-primary) 5%, white);
+  --color-bg-tint-medium: color-mix(in srgb, var(--color-primary) 8%, white);
+  --color-bg-tint-strong: color-mix(in srgb, var(--color-primary) 12%, white);
 
   /* ── Gray Scale (Slate) ── */
   --color-gray-50:  #f8fafc;
@@ -219,12 +225,12 @@ a {
   font-size: 0.9rem;
   cursor: pointer;
   transition: all var(--transition-smooth);
-  box-shadow: 0 4px 14px rgba(220, 96, 42, 0.3);
+  box-shadow: 0 4px 14px var(--color-primary-transparent);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(220, 96, 42, 0.4);
+  box-shadow: 0 6px 20px var(--color-primary-transparent);
 }
 
 .btn-primary:active {

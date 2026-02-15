@@ -6,7 +6,7 @@
 export type { Appointment, Medication, ClinicalResult, Invoice, Procedure, LOARequest, Claim, QueueStep, StepStatus, StepType, QueueInfo, UserProfile, Dependent, Notification, PhilHealth, HMOCard } from '../context/DataContext';
 
 // ---- Staff & Auth ----
-export type StaffRole = 'admin' | 'doctor' | 'nurse' | 'lab_tech' | 'pharmacist' | 'billing_staff' | 'front_desk' | 'hr' | 'imaging_tech';
+export type StaffRole = 'admin' | 'super_admin' | 'doctor' | 'nurse' | 'lab_tech' | 'pharmacist' | 'billing_staff' | 'front_desk' | 'hr' | 'imaging_tech';
 
 export interface StaffUser {
     id: string;
@@ -14,6 +14,8 @@ export interface StaffUser {
     role: StaffRole;
     department: string;
     specialty?: string;
+    /** Additional specializations (specialists can also do General Practice) */
+    specializations?: string[];
     branchId: string;
     email: string;
     phone: string;
@@ -355,7 +357,7 @@ export interface EventRegistration {
 export interface ManagedEvent {
     id: string;
     title: string;
-    type: 'Screening' | 'Webinar' | 'Vaccination Drive' | 'Wellness' | 'Health Fair';
+    type: 'Screening' | 'Webinar' | 'Vaccination Drive' | 'Wellness' | 'Health Fair' | 'Article' | 'Campaign' | 'Feature' | 'Activity';
     date: string;
     time: string;
     location: string;
@@ -364,6 +366,15 @@ export interface ManagedEvent {
     status: 'Draft' | 'Published' | 'Active' | 'Completed' | 'Cancelled';
     description: string;
     branchId?: string;
+    tenantId?: string;
+    /** Corresponding patient-facing community item ID (for cross-reference) */
+    patientFacingId?: string;
+    /** Whether this item requires patient registration */
+    registerable?: boolean;
+    /** External URL or source reference */
+    sourceUrl?: string;
+    /** Cover / banner image URL (data-URL or external link) */
+    imageUrl?: string;
 }
 
 // ---- Audit Log ----
@@ -493,6 +504,10 @@ export interface QueuePatient {
     assignedDoctor?: string;
     assignedNurse?: string;
 
+    /** Consultation room assignment (for Consult / Return-Consult stations) */
+    consultRoomId?: string;
+    consultRoomName?: string;
+
     // Station journey tracking
     journeyHistory: StationVisit[];
     currentStationEnteredAt: string;
@@ -500,6 +515,21 @@ export interface QueuePatient {
     // MULTI_STREAM: doctor-ordered re-queues
     doctorOrders: DoctorOrder[];
     currentOrderIndex: number; // -1 = no orders, otherwise index into doctorOrders
+}
+
+/** Consultation room definition for queue display */
+export interface ConsultRoom {
+    id: string;
+    name: string;
+    doctorName: string;
+    doctorId: string;
+    specialty: string;
+    floor: string;
+    /** Whether the room handles return consults as well */
+    handlesReturn: boolean;
+    status: 'Active' | 'On Break' | 'Closed';
+    /** Tenant/organization this room belongs to */
+    tenantId?: string;
 }
 
 // =============================================
@@ -568,4 +598,42 @@ export interface TeleconsultDoctor {
     scheduledDate: string;
     checkedIn: boolean;
     currentActivity?: string; // e.g. 'Clinic consult Room 3', 'Ward rounds Floor 2'
+    /** Tenant/organization this doctor belongs to */
+    tenantId?: string;
+}
+
+// =============================================
+// HomeCare Request (Provider-side view)
+// =============================================
+
+export type HomeCareRequestStatus = 'Pending Review' | 'Confirmed' | 'Scheduled' | 'In Progress' | 'Completed' | 'Cancelled' | 'Clarification Needed';
+
+export interface HomeCareRequest {
+    id: string;
+    patientName: string;
+    patientId: string;
+    mobile: string;
+    address: string;
+    addressType: 'home' | 'office';
+    branchId: string;
+    branchName: string;
+    referralSource: 'network' | 'upload';
+    /** For network referrals — list of selected lab request titles */
+    requestTitles: string[];
+    /** Specimen types to collect */
+    specimenTypes: string[];
+    referralFile?: string;
+    orderingDoctor?: string;
+    preferredDate1: string;
+    preferredTime1: string;
+    preferredDate2: string;
+    preferredTime2: string;
+    confirmedDate?: string;
+    confirmedTime?: string;
+    status: HomeCareRequestStatus;
+    assignedCollector?: string;
+    submittedAt: string;
+    updatedAt: string;
+    notes?: string;
+    priority: 'Routine' | 'Urgent';
 }

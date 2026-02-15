@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Syringe, Calendar, CheckCircle, Clock, AlertTriangle, ChevronRight, Baby, User } from 'lucide-react';
 import { BackButton } from '../components/Common/BackButton';
+import { useTheme } from '../theme/ThemeContext';
 import './Immunization.css';
 
 interface Vaccine {
@@ -22,9 +23,11 @@ interface FamilyMember {
 }
 
 export const Immunization: React.FC = () => {
-    const [selectedMember, setSelectedMember] = useState<string>('1');
+    const { tenant } = useTheme();
+    const defaultMember = tenant.id === 'maxicare' ? 'mc-1' : '1';
+    const [selectedMember, setSelectedMember] = useState<string>(defaultMember);
 
-    const familyMembers: FamilyMember[] = [
+    const METRO_MEMBERS: FamilyMember[] = [
         {
             id: '1',
             name: 'Juan Dela Cruz Jr.',
@@ -52,6 +55,38 @@ export const Immunization: React.FC = () => {
             ]
         },
     ];
+
+    const MAXICARE_MEMBERS: FamilyMember[] = [
+        {
+            id: 'mc-1',
+            name: 'Andrea Reyes',
+            relationship: 'Self',
+            age: '36 years old',
+            vaccines: [
+                { id: 'v-mc1', name: 'Influenza Vaccine 2025', date: 'Oct 20, 2025', status: 'Completed', dose: 'Annual', provider: 'Maxicare PCC - Ayala North Exchange' },
+                { id: 'v-mc2', name: 'Pneumococcal PCV20', date: 'Oct 20, 2025', status: 'Completed', dose: 'Single Dose', provider: 'Maxicare PCC - Ayala North Exchange' },
+                { id: 'v-mc3', name: 'COVID-19 (Moderna)', date: 'Jun 15, 2023', status: 'Completed', dose: 'Bivalent Booster', provider: 'Makati Medical Center' },
+                { id: 'v-mc4', name: 'Hepatitis B', date: 'Mar 10, 2020', status: 'Completed', dose: '3rd Dose', provider: 'St. Lukes BGC' },
+                { id: 'v-mc5', name: 'Tdap (Tetanus/Diphtheria/Pertussis)', date: 'Nov 5, 2022', status: 'Completed', dose: 'Booster', provider: 'Maxicare PCC - BGC' },
+                { id: 'v-mc6', name: 'Influenza Vaccine 2026', dueDate: 'Oct 2026', status: 'Upcoming', dose: 'Annual' },
+                { id: 'v-mc7', name: 'HPV Vaccine', dueDate: 'Mar 2026', status: 'Due', dose: '1st Dose' },
+            ]
+        },
+        {
+            id: 'mc-2',
+            name: 'Paolo Reyes',
+            relationship: 'Husband',
+            age: '37 years old',
+            vaccines: [
+                { id: 'v-mc10', name: 'COVID-19 (Pfizer)', date: 'Aug 20, 2021', status: 'Completed', dose: '2nd Dose', provider: 'SM Aura Vaccination Site' },
+                { id: 'v-mc11', name: 'COVID-19 Booster', date: 'Feb 8, 2022', status: 'Completed', dose: 'Booster', provider: 'Maxicare PCC - BGC' },
+                { id: 'v-mc12', name: 'Influenza Vaccine 2025', date: 'Nov 5, 2025', status: 'Completed', dose: 'Annual', provider: 'Maxicare PCC - Ayala North Exchange' },
+                { id: 'v-mc13', name: 'Hepatitis A', dueDate: 'May 2026', status: 'Due', dose: '1st Dose' },
+            ]
+        },
+    ];
+
+    const familyMembers: FamilyMember[] = tenant.id === 'maxicare' ? MAXICARE_MEMBERS : METRO_MEMBERS;
 
     const currentMember = familyMembers.find(m => m.id === selectedMember)!;
     const completed = currentMember.vaccines.filter(v => v.status === 'Completed');

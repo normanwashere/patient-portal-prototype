@@ -5,7 +5,7 @@
 /* Base Layout */
 .dashboard-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f0fdf8 0%, #f8fafc 50%, #f0f9ff 100%);
+    background: linear-gradient(135deg, var(--color-bg-tint-medium, #f0f7ff) 0%, var(--color-background, #f8fafc) 50%, var(--color-bg-tint-soft, #f0f9ff) 100%);
     padding-bottom: 2rem;
     overflow-x: hidden;
     width: 100%;
@@ -358,13 +358,13 @@
     background: linear-gradient(135deg, var(--color-primary) 0%, #c2410c 100%);
     color: white;
     box-shadow:
-        0 15px 35px -10px rgba(234, 88, 12, 0.4),
+        0 15px 35px -10px var(--color-primary-transparent),
         0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 .action-card-modern.primary:hover {
     box-shadow:
-        0 20px 45px -10px rgba(234, 88, 12, 0.5),
+        0 20px 45px -10px var(--color-primary-transparent),
         0 0 0 1px rgba(255, 255, 255, 0.15) inset;
 }
 
@@ -402,7 +402,7 @@
 }
 
 .action-card-modern.secondary .action-icon-wrapper {
-    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+    background: linear-gradient(135deg, var(--color-bg-tint, #f0fdf4), var(--color-bg-tint-soft, #ecfdf5));
     color: #0d9488;
     padding: 14px;
     border-radius: 16px;
@@ -912,4 +912,257 @@
         grid-template-columns: repeat(4, 1fr);
         gap: 1.5rem;
     }
+}
+
+/* =========================================
+   Quick Actions Customizer Modal
+   ========================================= */
+.qa-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: qaFadeIn 0.15s ease;
+}
+@keyframes qaFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.qa-modal {
+    width: 100%;
+    max-width: 440px;
+    max-height: 85vh;
+    background: var(--color-surface);
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: qaSlideUp 0.2s ease;
+}
+@keyframes qaSlideUp { from { transform: translateY(40px); opacity: 0.8; } to { transform: translateY(0); opacity: 1; } }
+
+@media (min-width: 600px) {
+    .qa-modal-overlay {
+        align-items: center;
+    }
+    .qa-modal {
+        border-radius: 16px;
+        max-height: 75vh;
+    }
+}
+
+.qa-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.1rem 0.5rem;
+}
+.qa-modal-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+.qa-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+.qa-modal-close:hover { background: var(--color-border); }
+
+.qa-modal-desc {
+    padding: 0 1.1rem 0.75rem;
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+}
+
+.qa-section-label {
+    padding: 0.35rem 1.1rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    background: var(--color-background);
+}
+
+.qa-list {
+    overflow-y: auto;
+    flex-shrink: 1;
+    padding: 0.25rem 0.75rem;
+}
+
+.qa-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.55rem 0.5rem;
+    border-radius: 10px;
+    margin-bottom: 2px;
+    transition: background 0.12s;
+    cursor: default;
+}
+.qa-item.active {
+    background: var(--color-surface);
+}
+.qa-item.available {
+    cursor: pointer;
+}
+.qa-item.available:hover {
+    background: var(--color-primary-light, rgba(0,0,0,0.03));
+}
+.qa-item svg { color: var(--color-primary); flex-shrink: 0; }
+.qa-item-label { flex: 1; font-size: 0.88rem; font-weight: 500; color: var(--color-text); }
+
+.qa-item-grip {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.qa-reorder-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 16px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.55rem;
+    cursor: pointer;
+    border-radius: 3px;
+    line-height: 1;
+}
+.qa-reorder-btn:hover { background: var(--color-border); color: var(--color-text); }
+
+.qa-remove-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+.qa-remove-btn:hover { background: #fee2e2; color: #ef4444; }
+
+.qa-add-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-primary);
+    white-space: nowrap;
+}
+
+.qa-modal-footer {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    padding: 0.75rem 1.1rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.qa-btn-secondary {
+    padding: 0.45rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font-size: 0.84rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+.qa-btn-secondary:hover { background: var(--color-background); }
+
+.qa-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.qa-btn-primary:hover { opacity: 0.9; }
+
+/* =========================================
+   Long-press Confirm Prompt
+   ========================================= */
+.qa-confirm-prompt {
+    background: var(--color-surface);
+    border-radius: 16px;
+    padding: 1.75rem 1.5rem 1.25rem;
+    width: 92%;
+    max-width: 320px;
+    text-align: center;
+    animation: qaFadeIn 0.18s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    /* Center regardless of parent align-items */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.qa-confirm-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: var(--color-primary-light, rgba(0,0,0,0.04));
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+}
+
+.qa-confirm-prompt h3 {
+    margin: 0 0 0.4rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.qa-confirm-prompt p {
+    margin: 0 0 1.25rem;
+    font-size: 0.84rem;
+    color: var(--color-text-muted);
+    line-height: 1.45;
+}
+
+.qa-confirm-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.qa-confirm-actions .qa-btn-secondary,
+.qa-confirm-actions .qa-btn-primary {
+    flex: 1;
+}
+
+/* Disable text-select on quick-action buttons during press */
+.quick-action-btn {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
 }

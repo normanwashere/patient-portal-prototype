@@ -9,6 +9,28 @@
     min-height: calc(100vh - var(--header-height) - 4rem);
 }
 
+/* Results Header — title, search, tabs stacked vertically */
+.results-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.results-title-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.results-title-row h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+    margin: 0;
+    line-height: 40px;
+}
+
 /* Search Bar */
 .search-bar {
     display: flex;
@@ -20,7 +42,6 @@
     border-radius: var(--radius-lg);
     border: 1px solid rgba(0, 0, 0, 0.06);
     box-shadow: var(--shadow-sm);
-    margin-top: 0.75rem;
     transition: all var(--transition-smooth);
 }
 
@@ -197,7 +218,7 @@
 
 /* Info Box */
 .info-box {
-    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    background: linear-gradient(135deg, var(--color-bg-tint-soft, #ecfdf5), var(--color-bg-tint-medium, #d1fae5));
     padding: 1rem 1.25rem;
     border-radius: var(--radius-lg);
     display: flex;
@@ -266,4 +287,168 @@
 .empty-state p {
     font-size: 0.95rem;
     font-weight: 500;
+}
+
+/* ── Chip Badge (for request count) ── */
+.chip-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    margin-left: 4px;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.chip.active .chip-badge {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+/* ── Request Card ── */
+.request-card {
+    align-items: flex-start;
+    cursor: default;
+}
+
+.request-card .result-icon.laboratory {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1e40af;
+}
+
+.request-card .result-icon.imaging {
+    background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+    color: #7c3aed;
+}
+
+.request-card .result-icon.procedure {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #92400e;
+}
+
+/* Status row */
+.request-status-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.15rem;
+}
+
+.request-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.request-priority-badge {
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.request-type-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--color-background, #f8fafc);
+}
+
+.request-specimen-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 1rem;
+    white-space: nowrap;
+}
+
+.request-specimen-badge.blood {
+    background: rgba(220, 38, 38, 0.08);
+    color: #b91c1c;
+}
+
+.request-specimen-badge.urine {
+    background: rgba(234, 179, 8, 0.1);
+    color: #a16207;
+}
+
+.request-specimen-badge.stool {
+    background: rgba(120, 85, 40, 0.1);
+    color: #78552a;
+}
+
+.request-specimen-badge.swab {
+    background: rgba(59, 130, 246, 0.08);
+    color: #1d4ed8;
+}
+
+.request-specimen-badge.other {
+    background: rgba(107, 114, 128, 0.08);
+    color: #4b5563;
+}
+
+/* Notes */
+.request-notes {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin: 0.2rem 0 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    line-height: 1.4;
+}
+
+.request-notes svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    opacity: 0.5;
+}
+
+.request-facility {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    margin: 0;
+}
+
+/* HomeCare Action Button */
+.btn-homecare-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    color: #065f46;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    padding: 0.45rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+    cursor: pointer;
+    align-self: flex-start;
+    transition: all 0.2s ease;
+}
+
+.btn-homecare-action:hover {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }

@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, Shield, Gift, Activity, Plus } from 'lucide-react';
-import { BackButton } from '../components/Common/BackButton';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../theme/ThemeContext';
 import { ServiceCard } from '../components/ServiceCard/ServiceCard';
@@ -45,8 +44,7 @@ export const Financial: React.FC = () => {
 
     return (
         <div className="profile-container">
-            <header className="page-header">
-                <BackButton />
+            <header className="page-header pillar-header">
                 <div className="header-text">
                     <h2>Coverage & Claims</h2>
                     <p className="page-subtitle">

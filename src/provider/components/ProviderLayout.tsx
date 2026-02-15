@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useMemo } from 'react';
+import { Outlet, NavLink, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -17,17 +17,20 @@ import {
   FileText,
   Bell,
   Search,
-  ChevronLeft,
-  ChevronRight,
   ChevronDown,
   Menu,
   Stethoscope,
   Cable,
   Server,
   Video,
+  Home,
+  MapPin,
+  LogOut,
+  FolderSearch,
 } from 'lucide-react';
 import { useProvider } from '../context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
+import { isProviderModuleAllowed } from '../roleAccess';
 import type { TenantFeatures } from '../../types/tenant';
 import clsx from 'clsx';
 import './ProviderLayout.css';
@@ -63,6 +66,8 @@ const SIDEBAR_SECTIONS: SidebarSection[] = [
       { to: `${PREFIX}/nursing`, icon: HeartPulse, label: 'Nursing Station' },
       { to: `${PREFIX}/lab-imaging`, icon: Microscope, label: 'Lab & Imaging', visible: (f) => f.visits.clinicLabFulfillmentEnabled },
       { to: `${PREFIX}/pharmacy`, icon: Pill, label: 'Pharmacy', visible: (f) => f.visits.clinicLabFulfillmentEnabled },
+      { to: `${PREFIX}/homecare`, icon: Home, label: 'HomeCare', visible: (f) => !!f.visits.homeCareEnabled },
+      { to: `${PREFIX}/records`, icon: FolderSearch, label: 'Records' },
     ],
   },
   {
@@ -89,6 +94,7 @@ const SIDEBAR_SECTIONS: SidebarSection[] = [
 
 function formatRole(role: string): string {
   const map: Record<string, string> = {
+    super_admin: 'Super Admin',
     admin: 'Admin',
     doctor: 'Doctor',
     nurse: 'Nurse',
@@ -117,17 +123,26 @@ function pathToBreadcrumb(pathname: string): { label: string; path?: string }[] 
 }
 
 export const ProviderLayout = () => {
-  const { currentStaff, switchApp, internalMessages } = useProvider();
+  const { currentStaff, switchApp, internalMessages, currentBranchId, availableBranches, switchBranch } = useProvider();
   const navigate = useNavigate();
   const { tenant } = useTheme();
   const location = useLocation();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
+  const isSuperAdmin = currentStaff.role === 'super_admin';
+  const currentBranch = availableBranches.find(b => b.id === currentBranchId) ?? availableBranches[0];
 
   const unreadCount = internalMessages.filter((m) => !m.read).length;
   const breadcrumbs = pathToBreadcrumb(location.pathname);
+
+  const ALWAYS_ALLOWED = ['dashboard', 'notifications', 'profile', 'settings'];
+  const currentRouteAllowed = useMemo(() => {
+    const slug = location.pathname.replace(`${PREFIX}/`, '').split('/')[0] || 'dashboard';
+    if (ALWAYS_ALLOWED.includes(slug)) return true;
+    return isProviderModuleAllowed(currentStaff.role, slug);
+  }, [location.pathname, currentStaff.role]);
 
   return (
     <div className="provider-shell">
@@ -140,7 +155,6 @@ export const ProviderLayout = () => {
       <aside
         className={clsx(
           'provider-sidebar',
-          sidebarCollapsed && 'collapsed',
           mobileSidebarOpen && 'mobile-open'
         )}
         aria-label="Provider navigation"
@@ -156,48 +170,72 @@ export const ProviderLayout = () => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-            {!sidebarCollapsed && (
-              <span className="provider-sidebar-title">Provider Portal</span>
+            <span className="provider-sidebar-title">Provider Portal</span>
+          </div>
+
+          {/* Branch indicator */}
+          <div className="provider-branch-indicator">
+            <MapPin size={14} className="provider-branch-icon" />
+            {isSuperAdmin ? (
+              <div className="provider-branch-switcher">
+                <button
+                  className="provider-branch-btn"
+                  onClick={() => setBranchDropdownOpen(o => !o)}
+                >
+                  <span className="provider-branch-name">{currentBranch.name}</span>
+                  <ChevronDown size={14} />
+                </button>
+                {branchDropdownOpen && (
+                  <>
+                    <div className="provider-branch-overlay" onClick={() => setBranchDropdownOpen(false)} />
+                    <div className="provider-branch-dropdown">
+                      {availableBranches.map(b => (
+                        <button
+                          key={b.id}
+                          className={clsx('provider-branch-option', b.id === currentBranchId && 'active')}
+                          onClick={() => { switchBranch(b.id); setBranchDropdownOpen(false); }}
+                        >
+                          <span>{b.name}</span>
+                          {b.id === currentBranchId && <span className="provider-branch-check">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <span className="provider-branch-name">{currentBranch.name}</span>
             )}
           </div>
 
-          {/* Collapse toggle (desktop) */}
-          <button
-            type="button"
-            className="provider-sidebar-toggle"
-            onClick={() => setSidebarCollapsed((c) => !c)}
-            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {sidebarCollapsed ? (
-              <ChevronRight size={20} />
-            ) : (
-              <ChevronLeft size={20} />
-            )}
-          </button>
-
-          {/* Nav sections - filtered by tenant feature flags */}
+          {/* Nav sections - filtered by tenant feature flags AND staff role */}
           <nav className="provider-sidebar-nav">
             {SIDEBAR_SECTIONS.map((section) => {
               const visibleItems = section.items.filter(
-                (item) => !item.visible || item.visible(tenant.features)
+                (item) => {
+                  // Check tenant feature flag
+                  if (item.visible && !item.visible(tenant.features)) return false;
+                  // Check role access
+                  const slug = item.to.replace(`${PREFIX}/`, '');
+                  return isProviderModuleAllowed(currentStaff.role, slug);
+                }
               );
               if (visibleItems.length === 0) return null;
               return (
                 <div key={section.label} className="provider-nav-section">
-                  {!sidebarCollapsed && (
-                    <span className="provider-nav-section-label">{section.label}</span>
-                  )}
+                  <span className="provider-nav-section-label">{section.label}</span>
                   {visibleItems.map(({ to, icon: Icon, label }) => (
                     <NavLink
                       key={to}
                       to={to}
+                      title={label}
                       className={({ isActive }) =>
                         clsx('provider-nav-item', isActive && 'active')
                       }
                       end={to === `${PREFIX}/dashboard`}
                     >
                       <Icon size={20} className="provider-nav-icon" />
-                      {!sidebarCollapsed && <span className="provider-nav-text">{label}</span>}
+                      <span className="provider-nav-text">{label}</span>
                     </NavLink>
                   ))}
                 </div>
@@ -207,24 +245,24 @@ export const ProviderLayout = () => {
 
           {/* Footer links */}
           <div className="provider-sidebar-footer">
-            {!sidebarCollapsed && (
-              <>
-                <button
-                  type="button"
-                  className="provider-sidebar-switch"
-                  onClick={() => {
-                    switchApp('doctor');
-                    navigate('/doctor');
-                  }}
-                >
-                  <Stethoscope size={16} />
-                  <span>Switch to Doctor App</span>
-                </button>
-                <Link to="/dashboard" className="provider-sidebar-switch provider-sidebar-back">
-                  Back to Patient Portal
-                </Link>
-              </>
-            )}
+            <button
+              type="button"
+              className="provider-sidebar-switch"
+              onClick={() => {
+                switchApp('doctor');
+                navigate('/doctor');
+              }}
+            >
+              <Stethoscope size={16} />
+              <span>Switch to Doctor App</span>
+            </button>
+            <Link to="/dashboard" className="provider-sidebar-switch provider-sidebar-back">
+              Back to Patient Portal
+            </Link>
+            <Link to="/apps" className="provider-sidebar-switch provider-sidebar-signout">
+              <LogOut size={16} />
+              <span>Sign Out</span>
+            </Link>
           </div>
         </div>
 
@@ -359,7 +397,11 @@ export const ProviderLayout = () => {
 
         {/* Main content */}
         <main className="provider-main" id="provider-main-content">
-          <Outlet />
+          {currentRouteAllowed ? (
+            <Outlet />
+          ) : (
+            <Navigate to="/provider/dashboard" replace />
+          )}
         </main>
 
         {/* Mobile bottom bar */}

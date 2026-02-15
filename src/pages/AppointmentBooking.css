@@ -386,10 +386,19 @@
     margin-top: auto;
 }
 
-.btn-next:hover,
-.btn-confirm:hover {
+.btn-next:hover:not(:disabled),
+.btn-confirm:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 15px 35px -5px var(--color-primary-transparent);
+}
+
+.btn-next:disabled,
+.btn-confirm:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    background: var(--color-gray-300, #d1d5db);
 }
 
 /* Success */
@@ -409,4 +418,160 @@
     background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
     color: white;
     border: none;
+}
+
+/* ─── Calendar Picker (reused from BookProcedure) ─── */
+.calendar-picker {
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid var(--color-border-subtle, rgba(0,0,0,0.06));
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.calendar-header-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text, #1a1a2e);
+}
+
+.calendar-month {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 0.35rem;
+}
+
+.cal-weekday {
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--color-text-muted, #64748b);
+    text-transform: uppercase;
+    padding: 0.25rem 0;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+}
+
+.cal-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 0.4rem 0;
+    border-radius: 0.5rem;
+    border: 1.5px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-height: 40px;
+}
+
+.cal-day.pad { cursor: default; }
+
+.cal-day-num {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text, #1a1a2e);
+}
+
+.cal-day:hover:not(.disabled):not(.full):not(.pad) {
+    background: var(--color-primary-light, rgba(0, 70, 190, 0.06));
+    border-color: var(--color-primary-transparent, rgba(0, 70, 190, 0.15));
+}
+
+.cal-day.selected {
+    background: var(--color-primary, #0046BE);
+    border-color: var(--color-primary, #0046BE);
+}
+
+.cal-day.selected .cal-day-num { color: white; }
+.cal-day.selected .cal-dot { background: rgba(255,255,255,0.6) !important; }
+.cal-day.disabled { opacity: 0.3; cursor: not-allowed; }
+.cal-day.full:not(.disabled) { opacity: 0.45; cursor: not-allowed; }
+.cal-day.limited .cal-day-num { color: #d97706; }
+
+.cal-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.cal-dot.available { background: #10b981; }
+.cal-dot.limited { background: #f59e0b; }
+.cal-dot.full { background: #ef4444; }
+
+.calendar-legend {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(0,0,0,0.04);
+}
+
+.calendar-legend > span {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--color-text-muted, #64748b);
+}
+
+/* ─── Time Slots ─── */
+.time-slots-section { margin-top: 1rem; }
+
+.time-slots-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--color-text, #1a1a2e);
+}
+
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+}
+
+.time-slot-btn {
+    padding: 0.6rem 0.25rem;
+    border-radius: 0.6rem;
+    border: 1.5px solid var(--color-border-subtle, rgba(0,0,0,0.08));
+    background: white;
+    color: var(--color-text, #1a1a2e);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+}
+
+.time-slot-btn:hover {
+    border-color: var(--color-primary, #0046BE);
+    color: var(--color-primary, #0046BE);
+    background: rgba(0, 70, 190, 0.04);
+}
+
+.time-slot-btn.selected {
+    background: var(--color-primary, #0046BE);
+    color: white;
+    border-color: var(--color-primary, #0046BE);
+    box-shadow: 0 2px 8px var(--color-primary-transparent);
 }

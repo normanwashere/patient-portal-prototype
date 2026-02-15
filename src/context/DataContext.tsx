@@ -68,6 +68,20 @@ export interface ClinicalResult {
     hasFollowUp?: boolean;
 }
 
+export interface DoctorRequest {
+    id: string;
+    type: 'Laboratory' | 'Imaging' | 'Procedure';
+    title: string;
+    doctor: string;
+    date: string;
+    status: 'Pending' | 'Scheduled' | 'Completed';
+    priority: 'Routine' | 'Urgent' | 'Stat';
+    notes?: string;
+    facility?: string;
+    homeCareEligible: boolean;
+    specimenType?: 'Blood' | 'Urine' | 'Stool' | 'Swab' | 'Other';
+}
+
 // Unified Step Status
 
 // Unified Step Status
@@ -171,6 +185,7 @@ interface DataContextType {
     appointments: Appointment[];
     medications: Medication[];
     results: ClinicalResult[];
+    doctorRequests: DoctorRequest[];
     invoices: Invoice[];
     procedures: Procedure[];
     loaRequests: LOARequest[];
@@ -312,7 +327,7 @@ const INITIAL_STEPS: QueueStep[] = [
 ];
 
 import { useTheme } from '../theme/ThemeContext';
-import { METRO_DATA, MERALCO_DATA, HEALTHFIRST_DATA } from '../data/tenantData';
+import { METRO_DATA, MERALCO_DATA, HEALTHFIRST_DATA, MAXICARE_DATA } from '../data/tenantData';
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { showToast } = useToast();
@@ -329,6 +344,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [medications, setMedications] = useState<Medication[]>([]);
     const [results, setResults] = useState<ClinicalResult[]>([]);
+    const [doctorRequests, setDoctorRequests] = useState<DoctorRequest[]>([]);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [dependents, setDependents] = useState<Dependent[]>([]);
@@ -348,6 +364,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 break;
             case 'metroGeneral':
                 tenantData = METRO_DATA;
+                break;
+            case 'maxicare':
+                tenantData = MAXICARE_DATA;
                 break;
             default:
                 // Custom / dynamic tenants get a demo patient seeded
@@ -394,6 +413,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setAppointments(currentPatient.appointments);
         setMedications(currentPatient.medications);
         setResults(currentPatient.results);
+        setDoctorRequests(currentPatient.doctorRequests || []);
         setNotifications(currentPatient.notifications);
         setInvoices(currentPatient.invoices || []);
         setProcedures(currentPatient.procedures || []);
@@ -696,7 +716,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     return (
         <DataContext.Provider value={{
-            appointments, medications, results, invoices, procedures, loaRequests,
+            appointments, medications, results, doctorRequests, invoices, procedures, loaRequests,
             userProfile, dependents,
             addAppointment, cancelAppointment, requestRefill, payInvoice, bookFollowUp,
             bookProcedure, requestLOA, fileClaim,

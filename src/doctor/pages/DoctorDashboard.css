@@ -48,44 +48,7 @@
   border-radius: 100px;
 }
 
-.doc-today-stats {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  border-radius: 12px;
-  padding: 8px 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.doc-today-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-}
-
-.doc-today-stat-value {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--color-text);
-  line-height: 1;
-}
-
-.doc-today-stat-label {
-  font-size: 10px;
-  color: var(--color-text-muted);
-  font-weight: 500;
-}
-
-.doc-today-stat-divider {
-  width: 1px;
-  height: 24px;
-  background: var(--color-border);
-}
+/* Dashboard uses .doc-stats-bar / .doc-stat-chip from DoctorLayout.css */
 
 /* ===== Active Patient Banner ===== */
 .doc-active-patient {
@@ -377,6 +340,49 @@
   font-size: 10px;
   color: var(--color-text-muted);
   line-height: 1.2;
+}
+
+/* ===== Inactive / Paused Tile ===== */
+.doc-tile--inactive {
+  opacity: 0.45;
+  filter: grayscale(0.7);
+  border: 1px dashed var(--color-gray-300, #d1d5db);
+  background: var(--color-gray-50, #f9fafb);
+  position: relative;
+}
+
+.doc-tile--inactive:hover {
+  opacity: 0.7;
+  filter: grayscale(0.3);
+  transform: translateY(-2px);
+}
+
+.doc-tile--inactive .doc-tile-label {
+  color: var(--color-gray-400, #9ca3af);
+}
+
+.doc-tile--inactive .doc-tile-desc {
+  color: var(--color-gray-400, #9ca3af);
+  font-style: italic;
+}
+
+.doc-tile-badge--muted {
+  background: var(--color-gray-400, #9ca3af) !important;
+  opacity: 0.7;
+}
+
+.doc-tile-paused {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: var(--color-gray-400, #9ca3af);
+  background: var(--color-gray-100, #f3f4f6);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
 }
 
 /* ===== Today's Schedule Section ===== */
@@ -672,13 +678,8 @@
     font-size: 19px;
   }
 
-  .doc-today-stats {
-    padding: 6px 10px;
-    gap: 8px;
-  }
-
-  .doc-today-stat-value {
-    font-size: 14px;
+  .doc-today > .doc-stats-bar {
+    margin-top: -8px;
   }
 
   .doc-tiles-grid {

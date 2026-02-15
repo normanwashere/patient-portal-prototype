@@ -228,9 +228,9 @@
 }
 
 .branch-action-btn.secondary {
-    background: #ecfdf5;
-    color: #0d9488;
-    border-color: var(--color-success-light);
+    background: var(--color-bg-tint-soft, #ecfdf5);
+    color: var(--color-primary, #0d9488);
+    border-color: var(--color-border, var(--color-success-light));
 }
 
 .branch-action-btn.ghost {

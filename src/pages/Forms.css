@@ -85,8 +85,8 @@
 }
 
 .badge.success {
-    background: #ecfdf5;
-    color: #047857;
+    background: var(--color-success-light, #ecfdf5);
+    color: var(--color-success-dark, #047857);
 }
 
 .badge.warning {

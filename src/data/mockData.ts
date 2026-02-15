@@ -1,4 +1,4 @@
-import type { Appointment, Medication, ClinicalResult, Notification, Invoice, Procedure, LOARequest, UserProfile, Dependent } from '../context/DataContext';
+import type { Appointment, Medication, ClinicalResult, DoctorRequest, Notification, Invoice, Procedure, LOARequest, UserProfile, Dependent } from '../context/DataContext';
 
 // Helper for dynamic dates
 const TODAY = new Date();
@@ -53,6 +53,14 @@ export const METRO_DATA = {
     loaRequests: [
         { id: 'loa-1', type: 'Lab Test', provider: 'Metro Lab', date: subDays(5), status: 'Approved', amount: '₱ 850.00' }
     ] as LOARequest[],
+
+    doctorRequests: [
+        { id: 'dreq-1', type: 'Laboratory', title: 'Lipid Profile Panel', doctor: 'Dr. Albert Go', date: subDays(1), status: 'Pending', priority: 'Routine', notes: 'Fasting 10-12 hrs required. Follow-up to elevated LDL.', homeCareEligible: true, specimenType: 'Blood' },
+        { id: 'dreq-2', type: 'Laboratory', title: 'HbA1c (Glycosylated Hemoglobin)', doctor: 'Dr. Jen Diaz', date: subDays(3), status: 'Pending', priority: 'Routine', notes: 'Quarterly monitoring for DM Type 2.', homeCareEligible: true, specimenType: 'Blood' },
+        { id: 'dreq-3', type: 'Imaging', title: 'Chest X-Ray (PA/Lateral)', doctor: 'Dr. Rahn Lim', date: subDays(7), status: 'Scheduled', priority: 'Routine', facility: 'Metro General - Main', notes: 'Follow-up for resolved pneumonia.', homeCareEligible: false },
+        { id: 'dreq-4', type: 'Laboratory', title: 'Complete Blood Count (CBC)', doctor: 'Dr. Jen Diaz', date: subDays(3), status: 'Pending', priority: 'Urgent', notes: 'Monitor WBC trend post-infection.', homeCareEligible: true, specimenType: 'Blood' },
+        { id: 'dreq-5', type: 'Procedure', title: '2D Echo with Doppler', doctor: 'Dr. Albert Go', date: subDays(14), status: 'Completed', priority: 'Routine', facility: 'Metro General - Heart Center', homeCareEligible: false },
+    ] as DoctorRequest[],
 
     userProfile: {
         id: 'u-1',
@@ -165,4 +173,60 @@ export const HEALTHFIRST_DATA = {
     } as UserProfile,
 
     dependents: [] as Dependent[]
+};
+
+// ==========================================
+// ORG 4: MAXICARE (HMO with Primary Care Clinics)
+// ==========================================
+export const MAXICARE_DATA = {
+    appointments: [
+        { id: '401', doctor: 'Dr. Carmela Ong', specialty: 'Internal Medicine', date: addDays(3), time: '10:00 AM', status: 'Upcoming', type: 'In-Person', location: 'Maxicare PCC - Ayala North Exchange' },
+        { id: '402', doctor: 'Dr. Ramon Bautista', specialty: 'Dermatology', date: addDays(10), time: '2:00 PM', status: 'Upcoming', type: 'Teleconsult' },
+        { id: '403', doctor: 'Dr. Patricia Santos', specialty: 'OB-Gyne', date: subDays(15), time: '9:30 AM', status: 'Completed', type: 'In-Person', location: 'Maxicare PCC - BGC' },
+    ] as Appointment[],
+
+    medications: [
+        { id: 'm8', name: 'Losartan', dosage: '50mg', instruction: 'Once daily in the morning', remaining: 30, refillDate: addDays(28), status: 'Active' },
+        { id: 'm9', name: 'Vitamin D3', dosage: '1000IU', instruction: 'Once daily', remaining: 60, refillDate: addDays(55), status: 'Active' },
+    ] as Medication[],
+
+    results: [
+        { id: 'r9', title: 'Complete Blood Count (CBC)', type: 'Laboratory', date: subDays(5), doctor: 'Dr. Ong', status: 'Final', isCritical: false },
+        { id: 'r10', title: 'Lipid Panel', type: 'Laboratory', date: subDays(5), doctor: 'Dr. Ong', status: 'Final', isCritical: true },
+        { id: 'r11', title: 'Pap Smear', type: 'Laboratory', date: subDays(15), doctor: 'Dr. Santos', status: 'Final' },
+    ] as ClinicalResult[],
+
+    notifications: [
+        { id: 'n8', title: 'Appointment Reminder', message: 'Your Internal Medicine appointment is in 3 days.', date: '2 hours ago', read: false, type: 'info', link: '/appointments' },
+        { id: 'n9', title: 'Lab Results Ready', message: 'Your CBC and Lipid Panel results are now available.', date: '1 day ago', read: false, type: 'warning', link: '/results' },
+        { id: 'n10', title: 'PRIMA Benefit', message: 'You have 1 annual check-up remaining. Book now!', date: '3 days ago', read: false, type: 'success', link: '/appointments' },
+    ] as Notification[],
+
+    invoices: [
+        { id: 'INV-MC01', date: subDays(5), description: 'Internal Medicine Consultation', provider: 'Dr. Carmela Ong', amount: 800, status: 'Paid', type: 'Consultation' },
+        { id: 'INV-MC02', date: subDays(5), description: 'CBC + Lipid Panel', provider: 'Maxicare PCC Lab', amount: 1200, status: 'Pending', type: 'Laboratory' },
+    ] as Invoice[],
+
+    procedures: [
+        { id: 'proc-mc1', category: 'Laboratory', name: 'Annual Check-up Package', date: subDays(30), time: '8:00 AM', location: 'Maxicare PCC - BGC', status: 'Completed' },
+    ] as Procedure[],
+
+    loaRequests: [
+        { id: 'loa-mc1', type: 'Annual Physical Exam', provider: 'Maxicare PCC - BGC', date: subDays(30), status: 'Approved', amount: '₱ 0.00' },
+    ] as LOARequest[],
+
+    userProfile: {
+        id: 'u-mc1',
+        name: 'Andrea Reyes',
+        memberId: 'MC-2024-88001',
+        company: 'SELF-EMPLOYED',
+        validity: '01/2025 - 12/2025',
+        membershipType: 'PRIMA Elite',
+        emergencyContact: { name: 'Paolo Reyes', relation: 'Husband', phone: '0917-555-1234' },
+        philHealth: { membershipNumber: '55-667788990-1', status: 'Active', category: 'Individually Paying', lastContribution: 'Jan 2025' }
+    } as UserProfile,
+
+    dependents: [
+        { id: 'd-mc1', name: 'Paolo Reyes', relation: 'Husband', birthDate: '1988-11-03', idNumber: 'DEP-MC01' },
+    ] as Dependent[]
 };

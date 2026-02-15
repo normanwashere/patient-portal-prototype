@@ -1,12 +1,18 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
     Settings, Play, Square, RotateCcw, LayoutGrid, List,
     X, Clock, UserCircle, Plus, Trash2, ChevronDown, ChevronUp,
     Check, Sparkles, Clapperboard,
+    ShieldCheck, Stethoscope, HeartPulse, FlaskConical, Pill, Receipt, MonitorSmartphone, UserCog, ScanLine,
+    LayoutDashboard, Users, CalendarDays, Microscope, CreditCard, Building2, Shield as ShieldIcon,
+    MessageSquare, CalendarCheck, BarChart3, FileText, Video, Cable, Server,
+    Calendar, ClipboardList, Syringe, FileCheck, Home,
 } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../theme/ThemeContext';
 import { useData } from '../context/DataContext';
+import { useProvider } from '../provider/context/ProviderContext';
+import { PROVIDER_ROLE_ACCESS, DOCTOR_ROLE_ACCESS } from '../provider/roleAccess';
 import type { TenantConfig, TenantFeatures, VisitFeatures } from '../types/tenant';
 import './DemoControls.css';
 
@@ -21,7 +27,7 @@ const FEATURE_PRESETS: Record<FeaturePreset, { label: string; description: strin
         features: {
             sso: true, loa: true, hmo: true, philHealth: true,
             queue: true, appointments: true,
-            multiLocation: true, admissions: true, cdss: true, aiAssistant: true,
+            multiLocation: true, admissions: true, cdss: true, aiAssistant: true, carePlans: true,
             visits: {
                 teleconsultEnabled: true, teleconsultNowEnabled: true, teleconsultLaterEnabled: true,
                 clinicVisitEnabled: true, clinicF2fSchedulingEnabled: true, clinicLabFulfillmentEnabled: true,
@@ -34,7 +40,7 @@ const FEATURE_PRESETS: Record<FeaturePreset, { label: string; description: strin
         features: {
             sso: true, loa: false, hmo: true, philHealth: false,
             queue: true, appointments: true,
-            multiLocation: false, admissions: false, cdss: true, aiAssistant: false,
+            multiLocation: false, admissions: false, cdss: true, aiAssistant: false, carePlans: true,
             visits: {
                 teleconsultEnabled: true, teleconsultNowEnabled: false, teleconsultLaterEnabled: true,
                 clinicVisitEnabled: true, clinicF2fSchedulingEnabled: true, clinicLabFulfillmentEnabled: true,
@@ -47,7 +53,7 @@ const FEATURE_PRESETS: Record<FeaturePreset, { label: string; description: strin
         features: {
             sso: false, loa: false, hmo: false, philHealth: true,
             queue: true, appointments: true,
-            multiLocation: false, admissions: false, cdss: false, aiAssistant: false,
+            multiLocation: false, admissions: false, cdss: false, aiAssistant: false, carePlans: false,
             visits: {
                 teleconsultEnabled: false, teleconsultNowEnabled: false, teleconsultLaterEnabled: false,
                 clinicVisitEnabled: true, clinicF2fSchedulingEnabled: true, clinicLabFulfillmentEnabled: false,
@@ -65,7 +71,83 @@ const COLOR_OPTIONS = [
     { label: 'Teal', primary: '#0d9488', secondary: '#14b8a6', background: '#f0fdfa', surface: '#ffffff', text: '#134e4a', textMuted: '#0f766e', border: '#99f6e4' },
 ];
 
-const BUILTIN_IDS = ['metroGeneral', 'meralcoWellness', 'healthFirst'];
+const BUILTIN_IDS = ['metroGeneral', 'meralcoWellness', 'healthFirst', 'maxicare'];
+
+/* ─────────────── Provider Role Profiles ─────────────── */
+
+interface RoleProfile {
+    role: string;
+    staffId: string;
+    label: string;
+    icon: React.FC<{ size?: number }>;
+    description: string;
+}
+
+const PROVIDER_ROLE_PROFILES: RoleProfile[] = [
+    { role: 'super_admin', staffId: 'staff-100', label: 'Super Admin', icon: ShieldIcon, description: 'Full access, can switch branches' },
+    { role: 'admin', staffId: 'staff-010', label: 'Admin', icon: ShieldCheck, description: 'Full system access, user management' },
+    { role: 'doctor', staffId: 'staff-001', label: 'Doctor', icon: Stethoscope, description: 'Clinical, prescriptions, encounters' },
+    { role: 'nurse', staffId: 'staff-004', label: 'Nurse', icon: HeartPulse, description: 'Triage, nursing station, vitals' },
+    { role: 'lab_tech', staffId: 'staff-006', label: 'Lab Tech', icon: FlaskConical, description: 'Lab results, specimen processing' },
+    { role: 'pharmacist', staffId: 'staff-007', label: 'Pharmacist', icon: Pill, description: 'Dispensing, medication management' },
+    { role: 'billing_staff', staffId: 'staff-008', label: 'Billing', icon: Receipt, description: 'Revenue, invoices, payments' },
+    { role: 'front_desk', staffId: 'staff-009', label: 'Front Desk', icon: MonitorSmartphone, description: 'Check-in, queue, scheduling' },
+    { role: 'hr', staffId: 'staff-011', label: 'HR', icon: UserCog, description: 'Staff records, shifts, credentials' },
+    { role: 'imaging_tech', staffId: 'staff-012', label: 'Imaging', icon: ScanLine, description: 'X-ray, CT, ultrasound processing' },
+];
+
+/* ─────────────── Role → Module Access Map ─────────────── */
+
+interface ModuleAccess {
+    key: string;
+    label: string;
+    icon: React.FC<{ size?: number }>;
+}
+
+const ALL_PROVIDER_MODULES: ModuleAccess[] = [
+    { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { key: 'queue', label: 'Queue Management', icon: Users },
+    { key: 'teleconsult-queue', label: 'Teleconsult Queue', icon: Video },
+    { key: 'scheduling', label: 'Scheduling', icon: CalendarDays },
+    { key: 'nursing', label: 'Nursing Station', icon: HeartPulse },
+    { key: 'lab-imaging', label: 'Lab & Imaging', icon: Microscope },
+    { key: 'pharmacy', label: 'Pharmacy', icon: Pill },
+    { key: 'billing', label: 'Billing & Revenue', icon: CreditCard },
+    { key: 'hr', label: 'HR & Staff', icon: UserCog },
+    { key: 'facility', label: 'Facility', icon: Building2 },
+    { key: 'users', label: 'User Management', icon: ShieldIcon },
+    { key: 'communications', label: 'Communications', icon: MessageSquare },
+    { key: 'events', label: 'Events', icon: CalendarCheck },
+    { key: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { key: 'forms', label: 'Forms', icon: FileText },
+    { key: 'integrations', label: 'Integrations', icon: Cable },
+    { key: 'architecture', label: 'Architecture', icon: Server },
+    { key: 'homecare', label: 'HomeCare', icon: Home },
+];
+
+/* ─────────────── Doctor App Module List (for demo panel) ─────────────── */
+
+const ALL_DOCTOR_MODULES: ModuleAccess[] = [
+    { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { key: 'schedule', label: 'My Schedule', icon: Calendar },
+    { key: 'queue', label: 'In-Clinic Queue', icon: Users },
+    { key: 'teleconsult', label: 'Teleconsult Queue', icon: Video },
+    { key: 'encounter', label: 'Patient Encounter', icon: Stethoscope },
+    { key: 'results', label: 'Lab Results', icon: FlaskConical },
+    { key: 'prescriptions', label: 'Prescriptions', icon: Pill },
+    { key: 'care-plans', label: 'Care Plans', icon: ClipboardList },
+    { key: 'messages', label: 'Messages', icon: MessageSquare },
+    { key: 'tasks', label: 'Tasks', icon: ClipboardList },
+    { key: 'immunizations', label: 'Immunizations', icon: Syringe },
+    { key: 'loa', label: 'LOA Review', icon: FileCheck },
+];
+
+/** Role profiles available in the Doctor app */
+const DOCTOR_ROLE_PROFILES: RoleProfile[] = [
+    { role: 'doctor', staffId: 'staff-001', label: 'Doctor', icon: Stethoscope, description: 'Full clinical access, encounters, prescriptions, care plans' },
+    { role: 'nurse', staffId: 'staff-004', label: 'Staff Nurse', icon: HeartPulse, description: 'Triage, vitals, immunizations, care plans, encounters' },
+    { role: 'front_desk', staffId: 'staff-009', label: 'Receptionist', icon: MonitorSmartphone, description: 'Queue management, scheduling, messages' },
+];
 
 /* ─────────────── Feature label helpers ─────────────── */
 
@@ -80,6 +162,7 @@ const FEATURE_LABELS: { key: keyof TenantFeatures; label: string; group: 'core' 
     { key: 'admissions', label: 'Admissions', group: 'core' },
     { key: 'cdss', label: 'CDSS Alerts', group: 'core' },
     { key: 'aiAssistant', label: 'AI Assistant', group: 'core' },
+    { key: 'carePlans', label: 'Care Plans', group: 'core' },
 ];
 
 const VISIT_LABELS: { key: keyof VisitFeatures; label: string; parent?: keyof VisitFeatures }[] = [
@@ -97,15 +180,35 @@ export const DemoControls: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [showPill, setShowPill] = useState(false);
     const location = useLocation();
+
+    // Determine which portal we're on
     const isDoctorPortal = location.pathname.startsWith('/doctor');
+    const isProviderPortal = location.pathname.startsWith('/provider');
+    const isPatientPortal = !isDoctorPortal && !isProviderPortal;
     const isDoctorSimRunning = isDoctorPortal && !!(window as any).__doctorSimulationRunning;
+
     const { tenant, setTenantId, availableTenants, addTenant, removeTenant, updateTenantFeatures } = useTheme();
     const {
         toggleSimulation, isSimulating, queueMode, toggleQueueMode,
         leaveQueue, isQueueActive, isVisitComplete, advanceQueue,
         currentPatientId, availablePatients, switchPatient,
     } = useData();
+    const { currentStaff, switchStaff } = useProvider();
+    const navigate = useNavigate();
     const [lastCompletedState, setLastCompletedState] = useState(isVisitComplete);
+
+    // Switch staff AND redirect to the appropriate dashboard
+    const handleStaffSwitch = useCallback((staffId: string) => {
+        switchStaff(staffId);
+        // Redirect to the appropriate dashboard after a tick so state updates
+        setTimeout(() => {
+            if (isProviderPortal) {
+                navigate('/provider/dashboard');
+            } else if (isDoctorPortal) {
+                navigate('/doctor');
+            }
+        }, 50);
+    }, [switchStaff, navigate, isProviderPortal, isDoctorPortal]);
 
     // Create tenant state
     const [showCreateTenant, setShowCreateTenant] = useState(false);
@@ -115,6 +218,23 @@ export const DemoControls: React.FC = () => {
     const [selectedPreset, setSelectedPreset] = useState<FeaturePreset>('clinic');
     const [selectedColorIdx, setSelectedColorIdx] = useState(0);
     const [customFeatures, setCustomFeatures] = useState<TenantFeatures>(FEATURE_PRESETS.clinic.features);
+
+    // Derive the current role's accessible provider modules
+    const roleModules = useMemo(() => {
+        const allowedKeys: readonly string[] = PROVIDER_ROLE_ACCESS[currentStaff.role] || [];
+        return ALL_PROVIDER_MODULES.filter(m => allowedKeys.includes(m.key));
+    }, [currentStaff.role]);
+
+    // Derive the current role's accessible doctor modules
+    const doctorRoleModules = useMemo(() => {
+        const allowedKeys: readonly string[] = DOCTOR_ROLE_ACCESS[currentStaff.role] || DOCTOR_ROLE_ACCESS['doctor'] || [];
+        return ALL_DOCTOR_MODULES.filter(m => allowedKeys.includes(m.key));
+    }, [currentStaff.role]);
+
+    // Panel title based on context
+    const panelTitle = isDoctorPortal ? 'Doctor Settings' :
+                       isProviderPortal ? 'Provider Settings' :
+                       'Patient Settings';
 
     // Auto-hide pill when visit completes
     React.useEffect(() => {
@@ -139,7 +259,6 @@ export const DemoControls: React.FC = () => {
 
     const liveToggleVisitFeature = useCallback((key: keyof VisitFeatures) => {
         const nextVisits = { ...tenant.features.visits, [key]: !tenant.features.visits[key] };
-        // Parent-child dependency: turning off parent disables children
         if (key === 'teleconsultEnabled' && !nextVisits.teleconsultEnabled) {
             nextVisits.teleconsultNowEnabled = false;
             nextVisits.teleconsultLaterEnabled = false;
@@ -165,12 +284,10 @@ export const DemoControls: React.FC = () => {
     const toggleVisitFeature = useCallback((key: keyof VisitFeatures) => {
         setCustomFeatures(prev => {
             const nextVisits = { ...prev.visits, [key]: !prev.visits[key] };
-            // If parent teleconsult turned off, also turn off children
             if (key === 'teleconsultEnabled' && !nextVisits.teleconsultEnabled) {
                 nextVisits.teleconsultNowEnabled = false;
                 nextVisits.teleconsultLaterEnabled = false;
             }
-            // If parent clinic turned off, also turn off children
             if (key === 'clinicVisitEnabled' && !nextVisits.clinicVisitEnabled) {
                 nextVisits.clinicF2fSchedulingEnabled = false;
                 nextVisits.clinicLabFulfillmentEnabled = false;
@@ -209,12 +326,334 @@ export const DemoControls: React.FC = () => {
     // Hide entirely when doctor simulation is running
     if (isDoctorSimRunning) return null;
 
+    /* ═══════════════════════════════════════════════════
+       RENDER: Shared Tenant Selector
+       ═══════════════════════════════════════════════════ */
+    const renderTenantSelector = () => (
+        <div className="demo-section">
+            <span className="demo-label">Hospital Brand</span>
+            <div className="tenant-grid-v2">
+                {availableTenants.map((t) => (
+                    <div key={t.id} className="tenant-card-wrap">
+                        <div
+                            className={`tenant-opt ${tenant.id === t.id ? 'active' : ''}`}
+                            onClick={() => setTenantId(t.id)}
+                        >
+                            <div className="tenant-dot" style={{ background: t.colors.primary }} />
+                            <span>{t.name.split(' ')[0]}</span>
+                        </div>
+                        {!BUILTIN_IDS.includes(t.id) && (
+                            <button
+                                className="tenant-remove-btn"
+                                onClick={(e) => { e.stopPropagation(); removeTenant(t.id); }}
+                                title="Remove custom tenant"
+                            >
+                                <Trash2 size={10} />
+                            </button>
+                        )}
+                    </div>
+                ))}
+            </div>
+            <button className="create-tenant-btn" onClick={() => setShowCreateTenant(true)}>
+                <Plus size={14} /> Create New Tenant
+            </button>
+        </div>
+    );
+
+    /* ═══════════════════════════════════════════════════
+       RENDER: Provider Portal — Role Switcher + Module Access
+       ═══════════════════════════════════════════════════ */
+    const renderProviderControls = () => (
+        <>
+            {/* Role Switcher */}
+            <div className="demo-section">
+                <span className="demo-label">Staff Profile</span>
+                <div className="provider-role-grid">
+                    {PROVIDER_ROLE_PROFILES.map((profile) => {
+                        const Icon = profile.icon;
+                        const isActive = currentStaff.role === profile.role;
+                        return (
+                            <button
+                                key={profile.role}
+                                className={`provider-role-btn ${isActive ? 'active' : ''}`}
+                                onClick={() => handleStaffSwitch(profile.staffId)}
+                                title={profile.description}
+                            >
+                                <Icon size={16} />
+                                <span>{profile.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+                <div className="provider-current-info">
+                    <span className="provider-current-name">{currentStaff.name}</span>
+                    <span className="provider-current-dept">{currentStaff.department}</span>
+                </div>
+            </div>
+
+            {/* Role Module Access */}
+            <div className="demo-section">
+                <span className="demo-label">
+                    Module Access ({roleModules.length}/{ALL_PROVIDER_MODULES.length})
+                </span>
+                <div className="module-access-list">
+                    {ALL_PROVIDER_MODULES.map((mod) => {
+                        const Icon = mod.icon;
+                        const allowed = roleModules.some(m => m.key === mod.key);
+                        return (
+                            <div key={mod.key} className={`module-access-item ${allowed ? 'allowed' : 'denied'}`}>
+                                <Icon size={14} />
+                                <span>{mod.label}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Tenant Selector */}
+            {renderTenantSelector()}
+        </>
+    );
+
+    /* ═══════════════════════════════════════════════════
+       RENDER: Doctor Portal Controls
+       ═══════════════════════════════════════════════════ */
+    const renderDoctorControls = () => (
+        <>
+            {/* Role Switcher — expanded for doctor app */}
+            <div className="demo-section">
+                <span className="demo-label">Staff Profile</span>
+                <div className="provider-role-grid">
+                    {DOCTOR_ROLE_PROFILES.map((profile) => {
+                        const Icon = profile.icon;
+                        const isActive = currentStaff.role === profile.role;
+                        return (
+                            <button
+                                key={profile.role}
+                                className={`provider-role-btn ${isActive ? 'active' : ''}`}
+                                onClick={() => handleStaffSwitch(profile.staffId)}
+                                title={profile.description}
+                            >
+                                <Icon size={16} />
+                                <span>{profile.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+                <div className="provider-current-info">
+                    <span className="provider-current-name">{currentStaff.name}</span>
+                    <span className="provider-current-dept">{currentStaff.department}</span>
+                </div>
+            </div>
+
+            {/* Doctor Module Access */}
+            <div className="demo-section">
+                <span className="demo-label">
+                    Module Access ({doctorRoleModules.length}/{ALL_DOCTOR_MODULES.length})
+                </span>
+                <div className="module-access-list">
+                    {ALL_DOCTOR_MODULES.map((mod) => {
+                        const Icon = mod.icon;
+                        const allowed = doctorRoleModules.some(m => m.key === mod.key);
+                        return (
+                            <div key={mod.key} className={`module-access-item ${allowed ? 'allowed' : 'denied'}`}>
+                                <Icon size={14} />
+                                <span>{mod.label}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Tenant Selector */}
+            {renderTenantSelector()}
+
+            {/* Doctor Simulation */}
+            <div className="demo-section">
+                <span className="demo-label">Guided Simulation</span>
+                <button
+                    className="sim-button start"
+                    onClick={() => {
+                        if ((window as any).__startDoctorSimulation) {
+                            (window as any).__startDoctorSimulation();
+                        }
+                        setIsOpen(false);
+                    }}
+                    style={{ width: '100%' }}
+                >
+                    <Clapperboard size={16} />
+                    <span>Run Doctor Simulation</span>
+                </button>
+            </div>
+        </>
+    );
+
+    /* ═══════════════════════════════════════════════════
+       RENDER: Patient Portal Controls
+       ═══════════════════════════════════════════════════ */
+    const renderPatientControls = () => (
+        <>
+            {/* Patient Switcher */}
+            <div className="demo-section">
+                <span className="demo-label">Simulated Patient</span>
+                <div className="patient-list-v2">
+                    {availablePatients.map((p) => (
+                        <button
+                            key={p.id}
+                            className={`patient-opt-v2 ${currentPatientId === p.id ? 'active' : ''}`}
+                            onClick={() => switchPatient(p.id)}
+                        >
+                            <div className="patient-avatar-mini">
+                                <UserCircle size={14} />
+                            </div>
+                            <div className="patient-info-mini">
+                                <span className="patient-name-mini">{p.name.split(' ')[0]}</span>
+                                <span className="patient-tier-mini">{p.membershipType.split(' ')[0]}</span>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Tenant Selector */}
+            {renderTenantSelector()}
+
+            {/* Live Feature Flags */}
+            <div className="demo-section">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span className="demo-label">Feature Flags</span>
+                    <button
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', gap: 2, fontSize: '0.65rem' }}
+                        onClick={() => setShowFeatureDetails(!showFeatureDetails)}
+                    >
+                        {showFeatureDetails ? 'Collapse' : 'Expand'}{' '}
+                        {showFeatureDetails ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                    </button>
+                </div>
+
+                {/* Quick tag overview (always visible) */}
+                <div className="feature-tags">
+                    {tenant.features.hmo && <span className="feature-tag on" onClick={() => liveToggleFeature('hmo')} style={{ cursor: 'pointer' }}>HMO</span>}
+                    {tenant.features.philHealth && <span className="feature-tag on" onClick={() => liveToggleFeature('philHealth')} style={{ cursor: 'pointer' }}>PhilH</span>}
+                    {tenant.features.queue && <span className="feature-tag on">Queue</span>}
+                    {tenant.features.appointments && <span className="feature-tag on">Appts</span>}
+                    {tenant.features.visits.teleconsultEnabled && <span className="feature-tag on">Telecon</span>}
+                    {tenant.features.visits.teleconsultNowEnabled && <span className="feature-tag on">Now</span>}
+                    {tenant.features.visits.clinicLabFulfillmentEnabled && <span className="feature-tag on">Labs</span>}
+                    {tenant.features.loa && <span className="feature-tag on">LOA</span>}
+                    {tenant.features.cdss && <span className="feature-tag on">CDSS</span>}
+                    {tenant.features.aiAssistant && <span className="feature-tag on">AI</span>}
+                    {!tenant.features.hmo && <span className="feature-tag off" onClick={() => liveToggleFeature('hmo')} style={{ cursor: 'pointer' }}>HMO</span>}
+                    {!tenant.features.philHealth && <span className="feature-tag off" onClick={() => liveToggleFeature('philHealth')} style={{ cursor: 'pointer' }}>PhilH</span>}
+                    {!tenant.features.visits.teleconsultEnabled && <span className="feature-tag off">Telecon</span>}
+                    {!tenant.features.visits.clinicLabFulfillmentEnabled && <span className="feature-tag off">Labs</span>}
+                    {!tenant.features.loa && <span className="feature-tag off">LOA</span>}
+                    {!tenant.features.cdss && <span className="feature-tag off">CDSS</span>}
+                </div>
+
+                {showFeatureDetails && (
+                    <>
+                        {/* Quick-apply presets */}
+                        <div className="preset-grid" style={{ marginTop: 8, marginBottom: 8 }}>
+                            {(Object.entries(FEATURE_PRESETS) as [FeaturePreset, typeof FEATURE_PRESETS[FeaturePreset]][]).map(([key, preset]) => (
+                                <button
+                                    key={key}
+                                    className="preset-btn"
+                                    onClick={() => liveApplyPreset(key)}
+                                >
+                                    <strong>{preset.label}</strong>
+                                    <span>{preset.description}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Individual toggles */}
+                        <div className="feature-checklist">
+                            {FEATURE_LABELS.map(({ key, label }) => (
+                                <label key={key} className="feature-check">
+                                    <input
+                                        type="checkbox"
+                                        checked={!!tenant.features[key]}
+                                        onChange={() => liveToggleFeature(key)}
+                                    />
+                                    <span>{label}</span>
+                                </label>
+                            ))}
+                            <div className="feature-divider" />
+                            {VISIT_LABELS.map(({ key, label, parent }) => {
+                                const parentOff = parent ? !tenant.features.visits[parent] : false;
+                                return (
+                                    <label key={key} className={`feature-check ${parentOff ? 'disabled' : ''}`}>
+                                        <input
+                                            type="checkbox"
+                                            checked={!!tenant.features.visits[key]}
+                                            onChange={() => liveToggleVisitFeature(key)}
+                                            disabled={parentOff}
+                                        />
+                                        <span>{label}</span>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {/* Experience Mode */}
+            <div className="demo-section">
+                <span className="demo-label">Experience Mode</span>
+                <div className="demo-control-row" onClick={toggleQueueMode} style={{ cursor: 'pointer' }}>
+                    <div className="demo-control-info">
+                        <span className="demo-control-name">
+                            {queueMode === 'LINEAR' ? 'Linear Journey' : 'Multi-Stream'}
+                        </span>
+                        <span className="demo-control-desc">
+                            {queueMode === 'LINEAR' ? 'Step-by-step flow' : 'Simultaneous queues'}
+                        </span>
+                    </div>
+                    {queueMode === 'LINEAR' ? <List size={20} color="#3b82f6" /> : <LayoutGrid size={20} color="#10b981" />}
+                </div>
+            </div>
+
+            {/* Simulation Controls */}
+            <div className="demo-section">
+                <span className="demo-label">Simulation</span>
+                {isQueueActive ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <button
+                            className={`sim-button ${isSimulating ? 'stop' : 'start'}`}
+                            onClick={() => {
+                                toggleSimulation();
+                                setIsOpen(false);
+                                setShowPill(true);
+                            }}
+                            disabled={isVisitComplete}
+                        >
+                            {isSimulating ? (
+                                <><Square size={16} fill="currentColor" /><span>Stop Auto-Advance</span></>
+                            ) : (
+                                <><Play size={16} fill="currentColor" /><span>Run Patient Journey</span></>
+                            )}
+                        </button>
+                        <button className="sim-button reset" onClick={leaveQueue}>
+                            <RotateCcw size={16} /><span>Reset Entire Visit</span>
+                        </button>
+                    </div>
+                ) : (
+                    <p className="demo-control-desc" style={{ textAlign: 'center', fontStyle: 'italic' }}>
+                        Check in to enable simulation
+                    </p>
+                )}
+            </div>
+        </>
+    );
+
     return (
         <div className="demo-controls-wrapper">
             {isOpen && (
                 <div className="demo-panel" style={showCreateTenant ? { width: 340 } : undefined}>
                     <div className="demo-panel-header">
-                        <h3>{showCreateTenant ? 'Create Tenant' : 'Demo Settings'}</h3>
+                        <h3>{showCreateTenant ? 'Create Tenant' : panelTitle}</h3>
                         <button onClick={() => { setIsOpen(false); setShowCreateTenant(false); }} style={{ color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
                             <X size={18} />
                         </button>
@@ -222,8 +661,7 @@ export const DemoControls: React.FC = () => {
 
                     {showCreateTenant ? (
                         /* ─── CREATE TENANT PANEL ─── */
-                        <div className="create-tenant-panel">
-                            {/* Name & Tagline */}
+                        <div className="create-tenant-panel demo-panel-body">
                             <input
                                 className="demo-input"
                                 placeholder="Tenant Name"
@@ -239,7 +677,6 @@ export const DemoControls: React.FC = () => {
                                 maxLength={60}
                             />
 
-                            {/* Color Picker */}
                             <span className="demo-label">Brand Color</span>
                             <div className="color-palette">
                                 {COLOR_OPTIONS.map((c, i) => (
@@ -255,7 +692,6 @@ export const DemoControls: React.FC = () => {
                                 ))}
                             </div>
 
-                            {/* Feature Presets */}
                             <span className="demo-label">Feature Preset</span>
                             <div className="preset-grid">
                                 {(Object.entries(FEATURE_PRESETS) as [FeaturePreset, typeof FEATURE_PRESETS[FeaturePreset]][]).map(([key, preset]) => (
@@ -270,7 +706,6 @@ export const DemoControls: React.FC = () => {
                                 ))}
                             </div>
 
-                            {/* Feature Checkboxes */}
                             <span className="demo-label">Feature Flags</span>
                             <div className="feature-checklist">
                                 {FEATURE_LABELS.map(({ key, label }) => (
@@ -300,7 +735,6 @@ export const DemoControls: React.FC = () => {
                                 })}
                             </div>
 
-                            {/* Actions */}
                             <div className="create-tenant-actions">
                                 <button className="btn-cancel-tenant" onClick={() => setShowCreateTenant(false)}>
                                     Cancel
@@ -315,204 +749,12 @@ export const DemoControls: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        /* ─── MAIN DEMO PANEL ─── */
-                        <>
-                            {/* Patient Switcher */}
-                            <div className="demo-section">
-                                <span className="demo-label">Simulated Patient</span>
-                                <div className="patient-list-v2">
-                                    {availablePatients.map((p) => (
-                                        <button
-                                            key={p.id}
-                                            className={`patient-opt-v2 ${currentPatientId === p.id ? 'active' : ''}`}
-                                            onClick={() => switchPatient(p.id)}
-                                        >
-                                            <div className="patient-avatar-mini">
-                                                <UserCircle size={14} />
-                                            </div>
-                                            <div className="patient-info-mini">
-                                                <span className="patient-name-mini">{p.name.split(' ')[0]}</span>
-                                                <span className="patient-tier-mini">{p.membershipType.split(' ')[0]}</span>
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Tenant Selector */}
-                            <div className="demo-section">
-                                <span className="demo-label">Hospital Brand</span>
-                                <div className="tenant-grid-v2">
-                                    {availableTenants.map((t) => (
-                                        <div key={t.id} className="tenant-card-wrap">
-                                            <div
-                                                className={`tenant-opt ${tenant.id === t.id ? 'active' : ''}`}
-                                                onClick={() => setTenantId(t.id)}
-                                            >
-                                                <div className="tenant-dot" style={{ background: t.colors.primary }} />
-                                                <span>{t.name.split(' ')[0]}</span>
-                                            </div>
-                                            {!BUILTIN_IDS.includes(t.id) && (
-                                                <button
-                                                    className="tenant-remove-btn"
-                                                    onClick={(e) => { e.stopPropagation(); removeTenant(t.id); }}
-                                                    title="Remove custom tenant"
-                                                >
-                                                    <Trash2 size={10} />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                                <button className="create-tenant-btn" onClick={() => setShowCreateTenant(true)}>
-                                    <Plus size={14} /> Create New Tenant
-                                </button>
-                            </div>
-
-                            {/* Live Feature Flags */}
-                            <div className="demo-section">
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span className="demo-label">Feature Flags</span>
-                                    <button
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', gap: 2, fontSize: '0.65rem' }}
-                                        onClick={() => setShowFeatureDetails(!showFeatureDetails)}
-                                    >
-                                        {showFeatureDetails ? 'Collapse' : 'Expand'}{' '}
-                                        {showFeatureDetails ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                                    </button>
-                                </div>
-
-                                {/* Quick tag overview (always visible) */}
-                                <div className="feature-tags">
-                                    {tenant.features.hmo && <span className="feature-tag on" onClick={() => liveToggleFeature('hmo')} style={{ cursor: 'pointer' }}>HMO</span>}
-                                    {tenant.features.philHealth && <span className="feature-tag on" onClick={() => liveToggleFeature('philHealth')} style={{ cursor: 'pointer' }}>PhilH</span>}
-                                    {tenant.features.queue && <span className="feature-tag on">Queue</span>}
-                                    {tenant.features.appointments && <span className="feature-tag on">Appts</span>}
-                                    {tenant.features.visits.teleconsultEnabled && <span className="feature-tag on">Telecon</span>}
-                                    {tenant.features.visits.teleconsultNowEnabled && <span className="feature-tag on">Now</span>}
-                                    {tenant.features.visits.clinicLabFulfillmentEnabled && <span className="feature-tag on">Labs</span>}
-                                    {tenant.features.loa && <span className="feature-tag on">LOA</span>}
-                                    {tenant.features.cdss && <span className="feature-tag on">CDSS</span>}
-                                    {tenant.features.aiAssistant && <span className="feature-tag on">AI</span>}
-                                    {!tenant.features.hmo && <span className="feature-tag off" onClick={() => liveToggleFeature('hmo')} style={{ cursor: 'pointer' }}>HMO</span>}
-                                    {!tenant.features.philHealth && <span className="feature-tag off" onClick={() => liveToggleFeature('philHealth')} style={{ cursor: 'pointer' }}>PhilH</span>}
-                                    {!tenant.features.visits.teleconsultEnabled && <span className="feature-tag off">Telecon</span>}
-                                    {!tenant.features.visits.clinicLabFulfillmentEnabled && <span className="feature-tag off">Labs</span>}
-                                    {!tenant.features.loa && <span className="feature-tag off">LOA</span>}
-                                    {!tenant.features.cdss && <span className="feature-tag off">CDSS</span>}
-                                </div>
-
-                                {showFeatureDetails && (
-                                    <>
-                                        {/* Quick-apply presets */}
-                                        <div className="preset-grid" style={{ marginTop: 8, marginBottom: 8 }}>
-                                            {(Object.entries(FEATURE_PRESETS) as [FeaturePreset, typeof FEATURE_PRESETS[FeaturePreset]][]).map(([key, preset]) => (
-                                                <button
-                                                    key={key}
-                                                    className="preset-btn"
-                                                    onClick={() => liveApplyPreset(key)}
-                                                >
-                                                    <strong>{preset.label}</strong>
-                                                    <span>{preset.description}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-
-                                        {/* Individual toggles */}
-                                        <div className="feature-checklist">
-                                            {FEATURE_LABELS.map(({ key, label }) => (
-                                                <label key={key} className="feature-check">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={!!tenant.features[key]}
-                                                        onChange={() => liveToggleFeature(key)}
-                                                    />
-                                                    <span>{label}</span>
-                                                </label>
-                                            ))}
-                                            <div className="feature-divider" />
-                                            {VISIT_LABELS.map(({ key, label, parent }) => {
-                                                const parentOff = parent ? !tenant.features.visits[parent] : false;
-                                                return (
-                                                    <label key={key} className={`feature-check ${parentOff ? 'disabled' : ''}`}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={!!tenant.features.visits[key]}
-                                                            onChange={() => liveToggleVisitFeature(key)}
-                                                            disabled={parentOff}
-                                                        />
-                                                        <span>{label}</span>
-                                                    </label>
-                                                );
-                                            })}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Doctor Simulation / Experience Mode */}
-                            <div className="demo-section">
-                                <span className="demo-label">{isDoctorPortal ? 'Guided Simulation' : 'Experience Mode'}</span>
-                                {isDoctorPortal ? (
-                                    <button
-                                        className="sim-button start"
-                                        onClick={() => {
-                                            if ((window as any).__startDoctorSimulation) {
-                                                (window as any).__startDoctorSimulation();
-                                            }
-                                            setIsOpen(false);
-                                        }}
-                                        style={{ width: '100%' }}
-                                    >
-                                        <Clapperboard size={16} />
-                                        <span>Run Doctor Simulation</span>
-                                    </button>
-                                ) : (
-                                    <div className="demo-control-row" onClick={toggleQueueMode} style={{ cursor: 'pointer' }}>
-                                        <div className="demo-control-info">
-                                            <span className="demo-control-name">
-                                                {queueMode === 'LINEAR' ? 'Linear Journey' : 'Multi-Stream'}
-                                            </span>
-                                            <span className="demo-control-desc">
-                                                {queueMode === 'LINEAR' ? 'Step-by-step flow' : 'Simultaneous queues'}
-                                            </span>
-                                        </div>
-                                        {queueMode === 'LINEAR' ? <List size={20} color="#3b82f6" /> : <LayoutGrid size={20} color="#10b981" />}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Simulation Controls */}
-                            <div className="demo-section">
-                                <span className="demo-label">Simulation</span>
-                                {isQueueActive ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                        <button
-                                            className={`sim-button ${isSimulating ? 'stop' : 'start'}`}
-                                            onClick={() => {
-                                                toggleSimulation();
-                                                setIsOpen(false);
-                                                setShowPill(true);
-                                            }}
-                                            disabled={isVisitComplete}
-                                        >
-                                            {isSimulating ? (
-                                                <><Square size={16} fill="currentColor" /><span>Stop Auto-Advance</span></>
-                                            ) : (
-                                                <><Play size={16} fill="currentColor" /><span>Run Patient Journey</span></>
-                                            )}
-                                        </button>
-                                        <button className="sim-button reset" onClick={leaveQueue}>
-                                            <RotateCcw size={16} /><span>Reset Entire Visit</span>
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <p className="demo-control-desc" style={{ textAlign: 'center', fontStyle: 'italic' }}>
-                                        Check in to enable simulation
-                                    </p>
-                                )}
-                            </div>
-                        </>
+                        /* ─── CONTEXTUAL DEMO PANEL ─── */
+                        <div className="demo-panel-body">
+                            {isProviderPortal && renderProviderControls()}
+                            {isDoctorPortal && renderDoctorControls()}
+                            {isPatientPortal && renderPatientControls()}
+                        </div>
                     )}
                 </div>
             )}

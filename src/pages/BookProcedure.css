@@ -103,3 +103,245 @@
     background: rgba(255, 255, 255, 0.7) !important;
     backdrop-filter: blur(8px);
 }
+
+/* ─── Calendar Picker ─── */
+.calendar-picker {
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid var(--color-border-subtle, rgba(0,0,0,0.06));
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.calendar-header-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text, #1a1a2e);
+}
+
+.calendar-month {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 0.35rem;
+}
+
+.cal-weekday {
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--color-text-muted, #64748b);
+    text-transform: uppercase;
+    padding: 0.25rem 0;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+}
+
+.cal-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 0.4rem 0;
+    border-radius: 0.5rem;
+    border: 1.5px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-height: 40px;
+}
+
+.cal-day.pad {
+    cursor: default;
+}
+
+.cal-day-num {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text, #1a1a2e);
+}
+
+.cal-day:hover:not(.disabled):not(.full):not(.pad) {
+    background: var(--color-primary-light, rgba(0, 70, 190, 0.06));
+    border-color: var(--color-primary-transparent, rgba(0, 70, 190, 0.15));
+}
+
+.cal-day.selected {
+    background: var(--color-primary, #0046BE);
+    border-color: var(--color-primary, #0046BE);
+}
+
+.cal-day.selected .cal-day-num {
+    color: white;
+}
+
+.cal-day.selected .cal-dot {
+    background: rgba(255,255,255,0.6) !important;
+}
+
+.cal-day.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.cal-day.full:not(.disabled) {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.cal-day.limited .cal-day-num {
+    color: #d97706;
+}
+
+.cal-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.cal-dot.available {
+    background: #10b981;
+}
+
+.cal-dot.limited {
+    background: #f59e0b;
+}
+
+.cal-dot.full {
+    background: #ef4444;
+}
+
+.calendar-legend {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(0,0,0,0.04);
+}
+
+.calendar-legend > span {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--color-text-muted, #64748b);
+}
+
+/* ─── Time Slots ─── */
+.time-slots-section {
+    margin-top: 1rem;
+}
+
+.time-slots-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--color-text, #1a1a2e);
+}
+
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+}
+
+.time-slot-btn {
+    padding: 0.6rem 0.25rem;
+    border-radius: 0.6rem;
+    border: 1.5px solid var(--color-border-subtle, rgba(0,0,0,0.08));
+    background: white;
+    color: var(--color-text, #1a1a2e);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+}
+
+.time-slot-btn:hover {
+    border-color: var(--color-primary, #0046BE);
+    color: var(--color-primary, #0046BE);
+    background: rgba(0, 70, 190, 0.04);
+}
+
+.time-slot-btn.selected {
+    background: var(--color-primary, #0046BE);
+    color: white;
+    border-color: var(--color-primary, #0046BE);
+    box-shadow: 0 2px 8px var(--color-primary-transparent);
+}
+
+.limited-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #d97706;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+/* ─── HomeCare Cross-link Banner ─── */
+.hc-crosslink-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 0.85rem;
+    cursor: pointer;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.hc-crosslink-banner:hover {
+    background: #d1fae5;
+    border-color: #6ee7b7;
+}
+
+.hc-crosslink-banner > svg:first-child {
+    color: #059669;
+    flex-shrink: 0;
+}
+
+.hc-crosslink-banner > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex: 1;
+}
+
+.hc-crosslink-banner strong {
+    font-size: 0.82rem;
+    color: #065f46;
+}
+
+.hc-crosslink-banner span {
+    font-size: 0.75rem;
+    color: #047857;
+    line-height: 1.4;
+}
+
+.hc-crosslink-banner .chevron {
+    color: #059669;
+    flex-shrink: 0;
+}

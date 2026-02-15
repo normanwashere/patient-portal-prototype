@@ -9,14 +9,14 @@ export const tenants: Record<string, TenantConfig> = {
         logoUrl: 'https://enterprise.static.domains/PatientPortal/metrohospcropped.png',
         loginBackgroundUrl: 'https://images.unsplash.com/photo-1587351021759-3e566b9af923?q=80&w=2000&auto=format&fit=crop',
         colors: {
-            // "Blue, Cyan, Light Gray"
+            // "Blue, Cyan" — background subtly tinted with sky blue
             primary: '#0284c7',    // Blue/Sky 600
             secondary: '#06b6d4',  // Cyan 500
-            background: '#f3f4f6', // Light Gray 100
+            background: '#f0f7ff', // Sky-blue tinted background
             surface: '#ffffff',    // White
             text: '#0f172a',       // Slate 900
             textMuted: '#64748b',  // Slate 500
-            border: '#e5e7eb',     // Gray 200
+            border: '#dbe8f4',     // Blue-gray border
         },
         features: {
             sso: true,
@@ -29,6 +29,7 @@ export const tenants: Record<string, TenantConfig> = {
             admissions: true,
             cdss: true,
             aiAssistant: true,
+            carePlans: true,
             visits: {
                 teleconsultEnabled: true,
                 teleconsultNowEnabled: true,
@@ -36,6 +37,7 @@ export const tenants: Record<string, TenantConfig> = {
                 clinicVisitEnabled: true,
                 clinicF2fSchedulingEnabled: true,
                 clinicLabFulfillmentEnabled: true,
+                homeCareEnabled: true,
             },
         },
     },
@@ -48,10 +50,10 @@ export const tenants: Record<string, TenantConfig> = {
         logoUrl: 'https://enterprise.static.domains/PatientPortal/meralcowellnesscropped.png',
         loginBackgroundUrl: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=2000&auto=format&fit=crop',
         colors: {
-            // "Orange, Light Gray, White"
+            // "Orange, Warm Neutrals" — background subtly warm-tinted
             primary: '#f97316',    // Orange 500
-            secondary: '#d1d5db',  // Gray 300 (Light Gray as secondary per request, essentially neutral)
-            background: '#f9fafb', // Gray 50 (Light Grayish)
+            secondary: '#d1d5db',  // Gray 300
+            background: '#fff8f3', // Warm orange-tinted background
             surface: '#ffffff',    // White
             text: '#431407',       // Dark Orange/Brown
             textMuted: '#9a3412',
@@ -68,6 +70,7 @@ export const tenants: Record<string, TenantConfig> = {
             admissions: false,
             cdss: true,
             aiAssistant: false,
+            carePlans: true,
             visits: {
                 teleconsultEnabled: true, // Can schedule
                 teleconsultNowEnabled: false, // NO NOW
@@ -107,6 +110,7 @@ export const tenants: Record<string, TenantConfig> = {
             admissions: false,
             cdss: false,
             aiAssistant: false,
+            carePlans: false,   // Basic clinic, no care plans
             visits: {
                 teleconsultEnabled: false, // NO TELECONSULT
                 teleconsultNowEnabled: false,
@@ -114,6 +118,46 @@ export const tenants: Record<string, TenantConfig> = {
                 clinicVisitEnabled: true,
                 clinicF2fSchedulingEnabled: true,
                 clinicLabFulfillmentEnabled: false, // NO LABS
+            },
+        },
+    },
+    // Org 4: Maxicare (HMO Provider – Primary Care Clinics + Affiliated Network)
+    maxicare: {
+        id: 'maxicare',
+        name: 'Maxicare',
+        tagline: 'Live Your Best Life',
+        logoUrl: 'https://www.maxicare.com.ph/wp-content/uploads/2022/11/new-home-logo.png',
+        loginBackgroundUrl: 'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?q=80&w=2000&auto=format&fit=crop',
+        colors: {
+            // Maxicare brand: Royal Blue primary, Gold/Yellow accent (from logo)
+            primary: '#0046BE',     // Maxicare royal blue
+            secondary: '#FDB81E',   // Maxicare gold/yellow accent
+            background: '#eef3ff',  // Blue-tinted background reflecting brand
+            surface: '#ffffff',     // White
+            text: '#1a1a2e',        // Near-black
+            textMuted: '#6c757d',   // Muted gray
+            border: '#d0dbf0',      // Soft blue-gray border
+        },
+        features: {
+            sso: true,
+            loa: true,
+            hmo: true,              // Core HMO provider
+            philHealth: true,
+            queue: true,
+            appointments: true,
+            multiLocation: true,    // 41+ Primary Care Clinics nationwide
+            admissions: false,      // HMO, not a hospital
+            cdss: true,
+            aiAssistant: true,
+            carePlans: true,
+            visits: {
+                teleconsultEnabled: true,
+                teleconsultNowEnabled: true,    // 24/7 Teleconsult with Video Call
+                teleconsultLaterEnabled: true,
+                clinicVisitEnabled: true,
+                clinicF2fSchedulingEnabled: true,
+                clinicLabFulfillmentEnabled: true,  // Labs at PCCs
+                homeCareEnabled: true,              // HomeCare: lab collection at home/office
             },
         },
     },

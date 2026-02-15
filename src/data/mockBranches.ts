@@ -276,6 +276,166 @@ export const HEALTH_FIRST_BRANCHES: Branch[] = [
     },
 ];
 
+// Maxicare Primary Care Clinics
+export const MAXICARE_BRANCHES: Branch[] = [
+    // NCR
+    {
+        id: 'maxicare-ayala-north',
+        name: 'Maxicare Primary Care - Ayala North Exchange',
+        type: 'clinic',
+        address: '2/F The Shops, Ayala North Exchange, Makati City',
+        phone: '(02) 7798-7739',
+        hours: '24hrs Mon-Sun',
+        services: ['Consultation', 'Laboratory', 'Ultrasound', 'ECG', 'Treadmill', 'X-Ray', '2D Echo', 'Holter'],
+        distance: '0.8 km',
+        specializations: ['Internal Medicine', 'Family Medicine', 'Pediatrics', 'ENT', 'OB-Gyne', 'Dermatology', 'Ophthalmology', 'Psychiatry', 'IM-Cardiology'],
+    },
+    {
+        id: 'maxicare-bgc',
+        name: 'Maxicare Primary Care - Bonifacio Technology Center',
+        type: 'clinic',
+        address: '2nd Ave cor 31st St, BGC, Taguig',
+        phone: '(02) 7798-7739',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Consultation', 'Lab', 'X-Ray', 'CT-Scan', 'MRI', 'Ultrasound', 'Treadmill', 'ECG', '2D Echo'],
+        distance: '4.2 km',
+        specializations: ['GP', 'Internal Medicine', 'Family Medicine', 'OB-Gyne', 'ENT', 'Pediatrics', 'Dermatology', 'Psychiatry', 'IM-Cardiology', 'Orthopedics'],
+    },
+    {
+        id: 'maxicare-bridgetowne',
+        name: 'Maxicare Primary Care - Bridgetowne',
+        type: 'clinic',
+        address: 'Unit 1-3 Zeta Tower, Bridgetowne, C-5 Road, Quezon City',
+        phone: '(02) 7798-7739',
+        hours: '24hrs Mon-Sun',
+        services: ['Consultation', 'Lab', 'Ultrasound', 'ECG', 'Treadmill', 'X-Ray', '2D Echo'],
+        distance: '11.5 km',
+    },
+    {
+        id: 'maxicare-centris',
+        name: 'Maxicare Primary Care - Centris',
+        type: 'clinic',
+        address: 'G/F Cyberpod Centris 5, Eton Centris, Quezon City',
+        phone: '(02) 7908-6925',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Lab', 'Ultrasound', 'ECG', 'Treadmill', '2D Echo', 'X-Ray', 'Holter', 'Physical Therapy'],
+        distance: '9.8 km',
+    },
+    {
+        id: 'maxicare-vv-soliven',
+        name: 'Maxicare Primary Care - VV Soliven',
+        type: 'clinic',
+        address: 'EDSA Greenhills, San Juan City',
+        phone: '(02) 7798-7788',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Consultation', 'Lab', 'CT Scan', 'Ultrasound', 'ECG', '2D Echo', 'X-Ray', 'Treadmill', 'Holter'],
+        distance: '5.6 km',
+    },
+    {
+        id: 'maxicare-cubao',
+        name: 'Maxicare Primary Care - Cubao',
+        type: 'clinic',
+        address: 'Cyberpark Tower 2, Araneta City, Quezon City',
+        phone: '(02) 7798-7739',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Consultation', 'Lab', 'Ultrasound', 'ECG', 'X-Ray', '2D Echo'],
+        distance: '10.2 km',
+    },
+    {
+        id: 'maxicare-fairview',
+        name: 'Maxicare Primary Care - Fairview',
+        type: 'clinic',
+        address: 'AD Center, Regalado Hi-Way, Fairview, Quezon City',
+        phone: '(02) 7798-7739',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Consultation', 'Lab', 'Ultrasound', 'ECG', 'X-Ray', '2D Echo'],
+        distance: '18.3 km',
+    },
+    {
+        id: 'maxicare-hemady',
+        name: 'Maxicare Primary Care - Hemady',
+        type: 'clinic',
+        address: 'Hemady Square, Dona Hemady St, Quezon City',
+        phone: '(02) 7798-7739',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Consultation', 'Lab', 'Ultrasound', 'ECG', 'X-Ray', '2D Echo'],
+        distance: '8.1 km',
+    },
+    {
+        id: 'maxicare-double-dragon',
+        name: 'Maxicare Primary Care - Double Dragon Meridian Park',
+        type: 'clinic',
+        address: 'Diosdado Macapagal Ave, Pasay City',
+        phone: '(02) 7798-7739',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Consultation', 'Lab', 'Ultrasound', 'ECG', 'X-Ray', '2D Echo'],
+        distance: '7.4 km',
+    },
+    {
+        id: 'maxicare-alabang',
+        name: 'Maxicare Primary Care - Alabang',
+        type: 'clinic',
+        address: 'Filinvest Three Bldg, Alabang-Zapote Rd, Muntinlupa',
+        phone: '(02) 7798-7739',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Consultation', 'Lab', 'Ultrasound', 'ECG', 'X-Ray', '2D Echo'],
+        distance: '16.5 km',
+    },
+    // Luzon (outside NCR)
+    {
+        id: 'maxicare-clark',
+        name: 'Maxicare Primary Care - Clark',
+        type: 'clinic',
+        address: 'G/F SM City Clark, Angeles, Pampanga',
+        phone: '(045) 499-0000',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Consultation', 'Lab', 'Ultrasound', 'ECG', 'X-Ray', '2D Echo'],
+        distance: '82 km',
+    },
+    {
+        id: 'maxicare-imus',
+        name: 'Maxicare Primary Care - Imus',
+        type: 'clinic',
+        address: 'Metro MPC Building, E. Aguinaldo Highway, Imus, Cavite',
+        phone: '(046) 419-8017',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Consultation', 'Lab', 'Ultrasound', 'ECG', 'X-Ray', '2D Echo'],
+        distance: '34 km',
+    },
+    // Visayas
+    {
+        id: 'maxicare-cebu',
+        name: 'Maxicare Primary Care - Cebu Business Park',
+        type: 'clinic',
+        address: 'Mindanao Ave, Cebu Business Park, Cebu City',
+        phone: '(032) 260-9067',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Consultation', 'Lab', 'Ultrasound', 'ECG', 'Treadmill', 'X-Ray', '2D Echo', 'Holter'],
+        distance: '565 km',
+    },
+    {
+        id: 'maxicare-iloilo',
+        name: 'Maxicare Primary Care - Iloilo',
+        type: 'clinic',
+        address: 'Three Techno Place, Megaworld Blvd, Iloilo City',
+        phone: '(033) 328-7031',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Consultation', 'Lab', 'Ultrasound', 'ECG', 'X-Ray', '2D Echo'],
+        distance: '475 km',
+    },
+    // Mindanao
+    {
+        id: 'maxicare-davao',
+        name: 'Maxicare Primary Care - Davao',
+        type: 'clinic',
+        address: 'Abreeza Mall, JP Laurel Ave, Davao City',
+        phone: '(082) 293-2446',
+        hours: '6AM-10PM Mon-Sun',
+        services: ['Consultation', 'Lab', 'Ultrasound', 'ECG', 'Treadmill', '2D Echo', 'X-Ray'],
+        distance: '965 km',
+    },
+];
+
 /**
  * Returns branches for the given tenant ID.
  * Custom / unknown tenants get a generic branch using the tenant name.
@@ -285,6 +445,7 @@ export function getTenantBranches(tenantId: string, tenantName?: string): Branch
         case 'metroGeneral': return METRO_GENERAL_BRANCHES;
         case 'meralcoWellness': return MERALCO_WELLNESS_BRANCHES;
         case 'healthFirst': return HEALTH_FIRST_BRANCHES;
+        case 'maxicare': return MAXICARE_BRANCHES;
         default:
             // Dynamic / custom tenants get one generic branch
             return [{

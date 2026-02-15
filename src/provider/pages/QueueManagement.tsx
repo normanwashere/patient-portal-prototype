@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, type CSSProperties } from 'react';
+import React, { useState, useMemo, useCallback, type CSSProperties } from 'react';
 import {
   LayoutList,
   GitBranch,
@@ -23,10 +23,17 @@ import {
   FlaskConical,
   Pill,
   CreditCard,
+  Monitor,
+  DoorOpen,
+  Coffee,
+  ExternalLink,
+  Tv,
+  HeartPulse,
 } from 'lucide-react';
 import { useProvider } from '../context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { useToast } from '../../context/ToastContext';
+import { getPatientTenant } from '../data/providerMockData';
 import type { QueuePatient, StationType, DoctorOrderType } from '../types';
 import { LINEAR_STATION_ORDER } from '../types';
 
@@ -141,15 +148,16 @@ const S: Record<string, CSSProperties> = {
   arrow: { display: 'flex', alignItems: 'center', padding: '0 2px', color: 'var(--color-text-muted)', flexShrink: 0 },
 
   // Patient card (shared)
-  card: { background: 'var(--color-background)', borderRadius: 8, border: '1px solid var(--color-border)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6, transition: 'box-shadow .15s' },
-  cardRow: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const },
-  ticket: { fontWeight: 800, fontSize: 12, color: 'var(--color-primary)', fontFamily: 'monospace' },
-  name: { fontWeight: 600, fontSize: 13, color: 'var(--color-text)', flex: 1 },
-  priBadge: { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' as const },
-  wait: { fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 },
-  complaint: { fontSize: 11, color: 'var(--color-text-muted)', flex: 1 },
+  card: { background: 'var(--color-background)', borderRadius: 8, border: '1px solid var(--color-border)', padding: 0, display: 'flex', flexDirection: 'column', gap: 0, transition: 'box-shadow .15s', overflow: 'hidden' as const },
+  cardInner: { padding: '8px 10px 6px', display: 'flex', flexDirection: 'column' as const, gap: 4 },
+  cardRow: { display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' as const },
+  ticket: { fontWeight: 800, fontSize: 13, color: 'var(--color-primary)', fontFamily: 'monospace', letterSpacing: 0.5 },
+  name: { fontWeight: 600, fontSize: 12, color: 'var(--color-text)', flex: 1, overflow: 'hidden' as const, textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const },
+  priBadge: { fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8, whiteSpace: 'nowrap' as const },
+  wait: { fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 2, fontFamily: 'monospace' },
+  complaint: { fontSize: 10, color: 'var(--color-text-muted)', overflow: 'hidden' as const, textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const },
   status: { fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 8 },
-  actions: { display: 'flex', gap: 4, flexWrap: 'wrap' as const, marginTop: 2 },
+  actions: { display: 'flex', gap: 3, flexWrap: 'wrap' as const, padding: '5px 10px 8px', borderTop: '1px solid var(--color-border)', background: 'color-mix(in srgb, var(--color-primary) 2%, var(--color-background))' },
 
   // MULTI-STREAM 3-section layout
   msContainer: { display: 'flex', flexDirection: 'column', gap: 24 },
@@ -193,6 +201,22 @@ const S: Record<string, CSSProperties> = {
   sectionArrow: { display: 'flex', justifyContent: 'center', padding: '4px 0', color: 'var(--color-text-muted)' },
 
   empty: { color: 'var(--color-text-muted)', fontSize: 12, textAlign: 'center' as const, padding: 20 },
+
+  /* ── Consultation Room Sub-Lanes ── */
+  roomGroup: { display: 'flex', flexDirection: 'column' as const, gap: 0 },
+  roomGroupHeader: { padding: '10px 14px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky' as const, top: 0, background: 'var(--color-surface)', zIndex: 2, borderRadius: 'var(--radius) var(--radius) 0 0' },
+  roomGroupTitle: { fontWeight: 700, fontSize: 13, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: 6 },
+  roomSubLane: { borderTop: '1px solid var(--color-border)', padding: 0, display: 'flex', flexDirection: 'column' as const, gap: 0 },
+  roomSubHeader: { padding: '8px 10px', background: 'color-mix(in srgb, var(--color-primary) 3%, var(--color-surface))', borderBottom: '1px solid var(--color-border)' },
+  roomLabel: { fontSize: 12, fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: 5 },
+  roomDoctor: { fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 },
+  roomSpecialty: { fontSize: 8, fontWeight: 600, padding: '1px 5px', borderRadius: 4, background: 'color-mix(in srgb, var(--color-primary) 8%, transparent)', color: 'var(--color-primary)', whiteSpace: 'nowrap' as const },
+  roomBadge: { fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 8, background: 'var(--color-primary)', color: '#fff' },
+  roomStatusBadge: { fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 6, display: 'inline-flex' as const, alignItems: 'center', gap: 2 },
+  roomCardBody: { padding: '6px 8px', display: 'flex', flexDirection: 'column' as const, gap: 6 },
+  unassignedSection: { borderTop: '1px dashed var(--color-border)', padding: '8px 10px' },
+  unassignedLabel: { fontSize: 11, fontWeight: 600, color: 'var(--color-warning)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 },
+
 };
 
 /* ═══════════════════════════════════════════════════
@@ -203,23 +227,51 @@ export const QueueManagement = () => {
   const { tenant } = useTheme();
   const { showToast } = useToast();
   const {
-    queuePatients, queueStats, queueMode,
+    queuePatients, queueMode, consultRooms,
     toggleQueueMode, checkInPatient, transferPatient,
     addDoctorOrders, startOrder, completeOrder, completeCurrentOrder,
     callNextPatient, startPatient, completePatient,
-    markNoShow, skipPatient,
+    markNoShow, skipPatient, deferOrder,
   } = useProvider();
 
   const labEnabled = tenant.features.visits.clinicLabFulfillmentEnabled;
+  const tenantId = tenant.id;
+
+  // ── Tenant-filtered data ──
+  const tenantQueuePatients = useMemo(
+    () => queuePatients.filter(p => getPatientTenant(p.patientId) === tenantId),
+    [queuePatients, tenantId],
+  );
+  const tenantConsultRooms = useMemo(
+    () => consultRooms.filter(r => !r.tenantId || r.tenantId === tenantId),
+    [consultRooms, tenantId],
+  );
+
+  // ── Tenant-aware queue stats (replaces global queueStats for display) ──
+  const tenantQueueStats = useMemo(() => {
+    const active = tenantQueuePatients.filter(p => p.status === 'QUEUED' || p.status === 'READY' || p.status === 'IN_SESSION');
+    const waitTimes = active.map(p => p.waitMinutes).filter(n => n >= 0);
+    return {
+      totalInQueue: active.length,
+      avgWaitTime: waitTimes.length > 0 ? Math.round(waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length) : 0,
+      longestWait: waitTimes.length > 0 ? Math.max(...waitTimes) : 0,
+      completedToday: tenantQueuePatients.filter(p => p.status === 'COMPLETED').length,
+    };
+  }, [tenantQueuePatients]);
 
   // ── Local state ──
+  type ViewMode = 'queue' | 'monitor';
+  const [viewMode, setViewMode] = useState<ViewMode>('queue');
   const [search, setSearch] = useState('');
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [ciName, setCiName] = useState('');
   const [ciComplaint, setCiComplaint] = useState('');
   const [ciPriority, setCiPriority] = useState<QueuePatient['priority']>('Normal');
   const [addOrdersFor, setAddOrdersFor] = useState<string | null>(null);
+  // Room assignment modal — opened when advancing from Triage/Check-In to Consult
+  const [assignRoomFor, setAssignRoomFor] = useState<{ patientId: string; patientName: string; fromStation: StationType } | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<DoctorOrderType[]>([]);
+
 
   // ── Derived data ──
   const visibleStations: StationType[] = useMemo(
@@ -228,10 +280,10 @@ export const QueueManagement = () => {
   );
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return queuePatients;
+    if (!search.trim()) return tenantQueuePatients;
     const q = search.toLowerCase();
-    return queuePatients.filter((p) => p.patientName.toLowerCase().includes(q) || p.ticketNumber.toLowerCase().includes(q));
-  }, [queuePatients, search]);
+    return tenantQueuePatients.filter((p) => p.patientName.toLowerCase().includes(q) || p.ticketNumber.toLowerCase().includes(q));
+  }, [tenantQueuePatients, search]);
 
   // LINEAR: group by station
   const byStation = useMemo(() => {
@@ -292,13 +344,32 @@ export const QueueManagement = () => {
 
   const handleAdvance = (patientId: string, currentStation: StationType) => {
     const next = nextStation(currentStation);
-    if (next) {
-      transferPatient(patientId, next);
-      showToast(`Moved to ${next}`, 'success');
-    } else {
+    if (!next) {
       completePatient(patientId);
       showToast('Patient completed', 'success');
+      return;
     }
+    // If advancing TO Consult → open room assignment modal
+    if (next === 'Consult') {
+      const patient = tenantQueuePatients.find(p => p.id === patientId);
+      setAssignRoomFor({ patientId, patientName: patient?.patientName ?? '', fromStation: currentStation });
+      return;
+    }
+    transferPatient(patientId, next);
+    showToast(`Moved to ${next}`, 'success');
+  };
+
+  const handleAssignRoom = (roomId: string) => {
+    if (!assignRoomFor) return;
+    const room = tenantConsultRooms.find(r => r.id === roomId);
+    if (!room) return;
+    transferPatient(assignRoomFor.patientId, 'Consult', {
+      consultRoomId: room.id,
+      consultRoomName: room.name,
+      assignedDoctor: room.doctorName,
+    });
+    showToast(`Assigned to ${room.name} — ${room.doctorName}`, 'success');
+    setAssignRoomFor(null);
   };
 
   const handleCall = (station: StationType) => {
@@ -345,7 +416,7 @@ export const QueueManagement = () => {
   //  SHARED: Patient Card
   // ═══════════════════════════════════════════════════
 
-  const PatientCard = ({ p, showAdvance, section }: { p: QueuePatient; showAdvance?: boolean; section?: MSSection }) => {
+  const PatientCard = ({ p, showAdvance, section, isReturn }: { p: QueuePatient; showAdvance?: boolean; section?: MSSection; isReturn?: boolean }) => {
     // Determine what kind of IN_SESSION actions to show
     const hasActiveOrders = p.doctorOrders.length > 0 && p.doctorOrders.some((o) => o.status !== 'completed');
     const hasCompletedOrders = p.doctorOrders.length > 0 && p.doctorOrders.every((o) => o.status === 'completed');
@@ -355,131 +426,343 @@ export const QueueManagement = () => {
     const isAtOrderStation = p.stationType === 'Lab' || p.stationType === 'Imaging';
     const isLinear = queueMode === 'LINEAR';
 
+    // Status-aware left border
+    const borderLeft = p.status === 'IN_SESSION' ? '3px solid var(--color-success)'
+      : p.status === 'READY' ? '3px solid var(--color-primary)'
+      : p.status === 'COMPLETED' ? '3px solid #a3a3a3'
+      : '3px solid transparent';
+
+    // Status label
+    const statusLabel = p.status === 'IN_SESSION' ? 'In Session'
+      : p.status === 'READY' ? 'Ready'
+      : p.status === 'QUEUED' ? 'Queued'
+      : p.status === 'COMPLETED' ? 'Done'
+      : p.status;
+
+    const statusColor = p.status === 'IN_SESSION' ? { bg: 'color-mix(in srgb, var(--color-success) 12%, transparent)', fg: 'var(--color-success)' }
+      : p.status === 'READY' ? { bg: 'color-mix(in srgb, var(--color-primary) 12%, transparent)', fg: 'var(--color-primary)' }
+      : p.status === 'COMPLETED' ? { bg: '#f3f4f6', fg: '#6b7280' }
+      : { bg: 'var(--color-gray-100, #f3f4f6)', fg: 'var(--color-text-muted)' };
+
     return (
-      <div style={S.card}>
-        <div style={S.cardRow}>
-          <span style={S.ticket}>{p.ticketNumber}</span>
-          <span style={S.name}>{p.patientName}</span>
-          <span style={{ ...S.priBadge, ...priorityColor(p.priority) }}>{p.priority}</span>
-        </div>
-        <div style={S.cardRow}>
-          <span style={{ ...S.wait, color: waitColor(p.waitMinutes) }}>
-            <Clock size={11} /> {p.waitMinutes}m
-          </span>
-          {p.chiefComplaint && <span style={S.complaint}>— {p.chiefComplaint}</span>}
-        </div>
-
-        {/* Show current order info when patient is at an order station */}
-        {isAtOrderStation && currentOrder && isLinear && (
-          <div style={S.orderChipRow}>
-            {p.doctorOrders.map((o) => {
-              const bg = o.status === 'completed' ? '#dcfce7' : o.status === 'in-progress' || o.status === 'queued' ? 'var(--color-info-light)' : '#f3f4f6';
-              const fg = o.status === 'completed' ? 'var(--color-success-dark)' : o.status === 'in-progress' || o.status === 'queued' ? 'var(--color-info-dark)' : '#6b7280';
-              return (
-                <span key={o.id} style={{ ...S.orderChip, background: bg, color: fg, fontWeight: o.id === currentOrder.id ? 700 : 500 }}>
-                  {o.status === 'completed' ? <Check size={9} /> : o.status === 'pending' ? <Circle size={9} /> : <Play size={9} />}
-                  {o.label}
-                </span>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Show completed order chips for post-order patients */}
-        {(isAtReturnConsult || section === 'post-orders') && hasCompletedOrders && (
-          <div style={S.orderChipRow}>
-            {p.doctorOrders.map((o) => (
-              <span key={o.id} style={{ ...S.orderChip, background: '#dcfce7', color: 'var(--color-success-dark)' }}>
-                <Check size={10} /> {o.label}
+      <div style={{ ...S.card, borderLeft }}>
+        <div style={S.cardInner}>
+          {/* Row 1: Ticket + Name + Priority */}
+          <div style={S.cardRow}>
+            <span style={S.ticket}>{p.ticketNumber}</span>
+            <span style={S.name}>{p.patientName}</span>
+            {isReturn && (
+              <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 5, background: '#7c3aed', color: '#ede9fe', whiteSpace: 'nowrap' }}>
+                RET
               </span>
-            ))}
+            )}
+            {p.priority !== 'Normal' && (
+              <span style={{ ...S.priBadge, ...priorityColor(p.priority) }}>{p.priority}</span>
+            )}
           </div>
-        )}
 
-        <div style={S.actions}>
-          {/* QUEUED: Call / Skip / No-Show */}
-          {p.status === 'QUEUED' && (
-            <>
-              <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => handleCall(p.stationType)}>
-                <PhoneCall size={11} /> Call
-              </button>
-              <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }} onClick={() => handleSkip(p.id)}>
-                <SkipForward size={11} /> Skip
-              </button>
-              <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm, color: 'var(--color-error)' }} onClick={() => handleNoShow(p.id)}>
-                <XCircle size={11} /> No-Show
-              </button>
-            </>
+          {/* Row 2: Status + Wait + Complaint */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 6, background: statusColor.bg, color: statusColor.fg, whiteSpace: 'nowrap' as const }}>
+              {statusLabel}
+            </span>
+            <span style={{ ...S.wait, color: waitColor(p.waitMinutes) }}>
+              <Clock size={9} /> +{p.waitMinutes}m
+            </span>
+            {p.chiefComplaint && (
+              <span style={S.complaint} title={p.chiefComplaint}>— {p.chiefComplaint}</span>
+            )}
+          </div>
+
+          {/* Row 3 (optional): Assigned doctor / nurse */}
+          {(p.assignedDoctor || p.assignedNurse) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 9, color: 'var(--color-text-muted)' }}>
+              {p.assignedDoctor && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Stethoscope size={8} style={{ flexShrink: 0 }} /> {p.assignedDoctor}
+                </span>
+              )}
+              {p.assignedDoctor && p.assignedNurse && <span style={{ opacity: 0.4 }}>·</span>}
+              {p.assignedNurse && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <HeartPulse size={8} style={{ flexShrink: 0 }} /> {p.assignedNurse}
+                </span>
+              )}
+            </div>
           )}
 
-          {/* READY: Start */}
-          {p.status === 'READY' && (
-            <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => handleStart(p.id)}>
-              <Play size={11} /> Start
-            </button>
+          {/* Order chips — when at order station */}
+          {isAtOrderStation && currentOrder && isLinear && (
+            <div style={S.orderChipRow}>
+              {p.doctorOrders.map((o) => {
+                const bg = o.status === 'completed' ? '#dcfce7' : o.status === 'in-progress' || o.status === 'queued' ? 'var(--color-info-light)' : '#f3f4f6';
+                const fg = o.status === 'completed' ? 'var(--color-success-dark)' : o.status === 'in-progress' || o.status === 'queued' ? 'var(--color-info-dark)' : '#6b7280';
+                return (
+                  <span key={o.id} style={{ ...S.orderChip, background: bg, color: fg, fontWeight: o.id === currentOrder.id ? 700 : 500 }}>
+                    {o.status === 'completed' ? <Check size={9} /> : o.status === 'pending' ? <Circle size={9} /> : <Play size={9} />}
+                    {o.label}
+                  </span>
+                );
+              })}
+            </div>
           )}
 
-          {/* IN_SESSION actions — context-dependent */}
-          {p.status === 'IN_SESSION' && (
-            <>
-              {/* At Consult (initial) with no orders yet → "Add Orders" + "Next →" (skip orders) */}
-              {isAtConsult && !hasActiveOrders && !hasCompletedOrders && (
-                <>
-                  <button style={{ ...S.btn, ...S.btnOutline, ...S.btnSm }}
-                    onClick={() => { setAddOrdersFor(p.id); setSelectedOrders([]); }}>
-                    <Plus size={11} /> Add Orders
+          {/* Completed order chips for return-consult / post-order patients */}
+          {(isAtReturnConsult || section === 'post-orders') && hasCompletedOrders && (
+            <div style={S.orderChipRow}>
+              {p.doctorOrders.map((o) => (
+                <span key={o.id} style={{ ...S.orderChip, background: '#dcfce7', color: 'var(--color-success-dark)' }}>
+                  <Check size={9} /> {o.label}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Actions bar — visually separated */}
+        {p.status !== 'NO_SHOW' && (
+          <div style={S.actions}>
+            {/* QUEUED: Call / Skip / No-Show */}
+            {p.status === 'QUEUED' && (
+              <>
+                <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => handleCall(p.stationType)}>
+                  <PhoneCall size={10} /> Call
+                </button>
+                <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }} onClick={() => handleSkip(p.id)}>
+                  <SkipForward size={10} /> Skip
+                </button>
+                <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm, color: 'var(--color-error)' }} onClick={() => handleNoShow(p.id)}>
+                  <XCircle size={10} />
+                </button>
+              </>
+            )}
+
+            {/* READY: Start */}
+            {p.status === 'READY' && (
+              <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => handleStart(p.id)}>
+                <Play size={10} /> Start
+              </button>
+            )}
+
+            {/* IN_SESSION actions — context-dependent */}
+            {p.status === 'IN_SESSION' && (
+              <>
+                {isAtConsult && !hasActiveOrders && !hasCompletedOrders && (
+                  <>
+                    <button style={{ ...S.btn, ...S.btnOutline, ...S.btnSm }}
+                      onClick={() => { setAddOrdersFor(p.id); setSelectedOrders([]); }}>
+                      <Plus size={10} /> Orders
+                    </button>
+                    {showAdvance && (
+                      <button style={{ ...S.btn, ...S.btnSuccess, ...S.btnSm }}
+                        onClick={() => handleAdvance(p.id, p.stationType)}>
+                        <ArrowRight size={10} /> {isLinear ? 'Return' : nextStation(p.stationType)}
+                      </button>
+                    )}
+                  </>
+                )}
+
+                {isAtOrderStation && hasActiveOrders && isLinear && (
+                  <button style={{ ...S.btn, ...S.btnSuccess, ...S.btnSm }}
+                    onClick={() => { completeCurrentOrder(p.id); showToast('Order completed', 'success'); }}>
+                    <CheckCircle size={10} /> Complete
                   </button>
-                  {showAdvance && (
+                )}
+
+                {isAtReturnConsult && (
+                  <>
+                    <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }}
+                      onClick={() => { transferPatient(p.id, 'Pharmacy'); showToast('Sent to Pharmacy', 'success'); }}>
+                      <Pill size={10} /> Pharmacy
+                    </button>
+                    <button style={{ ...S.btn, ...S.btnOutline, ...S.btnSm }}
+                      onClick={() => { transferPatient(p.id, 'Billing'); showToast('Sent to Billing', 'success'); }}>
+                      <CreditCard size={10} /> Billing
+                    </button>
+                  </>
+                )}
+
+                {showAdvance && !isAtConsult && !isAtOrderStation && !isAtReturnConsult && (
+                  nextStation(p.stationType) === 'Consult' ? (
                     <button style={{ ...S.btn, ...S.btnSuccess, ...S.btnSm }}
                       onClick={() => handleAdvance(p.id, p.stationType)}>
-                      <ArrowRight size={11} /> Next: {isLinear ? 'Return-Consult' : nextStation(p.stationType)}
+                      <DoorOpen size={10} /> Assign Room
                     </button>
-                  )}
-                </>
-              )}
-
-              {/* At an order station (Lab/Imaging) → "Complete Order" to advance sequentially */}
-              {isAtOrderStation && hasActiveOrders && isLinear && (
-                <button style={{ ...S.btn, ...S.btnSuccess, ...S.btnSm }}
-                  onClick={() => { completeCurrentOrder(p.id); showToast('Order completed', 'success'); }}>
-                  <CheckCircle size={11} /> Complete Order
-                </button>
-              )}
-
-              {/* At Return-Consult → doctor chooses: Pharmacy or Billing */}
-              {isAtReturnConsult && (
-                <>
-                  <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }}
-                    onClick={() => { transferPatient(p.id, 'Pharmacy'); showToast('Sent to Pharmacy', 'success'); }}>
-                    <Pill size={11} /> → Pharmacy
-                  </button>
-                  <button style={{ ...S.btn, ...S.btnOutline, ...S.btnSm }}
-                    onClick={() => { transferPatient(p.id, 'Billing'); showToast('Sent to Billing', 'success'); }}>
-                    <CreditCard size={11} /> → Billing
-                  </button>
-                </>
-              )}
-
-              {/* Normal advance for other stations (Check-In, Triage, Pharmacy, Billing) */}
-              {showAdvance && !isAtConsult && !isAtOrderStation && !isAtReturnConsult && (
-                <button style={{ ...S.btn, ...S.btnSuccess, ...S.btnSm }}
-                  onClick={() => handleAdvance(p.id, p.stationType)}>
-                  {nextStation(p.stationType) ? (
-                    <><ArrowRight size={11} /> Next: {nextStation(p.stationType)}</>
                   ) : (
-                    <><CheckCircle size={11} /> Complete</>
-                  )}
-                </button>
-              )}
-            </>
-          )}
+                    <button style={{ ...S.btn, ...S.btnSuccess, ...S.btnSm }}
+                      onClick={() => handleAdvance(p.id, p.stationType)}>
+                      {nextStation(p.stationType) ? (
+                        <><ArrowRight size={10} /> {nextStation(p.stationType)}</>
+                      ) : (
+                        <><CheckCircle size={10} /> Complete</>
+                      )}
+                    </button>
+                  )
+                )}
+              </>
+            )}
 
-          {/* COMPLETED */}
-          {p.status === 'COMPLETED' && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: 'var(--color-success)', fontWeight: 600 }}>
-              <Check size={12} /> Done
-            </span>
-          )}
+            {/* COMPLETED */}
+            {p.status === 'COMPLETED' && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: 'var(--color-success)', fontWeight: 600 }}>
+                <Check size={11} /> Done
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ═══════════════════════════════════════════════════
+  //  MONITOR DISPLAY — Room/Station Picker + Open in New Tab
+  //  Each room/station gets its own dedicated monitor display
+  // ═══════════════════════════════════════════════════
+
+  const openMonitor = (stationKey: string) => {
+    const url = `/provider/queue/monitor/${encodeURIComponent(stationKey)}?tenant=${encodeURIComponent(tenantId)}`;
+    window.open(url, `qm-${stationKey}`, 'noopener');
+  };
+
+  const renderMonitorDisplay = () => {
+    // Count patients per station for preview
+    const activePatients = tenantQueuePatients.filter(
+      p => p.status !== 'COMPLETED' && p.status !== 'NO_SHOW' && p.stationType !== 'Done'
+    );
+    const countByStation = (st: StationType) => activePatients.filter(p => p.stationType === st).length;
+    const countByRoom = (roomId: string, st: StationType) => activePatients.filter(p => p.stationType === st && p.consultRoomId === roomId).length;
+    const attendingByStation = (st: StationType) => activePatients.filter(p => p.stationType === st && p.status === 'IN_SESSION').length;
+    const attendingByRoom = (roomId: string, st: StationType) => activePatients.filter(p => p.stationType === st && p.consultRoomId === roomId && p.status === 'IN_SESSION').length;
+
+    // Build display cards
+    type MonitorCard = { key: string; icon: React.ReactNode; label: string; sublabel: string; count: number; attending: number; status?: string; doctorName?: string; specialty?: string };
+    const cards: MonitorCard[] = [];
+
+    // Non-consult stations
+    const stationList: { st: StationType; icon: React.ReactNode }[] = [
+      { st: 'Check-In', icon: <UserPlus size={20} /> },
+      { st: 'Triage', icon: <Stethoscope size={20} /> },
+    ];
+    for (const { st, icon } of stationList) {
+      cards.push({ key: st, icon, label: st, sublabel: '', count: countByStation(st), attending: attendingByStation(st) });
+    }
+
+    // Consult rooms — Consult + Return-Consult share the same physical room & doctor
+    for (const room of tenantConsultRooms) {
+      const consultCount = countByRoom(room.id, 'Consult');
+      const returnCount = room.handlesReturn ? countByRoom(room.id, 'Return-Consult') : 0;
+      const consultAttending = attendingByRoom(room.id, 'Consult');
+      const returnAttending = room.handlesReturn ? attendingByRoom(room.id, 'Return-Consult') : 0;
+      cards.push({
+        key: room.id,
+        icon: <DoorOpen size={20} />,
+        label: room.name,
+        sublabel: `${room.doctorName} • ${room.specialty}`,
+        doctorName: room.doctorName,
+        specialty: room.specialty,
+        count: consultCount + returnCount,
+        attending: consultAttending + returnAttending,
+        status: room.status,
+      });
+    }
+
+    // Lab / Imaging / Pharmacy / Billing
+    const postStations: { st: StationType; icon: React.ReactNode }[] = [
+      { st: 'Lab', icon: <FlaskConical size={20} /> },
+      { st: 'Imaging', icon: <Layers size={20} /> },
+      { st: 'Pharmacy', icon: <Pill size={20} /> },
+      { st: 'Billing', icon: <CreditCard size={20} /> },
+    ];
+    for (const { st, icon } of postStations) {
+      if (!labEnabled && LAB_STATIONS.includes(st)) continue;
+      cards.push({ key: st, icon, label: st, sublabel: '', count: countByStation(st), attending: attendingByStation(st) });
+    }
+
+    return (
+      <div>
+        {/* Explanation */}
+        <div style={{ marginBottom: 20, padding: '16px 20px', background: 'var(--color-surface)', borderRadius: 'var(--radius)', border: '1px solid var(--color-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <Tv size={20} style={{ color: 'var(--color-primary)' }} />
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>Station Displays</span>
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.5, margin: 0 }}>
+            Each station and consultation room has its own dedicated display. Click <strong>"Open Display"</strong> to launch
+            the queue monitor in a new tab — drag it to a connected monitor to display at the station.
+            The display shows ticket numbers only (no patient names) and updates in real-time.
+          </p>
+        </div>
+
+        {/* Grid of monitor cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 14 }}>
+          {cards.map(card => {
+            const isOnBreak = card.status === 'On Break';
+            const isClosed = card.status === 'Closed';
+            return (
+              <div key={card.key} style={{
+                background: 'var(--color-surface)', borderRadius: 'var(--radius)', border: '1px solid var(--color-border)',
+                padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12,
+                opacity: isClosed ? 0.5 : 1,
+              }}>
+                {/* Card header */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: isOnBreak ? '#fef3c7' : isClosed ? '#fee2e2' : 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
+                    color: isOnBreak ? '#92400e' : isClosed ? '#991b1b' : 'var(--color-primary)',
+                  }}>
+                    {card.icon}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {card.label}
+                      {isOnBreak && <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 8, background: '#fef3c7', color: '#92400e' }}><Coffee size={9} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />Break</span>}
+                      {isClosed && <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 8, background: '#fee2e2', color: '#991b1b' }}>Closed</span>}
+                    </div>
+                    {card.sublabel && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
+                        <Stethoscope size={11} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text)' }}>{card.doctorName ?? card.sublabel}</span>
+                        {card.specialty && <span style={S.roomSpecialty}>{card.specialty}</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Stats row */}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {card.attending > 0 && (
+                    <div style={{ flex: 1, padding: '8px 12px', background: 'color-mix(in srgb, var(--color-success) 10%, var(--color-background))', borderRadius: 8, textAlign: 'center' }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-success)', fontFamily: 'monospace' }}>{card.attending}</div>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Attending</div>
+                    </div>
+                  )}
+                  <div style={{ flex: 1, padding: '8px 12px', background: 'var(--color-background)', borderRadius: 8, textAlign: 'center' }}>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text)', fontFamily: 'monospace' }}>{card.count - card.attending}</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>In Queue</div>
+                  </div>
+                  <div style={{ flex: 1, padding: '8px 12px', background: 'var(--color-background)', borderRadius: 8, textAlign: 'center', borderLeft: '2px solid var(--color-border)' }}>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text-muted)', fontFamily: 'monospace' }}>{card.count}</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Total</div>
+                  </div>
+                </div>
+
+                {/* Open button */}
+                <button
+                  onClick={() => openMonitor(card.key)}
+                  disabled={isClosed}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    padding: '10px 16px', borderRadius: 8, border: 'none', cursor: isClosed ? 'not-allowed' : 'pointer',
+                    background: isClosed ? 'var(--color-gray-100, #e5e7eb)' : '#1e293b', color: isClosed ? '#9ca3af' : '#e2e8f0',
+                    fontWeight: 700, fontSize: 13, transition: 'all .15s',
+                  }}
+                >
+                  <ExternalLink size={14} /> Open Display
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -490,22 +773,190 @@ export const QueueManagement = () => {
   //  Complete → auto-advance to next lane
   // ═══════════════════════════════════════════════════
 
+  /**
+   * Render a Consult or Return-Consult station as room sub-lanes.
+   * Ghost cards show patients from the OTHER queue type (same room) so
+   * staff can see the real queue depth the doctor faces in each room.
+   */
+  const renderRoomLane = (station: 'Consult' | 'Return-Consult', patients: QueuePatient[]) => {
+    const active = patients.filter((p) => p.status !== 'COMPLETED' && p.status !== 'NO_SHOW');
+    const isReturn = station === 'Return-Consult';
+    const applicableRooms = tenantConsultRooms.filter(r => isReturn ? r.handlesReturn : true);
+
+    // The "other" queue that shares the same room
+    const otherStation: StationType = isReturn ? 'Consult' : 'Return-Consult';
+    const otherPatients = (byStation.get(otherStation) ?? []).filter(p => p.status !== 'COMPLETED' && p.status !== 'NO_SHOW');
+
+    // Group patients by room
+    const byRoom = new Map<string, QueuePatient[]>();
+    const otherByRoom = new Map<string, QueuePatient[]>();
+    const unassigned: QueuePatient[] = [];
+    for (const p of active) {
+      if (p.consultRoomId) {
+        if (!byRoom.has(p.consultRoomId)) byRoom.set(p.consultRoomId, []);
+        byRoom.get(p.consultRoomId)!.push(p);
+      } else {
+        unassigned.push(p);
+      }
+    }
+    for (const p of otherPatients) {
+      if (p.consultRoomId) {
+        if (!otherByRoom.has(p.consultRoomId)) otherByRoom.set(p.consultRoomId, []);
+        otherByRoom.get(p.consultRoomId)!.push(p);
+      }
+    }
+
+    const grpAttending = active.filter(p => p.status === 'IN_SESSION').length;
+    const grpQueued = active.length - grpAttending;
+
+    return (
+      <div style={{ ...S.lane, minWidth: 260, maxWidth: 320, flex: '0 0 280px' }}>
+        <div style={S.roomGroupHeader}>
+          <span style={S.roomGroupTitle}>
+            {stationIcon(station)} {isReturn ? 'Return Consult' : 'Consultation'}
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            {grpAttending > 0 && (
+              <span style={{ ...S.laneBadge, background: 'var(--color-success)', color: '#fff', fontSize: 10 }} title={`${grpAttending} attending`}>
+                {grpAttending} <Play size={8} style={{ display: 'inline', verticalAlign: 'middle' }} />
+              </span>
+            )}
+            <span style={{ ...S.laneBadge, background: 'var(--color-primary)', color: '#fff' }}>
+              {grpQueued}
+            </span>
+          </div>
+        </div>
+        <div style={{ overflowY: 'auto' as const, flex: 1, maxHeight: 'calc(100vh - 320px)' }}>
+          {applicableRooms.map((room) => {
+            const roomPatients = byRoom.get(room.id) ?? [];
+            const ghostPatients = otherByRoom.get(room.id) ?? [];
+            const rmAttending = roomPatients.filter(p => p.status === 'IN_SESSION').length;
+            const rmQueued = roomPatients.length - rmAttending;
+            const isOnBreak = room.status === 'On Break';
+            const isClosed = room.status === 'Closed';
+            const roomEmpty = roomPatients.length === 0 && ghostPatients.length === 0;
+            return (
+              <div key={room.id} style={S.roomSubLane}>
+                {/* Room header card */}
+                <div style={S.roomSubHeader}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' as const }}>
+                        <DoorOpen size={13} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                        <span style={S.roomLabel}>{room.name}</span>
+                        {isOnBreak && <span style={{ ...S.roomStatusBadge, background: '#fef3c7', color: '#92400e' }}><Coffee size={8} /> Break</span>}
+                        {isClosed && <span style={{ ...S.roomStatusBadge, background: '#fee2e2', color: '#991b1b' }}>Closed</span>}
+                      </div>
+                      <div style={S.roomDoctor}>
+                        <Stethoscope size={9} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.doctorName}</span>
+                        <span style={S.roomSpecialty}>{room.specialty}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginLeft: 8 }}>
+                      {ghostPatients.length > 0 && (
+                        <span style={{
+                          fontSize: 8, fontWeight: 700, padding: '2px 5px', borderRadius: 5,
+                          background: isReturn ? 'rgba(124,58,237,0.12)' : 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
+                          color: isReturn ? '#7c3aed' : 'var(--color-primary)',
+                          border: `1px dashed ${isReturn ? '#7c3aed' : 'var(--color-primary)'}`,
+                          lineHeight: 1, whiteSpace: 'nowrap' as const,
+                        }}>
+                          +{ghostPatients.length} {isReturn ? 'con' : 'ret'}
+                        </span>
+                      )}
+                      {rmAttending > 0 && (
+                        <span style={{ ...S.roomBadge, background: 'var(--color-success)', fontSize: 9, padding: '1px 6px' }} title={`${rmAttending} attending`}>
+                          {rmAttending}<Play size={7} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 1 }} />
+                        </span>
+                      )}
+                      <span style={{ ...S.roomBadge, fontSize: 9, padding: '1px 6px' }}>{rmQueued}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Room body — patients */}
+                <div style={S.roomCardBody}>
+                  {/* Ghost cards */}
+                  {ghostPatients.map((p) => (
+                    <div key={`ghost-${p.id}`} style={{
+                      opacity: 0.35, pointerEvents: 'none', padding: '4px 8px',
+                      borderRadius: 6, border: '1px dashed var(--color-border)', background: 'var(--color-surface)',
+                      display: 'flex', alignItems: 'center', gap: 4,
+                    }}>
+                      <span style={{ ...S.ticket, fontSize: 10 }}>{p.ticketNumber}</span>
+                      <span style={{ fontSize: 10, color: 'var(--color-text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.patientName}</span>
+                      <span style={{ fontSize: 7, fontWeight: 700, padding: '1px 4px', borderRadius: 4,
+                        background: isReturn ? 'var(--color-primary-light)' : '#7c3aed',
+                        color: isReturn ? 'var(--color-primary)' : '#ede9fe',
+                      }}>
+                        {isReturn ? 'CON' : 'RET'}
+                      </span>
+                    </div>
+                  ))}
+
+                  {/* Actual patients */}
+                  {roomEmpty ? (
+                    <div style={{ ...S.empty, padding: 8, fontSize: 10 }}>{isOnBreak ? 'On break' : isClosed ? 'Closed' : 'No patients'}</div>
+                  ) : (
+                    roomPatients.map((p) => <PatientCard key={p.id} p={p} showAdvance />)
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          {unassigned.length > 0 && (
+            <div style={S.unassignedSection}>
+              <div style={S.unassignedLabel}>
+                <Clock size={11} /> Unassigned ({unassigned.length})
+              </div>
+              {unassigned.map((p) => <PatientCard key={p.id} p={p} showAdvance />)}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderLinear = () => (
     <div style={S.kanban}>
       {visibleStations.map((station, i) => {
         const patients = byStation.get(station) ?? [];
         const isDone = station === 'Done';
         const active = isDone ? patients : patients.filter((p) => p.status !== 'COMPLETED' && p.status !== 'NO_SHOW');
+
+        // Use room-based rendering for Consult and Return-Consult
+        if (station === 'Consult' || station === 'Return-Consult') {
+          return (
+            <div key={station} style={{ display: 'flex', alignItems: 'flex-start' }}>
+              {renderRoomLane(station, patients)}
+              {i < visibleStations.length - 1 && (
+                <div style={S.arrow}><ChevronRight size={18} /></div>
+              )}
+            </div>
+          );
+        }
+
+        const stAttending = active.filter(p => p.status === 'IN_SESSION').length;
+        const stQueued = active.length - stAttending;
+
         return (
           <div key={station} style={{ display: 'flex', alignItems: 'flex-start' }}>
             <div style={S.lane}>
               <div style={S.laneHeader}>
                 <span style={S.laneTitle}>
-                  {stationIcon(station)} {station === 'Return-Consult' ? 'Return Consult' : station}
+                  {stationIcon(station)} {station}
                 </span>
-                <span style={{ ...S.laneBadge, background: isDone ? 'var(--color-success)' : 'var(--color-primary)', color: '#fff' }}>
-                  {active.length}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {stAttending > 0 && (
+                    <span style={{ ...S.laneBadge, background: 'var(--color-success)', color: '#fff', fontSize: 10 }} title={`${stAttending} attending`}>
+                      {stAttending} <Play size={8} style={{ display: 'inline', verticalAlign: 'middle' }} />
+                    </span>
+                  )}
+                  <span style={{ ...S.laneBadge, background: isDone ? 'var(--color-success)' : 'var(--color-primary)', color: '#fff' }}>
+                    {stQueued}
+                  </span>
+                </div>
               </div>
               <div style={S.laneBody}>
                 {active.length === 0 ? (
@@ -531,12 +982,141 @@ export const QueueManagement = () => {
   //  3. Post-Orders (Return Consult → Pharmacy → Billing)
   // ═══════════════════════════════════════════════════
 
+  /**
+   * Multi-stream: Render Consult or Return-Consult as 1 lane PER ROOM (not grouped).
+   * Each room gets its own independent lane with ghost cards from the other queue.
+   * Returns a fragment with multiple lanes — the caller handles arrows.
+   */
+  const renderRoomLanes = (station: 'Consult' | 'Return-Consult', patients: QueuePatient[], section: MSSection) => {
+    const isReturn = station === 'Return-Consult';
+    const applicableRooms = tenantConsultRooms.filter(r => isReturn ? r.handlesReturn : true);
+    const otherStation: StationType = isReturn ? 'Consult' : 'Return-Consult';
+    const otherPatients = (byStation.get(otherStation) ?? []).filter(p => p.status !== 'COMPLETED' && p.status !== 'NO_SHOW');
+
+    const byRoom = new Map<string, QueuePatient[]>();
+    const otherByRoom = new Map<string, QueuePatient[]>();
+    const unassigned: QueuePatient[] = [];
+    for (const p of patients) {
+      if (p.consultRoomId) {
+        if (!byRoom.has(p.consultRoomId)) byRoom.set(p.consultRoomId, []);
+        byRoom.get(p.consultRoomId)!.push(p);
+      } else {
+        unassigned.push(p);
+      }
+    }
+    for (const p of otherPatients) {
+      if (p.consultRoomId) {
+        if (!otherByRoom.has(p.consultRoomId)) otherByRoom.set(p.consultRoomId, []);
+        otherByRoom.get(p.consultRoomId)!.push(p);
+      }
+    }
+
+    return (
+      <>
+        {applicableRooms.map((room, ri) => {
+          const rp = byRoom.get(room.id) ?? [];
+          const ghostPts = otherByRoom.get(room.id) ?? [];
+          const isOnBreak = room.status === 'On Break';
+          const isClosed = room.status === 'Closed';
+          const msRmAttending = rp.filter(p => p.status === 'IN_SESSION').length;
+          const msRmQueued = rp.length - msRmAttending;
+
+          return (
+            <div key={room.id} style={{ display: 'flex', alignItems: 'flex-start' }}>
+              <div style={{ ...S.lane, minWidth: 180, maxWidth: 220, flex: '0 0 200px' }}>
+                {/* Room header */}
+                <div style={{
+                  padding: '8px 10px', borderBottom: '1px solid var(--color-border)',
+                  position: 'sticky' as const, top: 0, zIndex: 2,
+                  borderRadius: 'var(--radius) var(--radius) 0 0',
+                  background: 'color-mix(in srgb, var(--color-primary) 3%, var(--color-surface))',
+                }}>
+                  {/* Row 1: Room name + count badges */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <DoorOpen size={12} style={{ flexShrink: 0, color: 'var(--color-primary)' }} />
+                    <span style={{ fontWeight: 700, fontSize: 11, color: 'var(--color-text)', whiteSpace: 'nowrap', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name}</span>
+                    {isOnBreak && <span style={{ ...S.roomStatusBadge, background: '#fef3c7', color: '#92400e', fontSize: 8, padding: '1px 4px' }}><Coffee size={7} /></span>}
+                    {isClosed && <span style={{ ...S.roomStatusBadge, background: '#fee2e2', color: '#991b1b', fontSize: 8, padding: '1px 4px' }}>Off</span>}
+                    {ghostPts.length > 0 && (
+                      <span style={{
+                        fontSize: 8, fontWeight: 700, padding: '1px 4px', borderRadius: 4,
+                        background: isReturn ? 'rgba(124,58,237,0.12)' : 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
+                        color: isReturn ? '#7c3aed' : 'var(--color-primary)',
+                        border: `1px dashed ${isReturn ? '#7c3aed' : 'var(--color-primary)'}`,
+                        lineHeight: 1, whiteSpace: 'nowrap' as const,
+                      }}>
+                        +{ghostPts.length}
+                      </span>
+                    )}
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                      {msRmAttending > 0 && (
+                        <span style={{ ...S.roomBadge, background: 'var(--color-success)', fontSize: 9, padding: '1px 5px' }}>
+                          {msRmAttending}<Play size={6} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 1 }} />
+                        </span>
+                      )}
+                      <span style={{ ...S.roomBadge, fontSize: 9, padding: '1px 5px' }}>{msRmQueued}</span>
+                    </span>
+                  </div>
+                  {/* Row 2: Doctor + specialty */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 3 }}>
+                    <Stethoscope size={8} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                    <span style={{ fontSize: 9, fontWeight: 500, color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.doctorName}</span>
+                    <span style={{ ...S.roomSpecialty, fontSize: 7, padding: '0px 4px' }}>{room.specialty}</span>
+                  </div>
+                </div>
+                <div style={S.laneBody}>
+                  {/* Ghost cards from the other queue sharing this room */}
+                  {ghostPts.map((p) => (
+                    <div key={`ghost-${p.id}`} style={{
+                      ...S.card, opacity: 0.35, pointerEvents: 'none', padding: '4px 8px',
+                      borderStyle: 'dashed', background: 'var(--color-surface)', gap: 2,
+                    }}>
+                      <div style={{ ...S.cardRow, gap: 4 }}>
+                        <span style={{ ...S.ticket, fontSize: 10 }}>{p.ticketNumber}</span>
+                        <span style={{ ...S.name, fontSize: 10, color: 'var(--color-text-muted)' }}>{p.patientName}</span>
+                        <span style={{ fontSize: 7, fontWeight: 700, padding: '1px 4px', borderRadius: 3,
+                          background: isReturn ? 'var(--color-primary-light)' : '#7c3aed',
+                          color: isReturn ? 'var(--color-primary)' : '#ede9fe',
+                        }}>
+                          {isReturn ? 'CONSULT' : 'RETURN'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {rp.length === 0 && ghostPts.length === 0 ? (
+                    <div style={S.empty}>{isOnBreak ? 'On break' : isClosed ? 'Closed' : 'Empty'}</div>
+                  ) : rp.map((p) => <PatientCard key={p.id} p={p} showAdvance section={section} />)}
+                </div>
+              </div>
+              {/* Divider between rooms — but not after the last room */}
+              {ri < applicableRooms.length - 1 && (
+                <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--color-border)', margin: '0 2px', opacity: 0.5 }} />
+              )}
+            </div>
+          );
+        })}
+        {unassigned.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+            <div style={{ ...S.lane, minWidth: 160, maxWidth: 200, flex: '0 0 180px' }}>
+              <div style={S.laneHeader}>
+                <span style={S.laneTitle}><Clock size={12} /> Unassigned</span>
+                <span style={{ ...S.laneBadge, background: 'var(--color-warning)', color: '#fff' }}>{unassigned.length}</span>
+              </div>
+              <div style={S.laneBody}>
+                {unassigned.map((p) => <PatientCard key={p.id} p={p} showAdvance section={section} />)}
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  };
+
   // Mini swim lane for Section 1 or 3
   const renderMiniLanes = (stations: StationType[], patients: QueuePatient[], section: MSSection) => {
     const grouped = new Map<StationType, QueuePatient[]>();
     for (const st of stations) grouped.set(st, []);
     for (const p of patients) {
-      // For post-orders: map stationType correctly
       const st = stations.includes(p.stationType) ? p.stationType : stations[0];
       grouped.get(st)?.push(p);
     }
@@ -544,12 +1124,35 @@ export const QueueManagement = () => {
       <div style={S.miniLanes}>
         {stations.map((station, i) => {
           const stPatients = grouped.get(station) ?? [];
+
+          // Consult / Return-Consult: 1 lane per room
+          if (station === 'Consult' || station === 'Return-Consult') {
+            return (
+              <React.Fragment key={station}>
+                <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                  {renderRoomLanes(station, stPatients, section)}
+                </div>
+                {i < stations.length - 1 && <div style={S.arrow}><ChevronRight size={16} /></div>}
+              </React.Fragment>
+            );
+          }
+
+          const msStAtt = stPatients.filter(p => p.status === 'IN_SESSION').length;
+          const msStQ = stPatients.length - msStAtt;
+
           return (
             <div key={station} style={{ display: 'flex', alignItems: 'flex-start' }}>
               <div style={{ ...S.lane, minWidth: 180, maxWidth: 240, flex: '0 0 200px' }}>
                 <div style={S.laneHeader}>
-                  <span style={S.laneTitle}>{stationIcon(station)} {station === 'Return-Consult' ? 'Return Consult' : station}</span>
-                  <span style={{ ...S.laneBadge, background: 'var(--color-primary)', color: '#fff' }}>{stPatients.length}</span>
+                  <span style={S.laneTitle}>{stationIcon(station)} {station}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {msStAtt > 0 && (
+                      <span style={{ ...S.laneBadge, background: 'var(--color-success)', color: '#fff', fontSize: 10 }} title={`${msStAtt} attending`}>
+                        {msStAtt} <Play size={7} style={{ display: 'inline', verticalAlign: 'middle' }} />
+                      </span>
+                    )}
+                    <span style={{ ...S.laneBadge, background: 'var(--color-primary)', color: '#fff' }}>{msStQ}</span>
+                  </div>
                 </div>
                 <div style={S.laneBody}>
                   {stPatients.length === 0 ? (
@@ -620,7 +1223,7 @@ export const QueueManagement = () => {
                               {ord.status === 'in-progress' ? 'In Progress' : ord.status === 'queued' ? 'Waiting' : ord.status}
                             </span>
                             <span style={{ ...S.wait, color: waitColor(p.waitMinutes) }}>
-                              <Clock size={10} /> {p.waitMinutes}m
+                              <Clock size={10} /> +{p.waitMinutes}m
                             </span>
                           </div>
                           {/* All orders for this patient shown as chips */}
@@ -646,6 +1249,15 @@ export const QueueManagement = () => {
                             {ord.status === 'in-progress' && (
                               <button style={{ ...S.btn, ...S.btnSuccess, ...S.btnSm }} onClick={() => handleCompleteOrder(p.id, ord.id)}>
                                 <CheckCircle size={11} /> Complete
+                              </button>
+                            )}
+                            {(ord.status === 'queued' || ord.status === 'in-progress') && (
+                              <button
+                                style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }}
+                                title="Move to bottom of queue — patient is at another station"
+                                onClick={() => { deferOrder(p.id, ord.id); showToast(`${p.ticketNumber} deferred`, 'info'); }}
+                              >
+                                <ArrowDown size={11} /> Defer
                               </button>
                             )}
                             <button style={{ ...S.btn, ...S.btnOutline, ...S.btnSm }} onClick={() => { setAddOrdersFor(p.id); setSelectedOrders([]); }}>
@@ -760,79 +1372,93 @@ export const QueueManagement = () => {
         </div>
         <div style={S.modeToggle}>
           <button
-            onClick={() => queueMode !== 'LINEAR' && toggleQueueMode()}
-            style={{ ...S.modeBtn, background: queueMode === 'LINEAR' ? 'var(--color-primary)' : 'transparent', color: queueMode === 'LINEAR' ? '#fff' : 'var(--color-text-muted)' }}
+            onClick={() => { setViewMode('queue'); if (queueMode !== 'LINEAR') toggleQueueMode(); }}
+            style={{ ...S.modeBtn, background: viewMode === 'queue' && queueMode === 'LINEAR' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'queue' && queueMode === 'LINEAR' ? '#fff' : 'var(--color-text-muted)' }}
           >
             <LayoutList size={14} /> Swim Lane
           </button>
           <button
-            onClick={() => queueMode !== 'MULTI_STREAM' && toggleQueueMode()}
-            style={{ ...S.modeBtn, background: queueMode === 'MULTI_STREAM' ? 'var(--color-primary)' : 'transparent', color: queueMode === 'MULTI_STREAM' ? '#fff' : 'var(--color-text-muted)' }}
+            onClick={() => { setViewMode('queue'); if (queueMode !== 'MULTI_STREAM') toggleQueueMode(); }}
+            style={{ ...S.modeBtn, background: viewMode === 'queue' && queueMode === 'MULTI_STREAM' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'queue' && queueMode === 'MULTI_STREAM' ? '#fff' : 'var(--color-text-muted)' }}
           >
             <GitBranch size={14} /> Multi-Stream
           </button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div style={S.statsRow}>
-        <div style={S.statCard}>
-          <span style={S.statLabel}>In Queue</span>
-          <span style={S.statValue}>{queueStats.totalInQueue}</span>
-        </div>
-        <div style={S.statCard}>
-          <span style={S.statLabel}>Avg Wait</span>
-          <span style={S.statValue}>{queueStats.avgWaitTime}m</span>
-        </div>
-        <div style={S.statCard}>
-          <span style={S.statLabel}>Longest Wait</span>
-          <span style={{ ...S.statValue, color: queueStats.longestWait > 20 ? 'var(--color-error)' : 'var(--color-text)' }}>
-            {queueStats.longestWait}m
-          </span>
-        </div>
-        <div style={S.statCard}>
-          <span style={S.statLabel}>Completed</span>
-          <span style={{ ...S.statValue, color: 'var(--color-success)' }}>{queueStats.completedToday}</span>
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div style={S.controls}>
-        <div style={S.searchWrap}>
-          <Search size={14} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
-          <input style={S.searchInput} placeholder="Search patient or ticket..." value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => setShowCheckIn(!showCheckIn)}>
-          {showCheckIn ? <X size={14} /> : <UserPlus size={14} />}
-          {showCheckIn ? 'Cancel' : 'Check In Patient'}
-        </button>
-      </div>
-
-      {/* Check-in form */}
-      {showCheckIn && (
-        <div style={S.formRow}>
-          <div style={S.fieldGroup}>
-            <label style={S.label}>Patient Name</label>
-            <input style={S.input} value={ciName} onChange={(e) => setCiName(e.target.value)} placeholder="Full name" />
-          </div>
-          <div style={S.fieldGroup}>
-            <label style={S.label}>Chief Complaint</label>
-            <input style={S.input} value={ciComplaint} onChange={(e) => setCiComplaint(e.target.value)} placeholder="Reason for visit" />
-          </div>
-          <div style={S.fieldGroup}>
-            <label style={S.label}>Priority</label>
-            <select style={S.input} value={ciPriority} onChange={(e) => setCiPriority(e.target.value as QueuePatient['priority'])}>
-              {PRIORITY_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </div>
-          <button style={{ ...S.btn, ...S.btnSuccess }} onClick={handleCheckIn}>
-            <CheckCircle size={14} /> Check In
+          <button
+            onClick={() => setViewMode('monitor')}
+            style={{ ...S.modeBtn, background: viewMode === 'monitor' ? '#1e293b' : 'transparent', color: viewMode === 'monitor' ? '#fff' : 'var(--color-text-muted)' }}
+          >
+            <Tv size={14} /> Station Displays
           </button>
         </div>
-      )}
+      </div>
 
-      {/* Mode-specific view */}
-      {queueMode === 'LINEAR' ? renderLinear() : renderMultiStream()}
+      {viewMode === 'monitor' ? (
+        /* ── Monitor Display View ── */
+        renderMonitorDisplay()
+      ) : (
+        /* ── Management View ── */
+        <>
+          {/* Stats */}
+          <div style={S.statsRow}>
+            <div style={S.statCard}>
+              <span style={S.statLabel}>In Queue</span>
+              <span style={S.statValue}>{tenantQueueStats.totalInQueue}</span>
+            </div>
+            <div style={S.statCard}>
+              <span style={S.statLabel}>Avg Wait</span>
+              <span style={S.statValue}>{tenantQueueStats.avgWaitTime}m</span>
+            </div>
+            <div style={S.statCard}>
+              <span style={S.statLabel}>Longest Wait</span>
+              <span style={{ ...S.statValue, color: tenantQueueStats.longestWait > 20 ? 'var(--color-error)' : 'var(--color-text)' }}>
+                {tenantQueueStats.longestWait}m
+              </span>
+            </div>
+            <div style={S.statCard}>
+              <span style={S.statLabel}>Completed</span>
+              <span style={{ ...S.statValue, color: 'var(--color-success)' }}>{tenantQueueStats.completedToday}</span>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div style={S.controls}>
+            <div style={S.searchWrap}>
+              <Search size={14} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+              <input style={S.searchInput} placeholder="Search patient or ticket..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+            <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => setShowCheckIn(!showCheckIn)}>
+              {showCheckIn ? <X size={14} /> : <UserPlus size={14} />}
+              {showCheckIn ? 'Cancel' : 'Check In Patient'}
+            </button>
+          </div>
+
+          {/* Check-in form */}
+          {showCheckIn && (
+            <div style={S.formRow}>
+              <div style={S.fieldGroup}>
+                <label style={S.label}>Patient Name</label>
+                <input style={S.input} value={ciName} onChange={(e) => setCiName(e.target.value)} placeholder="Full name" />
+              </div>
+              <div style={S.fieldGroup}>
+                <label style={S.label}>Chief Complaint</label>
+                <input style={S.input} value={ciComplaint} onChange={(e) => setCiComplaint(e.target.value)} placeholder="Reason for visit" />
+              </div>
+              <div style={S.fieldGroup}>
+                <label style={S.label}>Priority</label>
+                <select style={S.input} value={ciPriority} onChange={(e) => setCiPriority(e.target.value as QueuePatient['priority'])}>
+                  {PRIORITY_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <button style={{ ...S.btn, ...S.btnSuccess }} onClick={handleCheckIn}>
+                <CheckCircle size={14} /> Check In
+              </button>
+            </div>
+          )}
+
+          {/* Mode-specific view */}
+          {queueMode === 'LINEAR' ? renderLinear() : renderMultiStream()}
+        </>
+      )}
 
       {/* Add Orders Modal */}
       {addOrdersFor && (
@@ -864,6 +1490,106 @@ export const QueueManagement = () => {
               <button style={{ ...S.btn, ...S.btnPrimary }} onClick={handleAddOrders} disabled={selectedOrders.length === 0}>
                 <Plus size={14} /> Add {selectedOrders.length} Order(s)
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign to Consultation Room Modal */}
+      {assignRoomFor && (
+        <div style={S.modalOverlay} onClick={() => setAssignRoomFor(null)}>
+          <div style={{ ...S.modal, maxWidth: 520 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <span style={S.modalTitle}>Assign to Consultation Room</span>
+              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setAssignRoomFor(null)}><X size={16} /></button>
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 16 }}>
+              Select a consultation room for <strong>{assignRoomFor.patientName}</strong>. The patient will be queued at the selected room.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+              {tenantConsultRooms.map((room) => {
+                const consultPts = tenantQueuePatients.filter(
+                  p => p.stationType === 'Consult' && p.consultRoomId === room.id && p.status !== 'COMPLETED' && p.status !== 'NO_SHOW'
+                );
+                const returnPts = tenantQueuePatients.filter(
+                  p => p.stationType === 'Return-Consult' && p.consultRoomId === room.id && p.status !== 'COMPLETED' && p.status !== 'NO_SHOW'
+                );
+                const isOnBreak = room.status === 'On Break';
+                const isClosed = room.status === 'Closed';
+                const consultAttending = consultPts.filter(p => p.status === 'IN_SESSION').length;
+                const consultWaiting = consultPts.filter(p => p.status === 'QUEUED' || p.status === 'READY').length;
+                const returnAttending = returnPts.filter(p => p.status === 'IN_SESSION').length;
+                const returnWaiting = returnPts.filter(p => p.status === 'QUEUED' || p.status === 'READY').length;
+                const totalAttending = consultAttending + returnAttending;
+                const totalWaiting = consultWaiting + returnWaiting;
+                const totalAll = totalAttending + totalWaiting;
+
+                return (
+                  <button
+                    key={room.id}
+                    disabled={isClosed}
+                    onClick={() => handleAssignRoom(room.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+                      borderRadius: 10, border: '1px solid var(--color-border)', cursor: isClosed ? 'not-allowed' : 'pointer',
+                      background: isClosed ? 'var(--color-gray-100, #f3f4f6)' : 'var(--color-background)',
+                      transition: 'all .15s', textAlign: 'left', width: '100%',
+                      opacity: isClosed ? 0.5 : 1,
+                    }}
+                    onMouseEnter={(e) => { if (!isClosed) e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--color-primary) 5%, var(--color-background))'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.background = isClosed ? 'var(--color-gray-100, #f3f4f6)' : 'var(--color-background)'; }}
+                  >
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      background: isOnBreak ? '#fef3c7' : 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
+                      color: isOnBreak ? '#92400e' : 'var(--color-primary)',
+                    }}>
+                      <DoorOpen size={18} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {room.name}
+                        {isOnBreak && <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 6, background: '#fef3c7', color: '#92400e' }}><Coffee size={8} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 2 }} />Break</span>}
+                        {isClosed && <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 6, background: '#fee2e2', color: '#991b1b' }}>Closed</span>}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+                        <Stethoscope size={11} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text)' }}>{room.doctorName}</span>
+                        <span style={S.roomSpecialty}>{room.specialty}</span>
+                      </div>
+                      {/* Breakdown: Consult + Return-Consult */}
+                      <div style={{ display: 'flex', gap: 8, marginTop: 5 }}>
+                        <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 5, background: 'color-mix(in srgb, var(--color-primary) 10%, transparent)', color: 'var(--color-primary)' }}>
+                          Consult: {consultAttending > 0 ? `${consultAttending} in session` : ''}{consultAttending > 0 && consultWaiting > 0 ? ' · ' : ''}{consultWaiting > 0 ? `${consultWaiting} queued` : ''}{consultAttending === 0 && consultWaiting === 0 ? 'none' : ''}
+                        </span>
+                        {room.handlesReturn && (
+                          <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 5, background: 'rgba(124,58,237,0.1)', color: '#7c3aed' }}>
+                            Return: {returnAttending > 0 ? `${returnAttending} in session` : ''}{returnAttending > 0 && returnWaiting > 0 ? ' · ' : ''}{returnWaiting > 0 ? `${returnWaiting} queued` : ''}{returnAttending === 0 && returnWaiting === 0 ? 'none' : ''}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, alignItems: 'flex-end' }}>
+                      {totalAttending > 0 && (
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 8, background: 'color-mix(in srgb, var(--color-success) 15%, var(--color-background))', color: 'var(--color-success)' }}>
+                          {totalAttending} attending
+                        </span>
+                      )}
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 8, background: totalWaiting > 3 ? 'color-mix(in srgb, var(--color-warning) 15%, var(--color-background))' : 'var(--color-gray-100, #f3f4f6)', color: totalWaiting > 3 ? 'var(--color-warning)' : 'var(--color-text-muted)' }}>
+                        {totalWaiting} waiting
+                      </span>
+                      {totalAll > 0 && (
+                        <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--color-text-muted)' }}>
+                          {totalAll} total
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setAssignRoomFor(null)}>Cancel</button>
             </div>
           </div>
         </div>

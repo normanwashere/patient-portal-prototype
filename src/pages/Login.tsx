@@ -5,6 +5,7 @@ import {
     Building2,
     Heart,
     Stethoscope,
+    ShieldPlus,
     ChevronRight,
     CheckCircle,
     User,
@@ -71,6 +72,14 @@ export const Login: React.FC = () => {
             icon: <Stethoscope size={28} />,
             features: ['Clinic Visits', 'Queue', 'Results', 'Medications'],
             color: '#10b981',
+        },
+        {
+            id: 'maxicare',
+            name: 'Maxicare',
+            description: 'HMO provider with primary care clinics & affiliated network',
+            icon: <ShieldPlus size={28} />,
+            features: ['24/7 Teleconsult', 'HMO/LOA', 'Primary Care Clinics', 'Lab Results'],
+            color: '#0046BE',
         },
     ];
 

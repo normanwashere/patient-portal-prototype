@@ -4,6 +4,8 @@ import {
   useState,
   useMemo,
   useCallback,
+  useEffect,
+  useRef,
   type ReactNode,
 } from 'react';
 import {
@@ -35,7 +37,13 @@ import {
   MOCK_TC_SESSIONS,
   MOCK_CONVERSATIONS,
   MOCK_CHAT_MESSAGES,
+  MOCK_HOMECARE_REQUESTS,
+  MOCK_CONSULT_ROOMS,
+  PROVIDER_BRANCHES,
 } from '../data/providerMockData';
+import type { ProviderBranch } from '../data/providerMockData';
+import { useTheme } from '../../theme/ThemeContext';
+import { getTenantBranches } from '../../data/mockBranches';
 import type {
   StaffUser,
   ClinicalNote,
@@ -72,6 +80,9 @@ import type {
   Conversation,
   ChatMessage,
   ConversationType,
+  HomeCareRequest,
+  HomeCareRequestStatus,
+  ConsultRoom,
 } from '../types';
 
 type CurrentApp = 'provider' | 'doctor';
@@ -123,6 +134,7 @@ interface ProviderContextType {
   rooms: Room[];
   equipment: Equipment[];
   queuePatients: QueuePatient[];
+  consultRooms: ConsultRoom[];
   shiftSchedules: ShiftSchedule[];
   pharmacyItems: PharmacyItem[];
   dispensing: DispensingRecord[];
@@ -141,8 +153,8 @@ interface ProviderContextType {
   appointments: Appointment[];
 
   // ── Queue actions ──
-  /** LINEAR: advance patient to next station in the swim lane */
-  transferPatient: (patientId: string, toStation: StationType) => void;
+  /** LINEAR: advance patient to next station in the swim lane, optionally assigning a consultation room */
+  transferPatient: (patientId: string, toStation: StationType, roomAssignment?: { consultRoomId: string; consultRoomName: string; assignedDoctor?: string }) => void;
   /** MULTI_STREAM: doctor adds orders — ALL orders queued in parallel */
   addDoctorOrders: (patientId: string, orderTypes: DoctorOrderType[]) => void;
   /** MULTI_STREAM: start a specific order (set in-progress) */
@@ -151,6 +163,8 @@ interface ProviderContextType {
   completeOrder: (patientId: string, orderId: string) => void;
   /** Legacy: mark current order complete (sequential fallback) */
   completeCurrentOrder: (patientId: string) => void;
+  /** Defer a specific order — reset to queued and move patient to bottom of queue */
+  deferOrder: (patientId: string, orderId: string) => void;
   /** Check in a new walk-in patient */
   checkInPatient: (name: string, complaint: string, priority: QueuePatient['priority']) => void;
   callNextPatient: (stationId: string) => void;
@@ -211,6 +225,7 @@ interface ProviderContextType {
 
   // ── Events ──
   addEvent: (event: Omit<ManagedEvent, 'id'>) => void;
+  updateEvent: (eventId: string, updates: Partial<Omit<ManagedEvent, 'id'>>) => void;
   updateEventStatus: (eventId: string, status: ManagedEvent['status']) => void;
   updateRegistrationStatus: (regId: string, status: EventRegistration['status']) => void;
 
@@ -271,6 +286,15 @@ interface ProviderContextType {
   markConversationRead: (conversationId: string) => void;
   totalUnreadMessages: number;
 
+  // ── Branch context (Super Admin) ──
+  currentBranchId: string;
+  availableBranches: ProviderBranch[];
+  switchBranch: (branchId: string) => void;
+
+  // ── HomeCare Requests ──
+  homeCareRequests: HomeCareRequest[];
+  updateHomeCareStatus: (requestId: string, status: HomeCareRequestStatus, updates?: Partial<HomeCareRequest>) => void;
+
   // Computed values
   pendingLabOrders: LabOrder[];
   criticalAlerts: CDSSAlert[];
@@ -296,6 +320,7 @@ const isToday = (dateStr: string) => {
 };
 
 export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { tenant } = useTheme();
   const firstDoctor = MOCK_STAFF.find((s) => s.role === 'doctor') ?? MOCK_STAFF[0];
 
   const [currentStaff, setCurrentStaff] = useState<StaffUser>(firstDoctor);
@@ -334,6 +359,53 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Global active teleconsult call state (persists across route changes)
   const [activeTeleconsultCall, setActiveTeleconsultCall] = useState<ActiveTeleconsultCall | null>(null);
+
+  // Branch context — derived from tenant; falls back to hardcoded branches if none found
+  const tenantBranches: ProviderBranch[] = useMemo(() => {
+    const tBranches = getTenantBranches(tenant.id, tenant.name);
+    if (tBranches.length > 0) {
+      return tBranches.map(b => ({ id: b.id, name: b.name, address: b.address }));
+    }
+    return PROVIDER_BRANCHES;
+  }, [tenant.id, tenant.name]);
+
+  const [currentBranchId, setCurrentBranchId] = useState(() => tenantBranches[0]?.id ?? PROVIDER_BRANCHES[0].id);
+  const availableBranches = tenantBranches;
+
+  // Reset branch when tenant changes
+  useEffect(() => {
+    setCurrentBranchId(tenantBranches[0]?.id ?? PROVIDER_BRANCHES[0].id);
+  }, [tenantBranches]);
+
+  // HomeCare requests
+  const [homeCareRequests, setHomeCareRequests] = useState<HomeCareRequest[]>(MOCK_HOMECARE_REQUESTS);
+
+  // ── Wait-time ticker — increments waitMinutes every 30s for active patients & TC sessions ──
+  const waitTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    waitTickRef.current = setInterval(() => {
+      setQueuePatients(prev =>
+        prev.map(p => {
+          if (p.status === 'QUEUED' || p.status === 'READY' || p.status === 'IN_SESSION') {
+            return { ...p, waitMinutes: p.waitMinutes + 1 };
+          }
+          return p;
+        })
+      );
+      // Also tick teleconsult sessions that are still waiting / in active flow
+      setTcSessions(prev =>
+        prev.map(s => {
+          if (s.status === 'in-queue' || s.status === 'doctor-assigned' || s.status === 'connecting' || s.status === 'in-session') {
+            return { ...s, waitMinutes: s.waitMinutes + 1 };
+          }
+          return s;
+        })
+      );
+    }, 30_000); // tick every 30 seconds for a snappier demo feel
+    return () => {
+      if (waitTickRef.current) clearInterval(waitTickRef.current);
+    };
+  }, []);
 
   // ── Basic switches ──
   const switchStaff = useCallback((staffId: string) => {
@@ -379,7 +451,7 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
     _audit('check_in', 'Queue', `Checked in ${name} - ${ticket}`);
   }, [_audit]);
 
-  const transferPatient = useCallback((patientId: string, toStation: StationType) => {
+  const transferPatient = useCallback((patientId: string, toStation: StationType, roomAssignment?: { consultRoomId: string; consultRoomName: string; assignedDoctor?: string }) => {
     setQueuePatients((prev) =>
       prev.map((p) => {
         if (p.id !== patientId && p.patientId !== patientId) return p;
@@ -393,10 +465,15 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
           journeyHistory: newHistory,
           currentStationEnteredAt: now(),
           waitMinutes: 0,
+          ...(roomAssignment ? {
+            consultRoomId: roomAssignment.consultRoomId,
+            consultRoomName: roomAssignment.consultRoomName,
+            assignedDoctor: roomAssignment.assignedDoctor ?? p.assignedDoctor,
+          } : {}),
         };
       })
     );
-    _audit('transfer', 'Queue', `Transferred patient to ${toStation}`);
+    _audit('transfer', 'Queue', `Transferred patient to ${toStation}${roomAssignment ? ` (${roomAssignment.consultRoomName})` : ''}`);
   }, [_audit]);
 
   // Add doctor orders — behaviour depends on queue mode:
@@ -565,6 +642,21 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       return [...others, { ...patient, status: 'QUEUED' as const, waitMinutes: 0 }];
     });
   }, []);
+
+  /** Defer a specific order — reset it to 'queued' and move the patient to the bottom of the queue */
+  const deferOrder = useCallback((patientId: string, orderId: string) => {
+    setQueuePatients((prev) => {
+      const patient = prev.find((p) => p.id === patientId || p.patientId === patientId);
+      if (!patient) return prev;
+      const updatedOrders = patient.doctorOrders.map(o =>
+        o.id === orderId ? { ...o, status: 'queued' as const, startedAt: undefined } : o
+      );
+      const updated = { ...patient, doctorOrders: updatedOrders, waitMinutes: 0 };
+      const others = prev.filter((p) => p.id !== patientId && p.patientId !== patientId);
+      return [...others, updated];
+    });
+    _audit('defer_order', 'Queue', `Deferred order ${orderId} for patient ${patientId}`);
+  }, [_audit]);
 
   // ── Clinical notes ──
   const signNote = useCallback((noteId: string) => {
@@ -739,6 +831,11 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
   const addEvent = useCallback((event: Omit<ManagedEvent, 'id'>) => {
     setManagedEvents((prev) => [{ ...event, id: genId('evt') } as ManagedEvent, ...prev]);
     _audit('add_event', 'Events', `New event: ${event.title}`);
+  }, [_audit]);
+
+  const updateEvent = useCallback((eventId: string, updates: Partial<Omit<ManagedEvent, 'id'>>) => {
+    setManagedEvents((prev) => prev.map((e) => (e.id === eventId ? { ...e, ...updates } : e)));
+    _audit('update_event', 'Events', `Updated event ${eventId}`);
   }, [_audit]);
 
   const updateEventStatus = useCallback((eventId: string, status: ManagedEvent['status']) => {
@@ -983,6 +1080,24 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
   }, [tcSessions, tcDoctors]);
 
+  // ═══════ Branch & HomeCare ═══════
+
+  const switchBranch = useCallback((branchId: string) => {
+    setCurrentBranchId(branchId);
+    _audit('switch_branch', 'Admin', `Switched to branch ${branchId}`);
+  }, [_audit]);
+
+  const updateHomeCareStatus = useCallback((requestId: string, status: HomeCareRequestStatus, updates?: Partial<HomeCareRequest>) => {
+    setHomeCareRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, ...updates, status, updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }
+          : r
+      )
+    );
+    _audit('homecare_status', 'HomeCare', `Request ${requestId} → ${status}`);
+  }, [_audit]);
+
   // ═══════ Computed ═══════
   const pendingLabOrders = useMemo(() => labOrders.filter((o) => o.status === 'Ordered' || o.status === 'In Progress'), [labOrders]);
   const criticalAlerts = useMemo(() => cdssAlerts.filter((a) => !a.dismissed), [cdssAlerts]);
@@ -1003,12 +1118,12 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
     () => ({
       currentStaff, currentApp, queueMode, doctorMode, switchStaff, switchApp, toggleQueueMode, setDoctorMode,
       staff, clinicalNotes, prescriptions, labOrders, availability, rooms, equipment,
-      queuePatients, shiftSchedules, pharmacyItems, dispensing, triageRecords, nursingTasks,
+      queuePatients, consultRooms: MOCK_CONSULT_ROOMS, shiftSchedules, pharmacyItems, dispensing, triageRecords, nursingTasks,
       formTemplates, formSubmissions, immunizationRecords, managedEvents, eventRegistrations,
       auditLogs, paymentTransactions, internalMessages, cdssAlerts, dashboardKpis, appointments,
       // Queue
       transferPatient, addDoctorOrders, startOrder, completeOrder, completeCurrentOrder, checkInPatient,
-      callNextPatient, startPatient, completePatient, markNoShow, skipPatient,
+      callNextPatient, startPatient, completePatient, markNoShow, skipPatient, deferOrder,
       // Clinical
       signNote, saveDraftNote, addClinicalNote,
       // Prescriptions
@@ -1032,7 +1147,7 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       // Facility
       updateRoomStatus, updateEquipmentStatus,
       // Events
-      addEvent, updateEventStatus, updateRegistrationStatus,
+      addEvent, updateEvent, updateEventStatus, updateRegistrationStatus,
       // Forms
       updateFormSubmissionStatus, addFormTemplate,
       // Immunization
@@ -1047,6 +1162,10 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       markTcNoShow, cancelTcSession, updateTcDoctorStatus, checkInTcDoctor, tcStats,
       // Active teleconsult call
       activeTeleconsultCall, setActiveTeleconsultCall,
+      // Branch
+      currentBranchId, availableBranches, switchBranch,
+      // HomeCare
+      homeCareRequests, updateHomeCareStatus,
       // Computed
       pendingLabOrders, criticalAlerts, todayAppointments, queueStats,
     }),
@@ -1059,18 +1178,20 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       cdssAlerts, dashboardKpis, appointments, pendingLabOrders, criticalAlerts, todayAppointments, queueStats,
       conversations, chatMessages, totalUnreadMessages,
       tcSessions, tcDoctors, tcStats, activeTeleconsultCall,
+      currentBranchId, homeCareRequests,
       switchStaff, switchApp, toggleQueueMode, setDoctorMode, setActiveTeleconsultCall, transferPatient, addDoctorOrders, startOrder, completeOrder, completeCurrentOrder,
-      checkInPatient, callNextPatient, startPatient, completePatient, markNoShow, skipPatient,
+      checkInPatient, callNextPatient, startPatient, completePatient, markNoShow, skipPatient, deferOrder,
       signNote, saveDraftNote, addClinicalNote, approvePrescription, denyPrescription, addPrescription, updatePrescription,
       updateLabOrderStatus, addLabOrder, dismissAlert, actionAlert, addCdssAlert, updateAppointmentStatus, addAppointment, cancelAppointment,
       markMessageRead, sendMessage, updateNursingTaskStatus, addTriageRecord, addNursingTask,
       dispenseItem, updatePharmacyStock, addPayment, refundPayment,
       updateStaffStatus, updateShiftStatus, updateRoomStatus, updateEquipmentStatus,
-      addEvent, updateEventStatus, updateRegistrationStatus,
+      addEvent, updateEvent, updateEventStatus, updateRegistrationStatus,
       updateFormSubmissionStatus, addFormTemplate, addImmunizationRecord, addAuditLog,
       addTcSession, updateTcSessionStatus, assignTcDoctor, startTcSession, endTcSession,
       markTcNoShow, cancelTcSession, updateTcDoctorStatus, checkInTcDoctor,
       sendChatMessage, createConversation, markConversationRead,
+      switchBranch, updateHomeCareStatus,
     ]
   );
 

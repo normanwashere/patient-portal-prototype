@@ -2,6 +2,7 @@ import {
     METRO_GENERAL_BRANCHES,
     MERALCO_WELLNESS_BRANCHES,
     HEALTH_FIRST_BRANCHES,
+    MAXICARE_BRANCHES,
     getTenantBranches,
 } from './mockBranches';
 
@@ -11,7 +12,8 @@ export { getTenantBranches };
 export const ALL_BRANCHES = [
     ...METRO_GENERAL_BRANCHES,
     ...MERALCO_WELLNESS_BRANCHES,
-    ...HEALTH_FIRST_BRANCHES
+    ...HEALTH_FIRST_BRANCHES,
+    ...MAXICARE_BRANCHES,
 ];
 
 
@@ -200,6 +202,71 @@ export const DOCTORS: Doctor[] = [
         locationIds: ['healthfirst-main', 'healthfirst-pasay'],
         image: 'https://randomuser.me/api/portraits/women/72.jpg', rating: 4.9, fee: 600,
         bio: 'Pediatrician specializing in newborn care and childhood immunizations.',
+        available: availability7Days
+    },
+
+    // ── Maxicare Primary Care Doctors ──
+    {
+        id: 'd14', name: 'Dr. Patricia Navarro', specialtyId: 'gen-med', specialtyName: 'General Medicine',
+        locationIds: ['maxicare-ayala-north', 'maxicare-bgc', 'maxicare-alabang'],
+        image: 'https://randomuser.me/api/portraits/women/48.jpg', rating: 4.9, fee: 0,
+        bio: 'Maxicare Primary Care physician with 12 years of experience in family medicine and preventive health.',
+        available: availability7Days
+    },
+    {
+        id: 'd15', name: 'Dr. Miguel Torres', specialtyId: 'gen-med', specialtyName: 'General Medicine',
+        locationIds: ['maxicare-centris', 'maxicare-cubao', 'maxicare-fairview', 'maxicare-hemady'],
+        image: 'https://randomuser.me/api/portraits/men/36.jpg', rating: 4.8, fee: 0,
+        bio: 'Internal medicine specialist focused on chronic disease management and wellness consultations at Maxicare PCCs.',
+        available: availability7Days
+    },
+    {
+        id: 'd16', name: 'Dr. Angela Sy', specialtyId: 'peds', specialtyName: 'Pediatrics',
+        locationIds: ['maxicare-ayala-north', 'maxicare-bridgetowne', 'maxicare-alabang'],
+        image: 'https://randomuser.me/api/portraits/women/55.jpg', rating: 4.8, fee: 0,
+        bio: 'Pediatrician providing comprehensive child healthcare including immunizations and developmental assessments.',
+        available: availability7Days
+    },
+    {
+        id: 'd17', name: 'Dr. Ramon dela Vega', specialtyId: 'cardio', specialtyName: 'Cardiology',
+        locationIds: ['maxicare-bgc', 'maxicare-ayala-north', 'maxicare-double-dragon'],
+        image: 'https://randomuser.me/api/portraits/men/42.jpg', rating: 4.9, fee: 0,
+        bio: 'Cardiologist specializing in preventive cardiology and executive health check-ups for Maxicare members.',
+        available: availability7Days
+    },
+    {
+        id: 'd18', name: 'Dr. Celine Ramos', specialtyId: 'derma', specialtyName: 'Dermatology',
+        locationIds: ['maxicare-bgc', 'maxicare-alabang', 'maxicare-cebu'],
+        image: 'https://randomuser.me/api/portraits/women/63.jpg', rating: 4.7, fee: 0,
+        bio: 'Board-certified dermatologist treating skin conditions and providing aesthetic consultations.',
+        available: availability7Days
+    },
+    {
+        id: 'd19', name: 'Dr. Francis Uy', specialtyId: 'obgyn', specialtyName: 'OB-GYN',
+        locationIds: ['maxicare-ayala-north', 'maxicare-centris', 'maxicare-imus'],
+        image: 'https://randomuser.me/api/portraits/men/58.jpg', rating: 4.8, fee: 0,
+        bio: 'OB-GYN focused on women\'s health, prenatal care, and family planning at Maxicare Primary Care Clinics.',
+        available: availability7Days
+    },
+    {
+        id: 'd20', name: 'Dr. Grace Villanueva', specialtyId: 'ent', specialtyName: 'ENT',
+        locationIds: ['maxicare-cubao', 'maxicare-fairview', 'maxicare-clark'],
+        image: 'https://randomuser.me/api/portraits/women/38.jpg', rating: 4.7, fee: 0,
+        bio: 'ENT specialist treating ear, nose, and throat conditions with a compassionate approach.',
+        available: availability7Days
+    },
+    {
+        id: 'd21', name: 'Dr. Kenneth Lim', specialtyId: 'eyes', specialtyName: 'Ophthalmology',
+        locationIds: ['maxicare-vv-soliven', 'maxicare-bridgetowne', 'maxicare-davao'],
+        image: 'https://randomuser.me/api/portraits/men/25.jpg', rating: 4.8, fee: 0,
+        bio: 'Ophthalmologist providing comprehensive eye exams, vision correction, and eye disease management.',
+        available: availability7Days
+    },
+    {
+        id: 'd22', name: 'Dr. Diana Cruz', specialtyId: 'gen-med', specialtyName: 'General Medicine',
+        locationIds: ['maxicare-cebu', 'maxicare-iloilo', 'maxicare-davao'],
+        image: 'https://randomuser.me/api/portraits/women/44.jpg', rating: 4.9, fee: 0,
+        bio: 'VisMin-based general practitioner with expertise in tropical medicine and community health.',
         available: availability7Days
     },
 ];

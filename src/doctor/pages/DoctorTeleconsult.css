@@ -491,7 +491,7 @@
 }
 
 .tc-encounter-hint:hover {
-  background: rgba(220, 96, 42, 0.12);
+  background: var(--color-primary-light);
   border-style: solid;
 }
 

@@ -1,13 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    CalendarDays,
-    ChevronRight,
-    TestTube,
-    Pill,
-    CreditCard,
-    Heart,
-    Syringe
+    CalendarDays, ChevronRight, TestTube, Pill, CreditCard, Heart,
+    Syringe, ClipboardList, Video, FileText, Building2, Users,
+    Settings2, X, Check,
 } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import { useData } from '../context/DataContext';
@@ -21,19 +17,237 @@ import {
 } from '../data/mockBranches';
 import './Dashboard.css';
 
+/* ═══════════════════════════════════════════════════
+   Quick Action Definitions
+   ═══════════════════════════════════════════════════ */
+
+interface QuickActionDef {
+    id: string;
+    label: string;
+    icon: React.FC<{ size?: number }>;
+    to: string;
+    /** return true to show this action; receives tenant features */
+    visible?: (f: any) => boolean;
+    /** badge count getter */
+    badgeKey?: 'labs' | 'meds';
+}
+
+const ALL_QUICK_ACTIONS: QuickActionDef[] = [
+    { id: 'appointments', label: 'Book Appointment', icon: CalendarDays, to: '/visits' },
+    { id: 'lab-results', label: 'Lab Results', icon: TestTube, to: '/results', badgeKey: 'labs' },
+    { id: 'medications', label: 'Medications', icon: Pill, to: '/medications', badgeKey: 'meds' },
+    { id: 'care-plans', label: 'Care Plans', icon: ClipboardList, to: '/health/care-plans', visible: (f) => !!f.carePlans },
+    { id: 'billing', label: 'Billing', icon: CreditCard, to: '/billing' },
+    { id: 'hmo-benefits', label: 'HMO Benefits', icon: Heart, to: '/benefits', visible: (f) => !!f.hmo },
+    { id: 'vaccines', label: 'Vaccines', icon: Syringe, to: '/immunization' },
+    { id: 'teleconsult', label: 'Teleconsult', icon: Video, to: '/visits/teleconsult-intake', visible: (f) => !!f.visits?.teleconsultEnabled },
+    { id: 'medical-history', label: 'Medical History', icon: FileText, to: '/medical-history' },
+    { id: 'branches', label: 'Find Clinics', icon: Building2, to: '/branches' },
+    { id: 'community', label: 'Community', icon: Users, to: '/community' },
+];
+
+/** Default visible actions (order matters) */
+const DEFAULT_ACTION_IDS = [
+    'appointments', 'lab-results', 'medications', 'care-plans', 'hmo-benefits', 'vaccines',
+];
+
+const STORAGE_KEY = 'patient-quick-actions';
+
+function loadSavedActions(): string[] | null {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return null;
+}
+
+function saveActions(ids: string[]) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); } catch { /* ignore */ }
+}
+
+/* ═══════════════════════════════════════════════════
+   Quick Actions Customizer Modal
+   ═══════════════════════════════════════════════════ */
+
+const CustomizerModal: React.FC<{
+    availableActions: QuickActionDef[];
+    selectedIds: string[];
+    onSave: (ids: string[]) => void;
+    onClose: () => void;
+}> = ({ availableActions, selectedIds, onSave, onClose }) => {
+    const [draft, setDraft] = useState<string[]>([...selectedIds]);
+
+    const toggle = (id: string) => {
+        setDraft(prev =>
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        );
+    };
+
+    const moveUp = (id: string) => {
+        setDraft(prev => {
+            const idx = prev.indexOf(id);
+            if (idx <= 0) return prev;
+            const next = [...prev];
+            [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+            return next;
+        });
+    };
+
+    const moveDown = (id: string) => {
+        setDraft(prev => {
+            const idx = prev.indexOf(id);
+            if (idx < 0 || idx >= prev.length - 1) return prev;
+            const next = [...prev];
+            [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+            return next;
+        });
+    };
+
+    return (
+        <div className="qa-modal-overlay" onClick={onClose}>
+            <div className="qa-modal" onClick={e => e.stopPropagation()}>
+                <div className="qa-modal-header">
+                    <h3>Customize Quick Actions</h3>
+                    <button className="qa-modal-close" onClick={onClose}><X size={18} /></button>
+                </div>
+
+                <p className="qa-modal-desc">Select and reorder the shortcuts shown on your dashboard.</p>
+
+                {/* Selected actions (reorderable) */}
+                <div className="qa-section-label">Active ({draft.length})</div>
+                <div className="qa-list">
+                    {draft.map((id) => {
+                        const action = availableActions.find(a => a.id === id);
+                        if (!action) return null;
+                        const Icon = action.icon;
+                        return (
+                            <div key={id} className="qa-item active">
+                                <div className="qa-item-grip">
+                                    <button className="qa-reorder-btn" onClick={() => moveUp(id)} title="Move up">▲</button>
+                                    <button className="qa-reorder-btn" onClick={() => moveDown(id)} title="Move down">▼</button>
+                                </div>
+                                <Icon size={18} />
+                                <span className="qa-item-label">{action.label}</span>
+                                <button className="qa-remove-btn" onClick={() => toggle(id)} title="Remove">
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Available to add */}
+                <div className="qa-section-label">Available</div>
+                <div className="qa-list">
+                    {availableActions.filter(a => !draft.includes(a.id)).map(action => {
+                        const Icon = action.icon;
+                        return (
+                            <div key={action.id} className="qa-item available" onClick={() => toggle(action.id)}>
+                                <Icon size={18} />
+                                <span className="qa-item-label">{action.label}</span>
+                                <span className="qa-add-badge">+ Add</span>
+                            </div>
+                        );
+                    })}
+                    {availableActions.filter(a => !draft.includes(a.id)).length === 0 && (
+                        <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.82rem', padding: '0.5rem 0' }}>
+                            All actions added
+                        </p>
+                    )}
+                </div>
+
+                <div className="qa-modal-footer">
+                    <button className="qa-btn-secondary" onClick={onClose}>Cancel</button>
+                    <button className="qa-btn-primary" onClick={() => onSave(draft)}>
+                        <Check size={15} /> Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+/* ═══════════════════════════════════════════════════
+   Dashboard Component
+   ═══════════════════════════════════════════════════ */
+
 export const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const { tenant } = useTheme();
-    const {
-        joinQueue,
-        leaveQueue
-    } = useData();
+    const { joinQueue, leaveQueue } = useData();
+    const { newLabsCount, newMedsCount } = useBadges();
+    const [showCustomizer, setShowCustomizer] = useState(false);
+    const [showConfirmPrompt, setShowConfirmPrompt] = useState(false);
 
-    const {
-        newLabsCount,
-        newMedsCount
-    } = useBadges();
+    // Long-press detection
+    const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pressedRef = useRef(false);
 
+    const handlePointerDown = useCallback(() => {
+        pressedRef.current = true;
+        longPressTimer.current = setTimeout(() => {
+            if (pressedRef.current) {
+                setShowConfirmPrompt(true);
+            }
+        }, 600);
+    }, []);
+
+    const handlePointerUp = useCallback(() => {
+        pressedRef.current = false;
+        if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current);
+            longPressTimer.current = null;
+        }
+    }, []);
+
+    const handlePointerLeave = useCallback(() => {
+        pressedRef.current = false;
+        if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current);
+            longPressTimer.current = null;
+        }
+    }, []);
+
+    // Available actions based on tenant features
+    const availableActions = useMemo(() =>
+        ALL_QUICK_ACTIONS.filter(a => !a.visible || a.visible(tenant.features)),
+    [tenant.features]);
+
+    // Selected action IDs (persisted)
+    const [selectedIds, setSelectedIds] = useState<string[]>(() => {
+        const saved = loadSavedActions();
+        if (saved) {
+            return saved.filter(id => availableActions.some(a => a.id === id));
+        }
+        return DEFAULT_ACTION_IDS.filter(id => availableActions.some(a => a.id === id));
+    });
+
+    // Re-validate when features change
+    useEffect(() => {
+        setSelectedIds(prev => {
+            const valid = prev.filter(id => availableActions.some(a => a.id === id));
+            if (valid.length === 0) {
+                return DEFAULT_ACTION_IDS.filter(id => availableActions.some(a => a.id === id));
+            }
+            return valid;
+        });
+    }, [availableActions]);
+
+    const handleSaveActions = useCallback((ids: string[]) => {
+        setSelectedIds(ids);
+        saveActions(ids);
+        setShowCustomizer(false);
+    }, []);
+
+    const activeActions = useMemo(() =>
+        selectedIds.map(id => availableActions.find(a => a.id === id)).filter(Boolean) as QuickActionDef[],
+    [selectedIds, availableActions]);
+
+    const getBadge = (key?: string) => {
+        if (key === 'labs') return newLabsCount;
+        if (key === 'meds') return newMedsCount;
+        return 0;
+    };
 
     const getTopBranches = (branches: Branch[]) => {
         const hospitals = branches.filter(b => b.type === 'hospital').slice(0, 2);
@@ -49,7 +263,7 @@ export const Dashboard: React.FC = () => {
                 <BannerCarousel />
             </section>
 
-            {/* Visit Context Widget (Dynamic) */}
+            {/* Visit Context Widget */}
             <section className="queue-section">
                 <CheckInCard
                     onCheckIn={() => joinQueue()}
@@ -57,53 +271,35 @@ export const Dashboard: React.FC = () => {
                 />
             </section>
 
-            {/* Quick Actions - Compact Grid */}
+            {/* Quick Actions - Long-press to customize */}
             <section className="action-center">
                 <h3 className="section-title">Quick Actions</h3>
                 <div className="quick-actions-grid">
-                    {/* 1. Book Appointment */}
-                    <button className="quick-action-btn" onClick={() => navigate('/visits')}>
-                        <CalendarDays size={20} />
-                        <span>Book Appointment</span>
-                    </button>
-
-                    {/* 2. Lab Results */}
-                    <button className="quick-action-btn" onClick={() => navigate('/results')}>
-                        <div className="icon-badge-box">
-                            <TestTube size={20} />
-                            {newLabsCount > 0 && <span className="btn-badge">{newLabsCount}</span>}
-                        </div>
-                        <span>Lab Results</span>
-                    </button>
-
-                    {/* 3. Medications */}
-                    <button className="quick-action-btn" onClick={() => navigate('/medications')}>
-                        <div className="icon-badge-box">
-                            <Pill size={20} />
-                            {newMedsCount > 0 && <span className="btn-badge">{newMedsCount}</span>}
-                        </div>
-                        <span>Medications</span>
-                    </button>
-
-                    {/* 4. Billing */}
-                    <button className="quick-action-btn" onClick={() => navigate('/billing')}>
-                        <CreditCard size={20} />
-                        <span>Billing</span>
-                    </button>
-
-                    {/* 5. Benefits (HMO) */}
-                    {tenant.features.hmo && (
-                        <button className="quick-action-btn" onClick={() => navigate('/benefits')}>
-                            <Heart size={20} />
-                            <span>HMO Benefits</span>
-                        </button>
-                    )}
-
-                    {/* 6. Vaccines */}
-                    <button className="quick-action-btn" onClick={() => navigate('/immunization')}>
-                        <Syringe size={20} />
-                        <span>Vaccines</span>
-                    </button>
+                    {activeActions.map(action => {
+                        const Icon = action.icon;
+                        const badge = getBadge(action.badgeKey);
+                        return (
+                            <button
+                                key={action.id}
+                                className="quick-action-btn"
+                                onClick={() => navigate(action.to)}
+                                onPointerDown={handlePointerDown}
+                                onPointerUp={handlePointerUp}
+                                onPointerLeave={handlePointerLeave}
+                                onContextMenu={e => { e.preventDefault(); setShowConfirmPrompt(true); }}
+                            >
+                                {badge > 0 ? (
+                                    <div className="icon-badge-box">
+                                        <Icon size={20} />
+                                        <span className="btn-badge">{badge}</span>
+                                    </div>
+                                ) : (
+                                    <Icon size={20} />
+                                )}
+                                <span>{action.label}</span>
+                            </button>
+                        );
+                    })}
                 </div>
             </section>
 
@@ -119,15 +315,40 @@ export const Dashboard: React.FC = () => {
                 <div className="hospitals-grid">
                     {(() => {
                         const branches: Branch[] = getTenantBranches(tenant.id, tenant.name);
-
                         const displayBranches = getTopBranches(branches);
-
                         return displayBranches.map(branch => (
                             <HospitalWidget key={branch.id} branch={branch} />
                         ));
                     })()}
                 </div>
             </section>
+
+            {/* Confirm Prompt (tap & hold) */}
+            {showConfirmPrompt && (
+                <div className="qa-modal-overlay" onClick={() => setShowConfirmPrompt(false)}>
+                    <div className="qa-confirm-prompt" onClick={e => e.stopPropagation()}>
+                        <div className="qa-confirm-icon"><Settings2 size={28} /></div>
+                        <h3>Customize Quick Actions?</h3>
+                        <p>Rearrange, add, or remove shortcuts from your dashboard.</p>
+                        <div className="qa-confirm-actions">
+                            <button className="qa-btn-secondary" onClick={() => setShowConfirmPrompt(false)}>Cancel</button>
+                            <button className="qa-btn-primary" onClick={() => { setShowConfirmPrompt(false); setShowCustomizer(true); }}>
+                                Customize
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Customizer Modal */}
+            {showCustomizer && (
+                <CustomizerModal
+                    availableActions={availableActions}
+                    selectedIds={selectedIds}
+                    onSave={handleSaveActions}
+                    onClose={() => setShowCustomizer(false)}
+                />
+            )}
         </div>
     );
 };

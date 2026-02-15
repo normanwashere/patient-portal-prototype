@@ -79,8 +79,8 @@
 }
 
 .notification-card.unread {
-    background: linear-gradient(to right, #f0f9ff, #ffffff);
-    border-color: #bae6fd;
+    background: linear-gradient(to right, var(--color-bg-tint-soft, #f0f9ff), #ffffff);
+    border-color: var(--color-border, #bae6fd);
 }
 
 .notification-card.unread::before {
@@ -105,8 +105,8 @@
 }
 
 .notif-icon-box.success {
-    background-color: #f0fdf4;
-    color: #16a34a;
+    background-color: var(--color-success-light, #f0fdf4);
+    color: var(--color-success, #16a34a);
 }
 
 .notif-icon-box.warning {

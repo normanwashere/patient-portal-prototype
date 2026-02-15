@@ -41,6 +41,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
+import { isDoctorModuleAllowed } from '../../provider/roleAccess';
 import './DoctorDashboard.css';
 
 const getGreeting = () => {
@@ -60,6 +61,7 @@ interface DashTile {
   badge?: number;
   visible: boolean;
   description?: string;
+  inactive?: boolean;  // visually dimmed — the "other" mode
 }
 
 export const DoctorDashboard = () => {
@@ -214,17 +216,39 @@ export const DoctorDashboard = () => {
   };
 
   // ===== Tile Definitions (feature-flag gated) =====
+  const isClinicMode = doctorMode === 'in-clinic';
+  const isTeleMode = doctorMode === 'teleconsult';
+
   const tiles: DashTile[] = [
     {
       id: 'queue',
       label: 'In-Clinic Queue',
       icon: Users,
-      color: doctorMode === 'teleconsult' ? 'rgba(100,116,139,0.06)' : 'rgba(59, 130, 246, 0.1)',
-      iconColor: doctorMode === 'teleconsult' ? 'var(--color-gray-400)' : 'var(--color-info)',
+      color: isClinicMode ? 'rgba(59, 130, 246, 0.12)' : 'rgba(100,116,139,0.04)',
+      iconColor: isClinicMode ? 'var(--color-info)' : 'var(--color-gray-400)',
       route: '/doctor/queue',
       badge: queueCount,
       visible: queueEnabled,
-      description: doctorMode === 'teleconsult' ? 'On Hold' : (queueCount > 0 ? `${queueCount} waiting` : 'No patients'),
+      description: isTeleMode ? 'On Hold' : (queueCount > 0 ? `${queueCount} waiting` : 'No patients'),
+      inactive: isTeleMode,
+    },
+    {
+      id: 'teleconsult',
+      label: teleconsultNowEnabled ? 'Teleconsult Queue' : 'Teleconsult',
+      icon: Video,
+      color: teleconsultNowEnabled
+        ? (isTeleMode ? 'rgba(139, 92, 246, 0.12)' : 'rgba(100,116,139,0.04)')
+        : 'rgba(139, 92, 246, 0.06)',
+      iconColor: teleconsultNowEnabled
+        ? (isTeleMode ? 'var(--color-purple-dark)' : 'var(--color-gray-400)')
+        : 'var(--color-purple-dark)',
+      route: '/doctor/teleconsult',
+      badge: teleconsultNowEnabled ? 3 : 0,
+      visible: teleconsultEnabled,
+      description: teleconsultNowEnabled
+        ? (isClinicMode ? 'On Hold · 3 waiting' : '3 patients waiting')
+        : 'Schedule only',
+      inactive: teleconsultNowEnabled && isClinicMode,
     },
     {
       id: 'schedule',
@@ -293,23 +317,6 @@ export const DoctorDashboard = () => {
       description: noteCount > 0 ? `${noteCount} drafts` : 'All signed',
     },
     {
-      id: 'teleconsult',
-      label: teleconsultNowEnabled ? 'Teleconsult Queue' : 'Teleconsult',
-      icon: Video,
-      color: teleconsultNowEnabled
-        ? (doctorMode === 'in-clinic' ? 'rgba(100,116,139,0.06)' : 'rgba(139, 92, 246, 0.08)')
-        : 'rgba(139, 92, 246, 0.06)',
-      iconColor: teleconsultNowEnabled
-        ? (doctorMode === 'in-clinic' ? 'var(--color-gray-400)' : 'var(--color-purple-dark)')
-        : 'var(--color-purple-dark)',
-      route: '/doctor/teleconsult',
-      badge: teleconsultNowEnabled ? 3 : 0,
-      visible: teleconsultEnabled,
-      description: teleconsultNowEnabled
-        ? (doctorMode === 'in-clinic' ? 'On Hold · 3 waiting' : '3 patients waiting')
-        : 'Schedule only',
-    },
-    {
       id: 'tasks',
       label: 'Tasks',
       icon: ClipboardList,
@@ -344,7 +351,30 @@ export const DoctorDashboard = () => {
     },
   ];
 
-  const visibleTiles = tiles.filter(t => t.visible);
+  // Map tile IDs to the module key used by role access
+  const TILE_MODULE_MAP: Record<string, string> = {
+    queue: 'queue',
+    schedule: 'schedule',
+    encounter: 'encounter',
+    results: 'results',
+    prescriptions: 'prescriptions',
+    cdss: 'encounter',      // CDSS is part of the encounter module
+    notes: 'encounter',     // Clinical notes are part of encounter
+    teleconsult: 'teleconsult',
+    tasks: 'tasks',
+    immunizations: 'immunizations',
+    loa: 'loa',
+    'care-plans': 'care-plans',
+    messages: 'messages',
+  };
+
+  const currentRole = currentStaff?.role ?? 'doctor';
+  const visibleTiles = tiles.filter(t => {
+    if (!t.visible) return false;
+    // Also check role-based module access
+    const moduleKey = TILE_MODULE_MAP[t.id] ?? t.id;
+    return isDoctorModuleAllowed(currentRole, moduleKey);
+  });
 
   // ===== RENDER =====
   return (
@@ -353,35 +383,32 @@ export const DoctorDashboard = () => {
       <header className="doc-today-header">
         <div>
           <h1 className="doc-today-greeting">
-            {getGreeting()}, Dr. {currentStaff?.name?.replace(/^Dr\.\s*/i, '').split(' ')[0] ?? 'Doctor'}
+            {getGreeting()}, {currentRole === 'doctor' ? 'Dr.' : ''} {currentStaff?.name?.replace(/^Dr\.\s*/i, '').split(' ')[0] ?? 'Doctor'}
           </h1>
           <div className="doc-today-date">
             {todayStr}
             {currentStaff?.specialty && <span className="doc-today-specialty">{currentStaff.specialty}</span>}
           </div>
         </div>
-        {/* Quick stats row */}
-        <div className="doc-today-stats">
-          <div className="doc-today-stat">
-            <span className="doc-today-stat-value">{queueStats.completedToday}</span>
-            <span className="doc-today-stat-label">Seen</span>
-          </div>
-          <div className="doc-today-stat-divider" />
-          <div className="doc-today-stat">
-            <span className="doc-today-stat-value">{queueStats.avgWaitTime || 18}m</span>
-            <span className="doc-today-stat-label">Avg</span>
-          </div>
-          {queueEnabled && (
-            <>
-              <div className="doc-today-stat-divider" />
-              <div className="doc-today-stat">
-                <span className="doc-today-stat-value">{queueStats.totalInQueue}</span>
-                <span className="doc-today-stat-label">Queue</span>
-              </div>
-            </>
-          )}
-        </div>
       </header>
+
+      {/* Quick stats row — matches queue page stat chips */}
+      <div className="doc-stats-bar">
+        <div className="doc-stat-chip">
+          <div className="doc-stat-value" style={{ color: 'var(--color-success)' }}>{queueStats.completedToday}</div>
+          <div className="doc-label-sm">Seen today</div>
+        </div>
+        <div className="doc-stat-chip">
+          <div className="doc-stat-value">{queueStats.avgWaitTime || 8} min</div>
+          <div className="doc-label-sm">Avg wait</div>
+        </div>
+        {queueEnabled && (
+          <div className="doc-stat-chip">
+            <div className="doc-stat-value" style={{ color: 'var(--color-warning)' }}>{queueStats.totalInQueue}</div>
+            <div className="doc-label-sm">In my queue</div>
+          </div>
+        )}
+      </div>
 
       {/* ===== Active Mode Indicator (only when live teleconsult NOW is available) ===== */}
       {hasLiveQueue && (
@@ -806,20 +833,22 @@ export const DoctorDashboard = () => {
         <div className="doc-tiles-grid">
           {visibleTiles.map((tile) => {
             const Icon = tile.icon;
+            const dimmed = !!tile.inactive;
             return (
               <button
                 key={tile.id}
-                className={`doc-tile ${(tile.badge ?? 0) > 0 ? 'doc-tile--has-badge' : ''}`}
+                className={`doc-tile ${(tile.badge ?? 0) > 0 ? 'doc-tile--has-badge' : ''} ${dimmed ? 'doc-tile--inactive' : ''}`}
                 onClick={() => navigate(tile.route)}
               >
                 <div className="doc-tile-icon" style={{ background: tile.color }}>
                   <span style={{ color: tile.iconColor }}><Icon size={22} /></span>
                   {(tile.badge ?? 0) > 0 && (
-                    <span className="doc-tile-badge">{tile.badge}</span>
+                    <span className={`doc-tile-badge ${dimmed ? 'doc-tile-badge--muted' : ''}`}>{tile.badge}</span>
                   )}
                 </div>
                 <span className="doc-tile-label">{tile.label}</span>
                 <span className="doc-tile-desc">{tile.description}</span>
+                {dimmed && <span className="doc-tile-paused">PAUSED</span>}
               </button>
             );
           })}

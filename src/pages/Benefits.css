@@ -117,7 +117,7 @@
     width: 48px;
     height: 48px;
     border-radius: 14px;
-    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+    background: linear-gradient(135deg, var(--color-bg-tint, #f0fdf4), var(--color-bg-tint-soft, #ecfdf5));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -212,11 +212,25 @@
 }
 
 .card-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0 1rem;
-    font-weight: 800;
+    padding: 0.75rem 1.25rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all var(--transition-smooth);
+    white-space: nowrap;
+}
+
+.card-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
 }
 
 .benefit-grid {
@@ -533,7 +547,7 @@
 .service-option.active {
     background: white;
     border-color: var(--color-primary);
-    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.08);
+    box-shadow: 0 4px 12px var(--color-primary-transparent);
 }
 
 .service-option-info {

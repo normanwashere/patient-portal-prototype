@@ -26,6 +26,7 @@ import { Health } from './pages/Health';
 import { CarePlans } from './pages/CarePlans';
 import { Financial } from './pages/Financial';
 import { BookProcedure } from './pages/BookProcedure';
+import { HomeCareBooking } from './pages/HomeCareBooking';
 import { TeleconsultLanding } from './pages/TeleconsultLanding';
 import { ConsultNow } from './pages/ConsultNow';
 import { TeleconsultIntake } from './pages/intake/TeleconsultIntake';
@@ -56,11 +57,14 @@ import { EventsManagement } from './provider/pages/EventsManagement';
 import { Analytics } from './provider/pages/Analytics';
 import { FormsManagement } from './provider/pages/FormsManagement';
 import { Integrations } from './provider/pages/Integrations';
+import { HomeCareManagement } from './provider/pages/HomeCareManagement';
 import { Architecture } from './provider/pages/Architecture';
+import { Records } from './provider/pages/Records';
 import { TeleconsultQueue } from './provider/pages/TeleconsultQueue';
 import { ProviderNotifications } from './provider/pages/ProviderNotifications';
 import { ProviderProfile } from './provider/pages/ProviderProfile';
 import { ProviderSettings } from './provider/pages/ProviderSettings';
+import { QueueMonitor } from './provider/pages/QueueMonitor';
 
 // Doctor App imports
 import { DoctorLayout } from './doctor/components/DoctorLayout';
@@ -75,6 +79,8 @@ import { DoctorTasks } from './doctor/pages/DoctorTasks';
 import { DoctorMessages } from './doctor/pages/DoctorMessages';
 import { ImmunizationManagement } from './doctor/pages/ImmunizationManagement';
 import { LOAReview } from './doctor/pages/LOAReview';
+import { DoctorCarePlans } from './doctor/pages/DoctorCarePlans';
+import { DoctorProfile } from './doctor/pages/DoctorProfile';
 
 // App Selector
 import { AppSelector } from './pages/AppSelector';
@@ -119,6 +125,7 @@ function App() {
                                         <Route path="/visits/consult-now" element={<ConsultNow />} />
                                         <Route path="/visits/teleconsult-intake" element={<TeleconsultIntake />} />
                                         <Route path="/visits/book-procedure" element={<BookProcedure />} />
+                                        <Route path="/visits/homecare" element={<HomeCareBooking />} />
                                         <Route path="/visits/consult-later" element={<AppointmentBooking />} />
                                         <Route path="/health" element={<Health />} />
                                         <Route path="/health/care-plans" element={<CarePlans />} />
@@ -133,6 +140,9 @@ function App() {
                                         <Route path="/notifications" element={<Notifications />} />
                                         <Route path="/queue" element={<Queue />} />
                                     </Route>
+
+                                    {/* Queue Monitor — standalone fullscreen (no sidebar/nav) */}
+                                    <Route path="/provider/queue/monitor/:stationKey" element={<QueueMonitor />} />
 
                                     {/* Provider App Routes */}
                                     <Route element={<ProviderLayout />}>
@@ -152,6 +162,8 @@ function App() {
                                         <Route path="/provider/hr" element={<HRStaff />} />
                                         <Route path="/provider/analytics" element={<Analytics />} />
                                         <Route path="/provider/integrations" element={<Integrations />} />
+                                        <Route path="/provider/homecare" element={<HomeCareManagement />} />
+                                        <Route path="/provider/records" element={<Records />} />
                                         <Route path="/provider/architecture" element={<Architecture />} />
                     <Route path="/provider/forms" element={<FormsManagement />} />
                     <Route path="/provider/notifications" element={<ProviderNotifications />} />
@@ -172,6 +184,8 @@ function App() {
                                         <Route path="/doctor/messages" element={<DoctorMessages />} />
                                         <Route path="/doctor/immunizations" element={<ImmunizationManagement />} />
                                         <Route path="/doctor/loa" element={<LOAReview />} />
+                                        <Route path="/doctor/care-plans" element={<DoctorCarePlans />} />
+                                        <Route path="/doctor/profile" element={<DoctorProfile />} />
                                     </Route>
 
                                     <Route path="*" element={<Navigate to="/apps" replace />} />

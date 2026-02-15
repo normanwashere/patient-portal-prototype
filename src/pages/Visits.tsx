@@ -1,24 +1,43 @@
-import { useNavigate } from 'react-router-dom';
-import { Video, CalendarDays, Building2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Video, CalendarDays, Building2, Home } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import { ServiceCard } from '../components/ServiceCard/ServiceCard';
 import { useBadges } from '../hooks/useBadges';
-import { BackButton } from '../components/Common/BackButton';
 import './Visits.css';
 
 export const Visits: React.FC = () => {
     const { tenant } = useTheme();
     const navigate = useNavigate();
+    const location = useLocation();
     const { visits } = tenant.features;
     const { careBadge } = useBadges();
+    const teleconsultNowRef = useRef<HTMLDivElement>(null);
+    const [highlightTeleconsult, setHighlightTeleconsult] = useState(false);
+
+    // If navigated here with highlight state, scroll to and pulse the teleconsult now card
+    useEffect(() => {
+        const state = location.state as { highlight?: string } | null;
+        if (state?.highlight === 'teleconsult-now') {
+            setHighlightTeleconsult(true);
+            // Scroll to the card after a brief delay for render
+            setTimeout(() => {
+                teleconsultNowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+            // Clear highlight after animation
+            const timer = setTimeout(() => setHighlightTeleconsult(false), 3000);
+            // Clear the state so refresh doesn't re-trigger
+            window.history.replaceState({}, '');
+            return () => clearTimeout(timer);
+        }
+    }, [location.state]);
 
     // Check if any visit type is available
     const hasAnyVisit = visits.teleconsultEnabled || visits.clinicVisitEnabled;
 
     return (
         <div className="visits-container">
-            <header className="page-header">
-                <BackButton />
+            <header className="page-header pillar-header">
                 <div className="header-text">
                     <h2>Care Services</h2>
                     <p className="page-subtitle">Schedule and manage your healthcare needs</p>
@@ -47,16 +66,29 @@ export const Visits: React.FC = () => {
                     backgroundImage="https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=600"
                 />
 
-                {/* 2. Book Procedure */}
+                {/* 2. Book Procedure — In-Facility */}
                 <ServiceCard
                     title="Book Procedure"
-                    description="Schedule lab tests or diagnostics."
+                    description="Visit a facility for lab tests, imaging, or diagnostics."
                     icon={<Building2 size={24} />}
                     onClick={() => navigate('/visits/book-procedure')}
                     colorTheme="blue"
                     actionLabel="Schedule"
                     backgroundImage="https://images.unsplash.com/photo-1579154341098-e4e158cc7f55?w=600"
                 />
+
+                {/* 2b. HomeCare — At-Home Collection */}
+                {visits.homeCareEnabled && (
+                    <ServiceCard
+                        title="HomeCare"
+                        description="We send a medical professional to your home or office for specimen collection."
+                        icon={<Home size={24} />}
+                        onClick={() => navigate('/visits/homecare')}
+                        colorTheme="green"
+                        actionLabel="Book HomeCare"
+                        backgroundImage="https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?w=600"
+                    />
+                )}
 
                 {/* 3. Book In-Person Consult */}
                 {visits.clinicVisitEnabled && (
@@ -86,15 +118,17 @@ export const Visits: React.FC = () => {
 
                 {/* 5. Teleconsult Now */}
                 {visits.teleconsultEnabled && (
-                    <ServiceCard
-                        title="Teleconsult Now"
-                        description="Connect with a doctor immediately."
-                        icon={<Video size={24} />}
-                        onClick={() => navigate('/visits/teleconsult-intake')}
-                        colorTheme="purple"
-                        actionLabel="Start Now"
-                        backgroundImage="https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=600"
-                    />
+                    <div ref={teleconsultNowRef} className={highlightTeleconsult ? 'teleconsult-highlight' : ''}>
+                        <ServiceCard
+                            title="Teleconsult Now"
+                            description="Connect with a doctor immediately."
+                            icon={<Video size={24} />}
+                            onClick={() => navigate('/visits/teleconsult-intake')}
+                            colorTheme="purple"
+                            actionLabel="Start Now"
+                            backgroundImage="https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=600"
+                        />
+                    </div>
                 )}
             </div>
 

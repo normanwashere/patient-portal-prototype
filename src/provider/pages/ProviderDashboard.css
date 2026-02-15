@@ -1,0 +1,32 @@
+/* ── ProviderDashboard clickable hover effects ── */
+
+.pd-kpi-card:hover,
+.pd-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: var(--color-primary) !important;
+}
+
+.pd-quick-action:hover {
+  border-color: var(--color-primary) !important;
+  background: var(--color-primary-light) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+.pd-list-item:hover {
+  background: var(--color-primary-light);
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.pd-pending-row:hover {
+  background: var(--color-primary-light);
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.pd-alert-card:hover {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  border-color: var(--color-primary) !important;
+}

@@ -396,6 +396,17 @@ export const AppointmentBooking: React.FC = () => {
         const currentSelectedDateObj = availability.find(d => d.date === selectedDate);
         const availableSlots = currentSelectedDateObj?.slots || [];
 
+        // Build a set of available date numbers for the calendar
+        const today = new Date();
+        const availableDateMap = new Map<number, { status: string; slots: string[] }>();
+        availability.forEach(d => {
+            // Parse "Feb 14" style dates
+            const parsed = new Date(`${d.date}, ${today.getFullYear()}`);
+            if (!isNaN(parsed.getTime())) {
+                availableDateMap.set(parsed.getDate(), { status: d.status, slots: d.slots });
+            }
+        });
+
         return (
             <div className="step-content">
                 <div className="doctor-summary-mini with-bio">
@@ -414,38 +425,86 @@ export const AppointmentBooking: React.FC = () => {
 
                 <div className="datetime-section">
                     <h3>Select Date & Time</h3>
-                    <div className="date-scroll">
-                        {availability.map((d, index) => (
-                            <button key={index}
-                                className={`date-card ${selectedDate === d.date ? 'selected' : ''} ${d.status === 'Full' ? 'full' : ''}`}
-                                disabled={d.status === 'Full'}
-                                onClick={() => {
-                                    if (d.status !== 'Full') {
-                                        setSelectedDate(d.date);
-                                        setSelectedTime(''); // Reset time when date changes
-                                    }
-                                }}>
-                                <span className="date-day">{d.day}</span>
-                                <span className="date-num">{d.date.split(' ')[1]}</span>
-                                <span className={`date-status ${d.status.toLowerCase()}`}>{d.status}</span>
-                            </button>
-                        ))}
+
+                    {/* Calendar View */}
+                    <div className="calendar-picker">
+                        <div className="calendar-header-row">
+                            <span className="calendar-month">
+                                {today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                            </span>
+                        </div>
+                        <div className="calendar-weekdays">
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                                <span key={d} className="cal-weekday">{d}</span>
+                            ))}
+                        </div>
+                        <div className="calendar-grid">
+                            {(() => {
+                                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                                const startPad = firstDay.getDay();
+                                const cells = [];
+
+                                for (let i = 0; i < startPad; i++) {
+                                    cells.push(<span key={`pad-${i}`} className="cal-day pad" />);
+                                }
+
+                                for (let d = 1; d <= lastDay.getDate(); d++) {
+                                    const dateObj = new Date(today.getFullYear(), today.getMonth(), d);
+                                    const isPast = dateObj <= today;
+                                    const avail = availableDateMap.get(d);
+                                    const hasSlots = !!avail && avail.status !== 'Full';
+                                    const isLimited = !!avail && avail.status === 'Limited';
+                                    const isFull = !!avail && avail.status === 'Full';
+                                    const isDisabled = isPast || !avail;
+                                    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                    const isSelected = selectedDate === dateStr;
+
+                                    cells.push(
+                                        <button
+                                            key={d}
+                                            className={`cal-day ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''} ${isFull ? 'full' : ''} ${isLimited ? 'limited' : ''}`}
+                                            disabled={isDisabled || isFull}
+                                            onClick={() => { setSelectedDate(dateStr); setSelectedTime(''); }}
+                                        >
+                                            <span className="cal-day-num">{d}</span>
+                                            {!isPast && hasSlots && !isLimited && <span className="cal-dot available" />}
+                                            {!isPast && isLimited && <span className="cal-dot limited" />}
+                                            {!isPast && isFull && <span className="cal-dot full" />}
+                                        </button>
+                                    );
+                                }
+
+                                return cells;
+                            })()}
+                        </div>
+                        <div className="calendar-legend">
+                            <span><span className="cal-dot available" /> Available</span>
+                            <span><span className="cal-dot limited" /> Limited</span>
+                            <span><span className="cal-dot full" /> Full</span>
+                        </div>
                     </div>
 
+                    {/* Time Slots */}
                     {selectedDate && (
-                        <div className="time-grid animate-in">
-                            {availableSlots.length > 0 ? availableSlots.map(t => (
-                                <button key={t} className={`time-card ${selectedTime === t ? 'selected' : ''}`}
-                                    onClick={() => setSelectedTime(t)}>
-                                    {t}
-                                </button>
-                            )) : (
-                                <div className="no-slots">No slots available for this date.</div>
-                            )}
+                        <div className="time-slots-section animate-in">
+                            <div className="time-slots-header">
+                                <span>Available times for <strong>{selectedDate}</strong></span>
+                            </div>
+                            <div className="time-slots-grid">
+                                {availableSlots.length > 0 ? availableSlots.map(t => (
+                                    <button key={t} className={`time-slot-btn ${selectedTime === t ? 'selected' : ''}`}
+                                        onClick={() => setSelectedTime(t)}>
+                                        {t}
+                                    </button>
+                                )) : (
+                                    <div className="no-slots" style={{ gridColumn: '1 / -1' }}>No slots available for this date.</div>
+                                )}
+                            </div>
                         </div>
                     )}
                     {!selectedDate && (
-                        <div className="placeholder-slots">Please select a date above to see available times.</div>
+                        <div className="placeholder-slots">Select a date on the calendar to see available times.</div>
                     )}
                 </div>
 

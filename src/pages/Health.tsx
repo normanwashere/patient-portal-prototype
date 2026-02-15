@@ -1,19 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TestTube, Pill, Syringe, Clock, FileText, ClipboardList } from 'lucide-react';
-import { BackButton } from '../components/Common/BackButton';
 import { ServiceCard } from '../components/ServiceCard/ServiceCard';
+import { useTheme } from '../theme/ThemeContext';
 import { useBadges } from '../hooks/useBadges';
 import './HubPage.css';
 
 export const Health: React.FC = () => {
     const navigate = useNavigate();
+    const { tenant } = useTheme();
     const { newMedsCount, newLabsCount, newImmunizationsCount } = useBadges();
 
     return (
         <div className="hub-page">
-            <header className="page-header">
-                <BackButton />
+            <header className="page-header pillar-header">
                 <div className="header-text">
                     <h2>Health Records</h2>
                     <p className="page-subtitle">Manage your medical history and results</p>
@@ -74,16 +74,18 @@ export const Health: React.FC = () => {
                     backgroundImage="https://images.unsplash.com/photo-1615631648086-325025c9e51e?w=600"
                 />
 
-                <ServiceCard
-                    title="My Care Plans"
-                    description="Track treatment goals, interventions, and progress across your care team."
-                    icon={<ClipboardList size={24} />}
-                    onClick={() => navigate('/health/care-plans')}
-                    colorTheme="primary"
-                    badge={2}
-                    actionLabel="View Plans"
-                    backgroundImage="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600"
-                />
+                {tenant.features.carePlans && (
+                    <ServiceCard
+                        title="My Care Plans"
+                        description="Track treatment goals, interventions, and progress across your care team."
+                        icon={<ClipboardList size={24} />}
+                        onClick={() => navigate('/health/care-plans')}
+                        colorTheme="primary"
+                        badge={2}
+                        actionLabel="View Plans"
+                        backgroundImage="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600"
+                    />
+                )}
             </div>
         </div>
     );

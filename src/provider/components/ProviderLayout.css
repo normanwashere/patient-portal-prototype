@@ -48,10 +48,6 @@
   overflow: hidden;
 }
 
-.provider-sidebar.collapsed {
-  width: 72px;
-}
-
 .provider-sidebar-inner {
   display: flex;
   flex-direction: column;
@@ -67,7 +63,8 @@
   gap: 12px;
   padding: 20px 16px;
   min-height: 72px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 15%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 3%, var(--color-surface));
 }
 
 .provider-sidebar-logo {
@@ -83,39 +80,106 @@
   white-space: nowrap;
 }
 
-.provider-sidebar.collapsed .provider-sidebar-brand {
-  justify-content: center;
-  padding: 20px 12px;
-}
 
-.provider-sidebar.collapsed .provider-sidebar-title {
-  display: none;
-}
-
-/* Collapse toggle */
-.provider-sidebar-toggle {
-  position: absolute;
-  top: 24px;
-  right: -12px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+/* Branch indicator */
+.provider-branch-indicator {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  z-index: 10;
+  gap: 8px;
+  padding: 10px 16px;
+  margin: 0 12px 4px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
-.provider-sidebar-toggle:hover {
-  background: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
+.provider-branch-icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.provider-branch-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.provider-branch-switcher {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.provider-branch-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.provider-branch-btn:hover .provider-branch-name {
+  color: var(--color-primary);
+}
+
+.provider-branch-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 98;
+}
+
+.provider-branch-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: -8px;
+  right: -8px;
+  min-width: 200px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  z-index: 300;
+  animation: providerDropdownIn 0.2s ease;
+}
+
+.provider-branch-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.provider-branch-option:hover {
+  background: var(--color-primary-transparent);
+  color: var(--color-primary);
+}
+
+.provider-branch-option.active {
+  background: var(--color-primary-transparent);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.provider-branch-check {
+  color: var(--color-primary);
+  font-weight: 700;
 }
 
 /* Nav sections */
@@ -127,7 +191,9 @@
 
 .provider-nav-section {
   margin-bottom: 8px;
+  padding-bottom: 8px;
 }
+
 
 .provider-nav-section-label {
   display: block;
@@ -135,13 +201,10 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-text-muted);
+  color: color-mix(in srgb, var(--color-primary) 50%, var(--color-text-muted));
   padding: 8px 16px 4px;
 }
 
-.provider-sidebar.collapsed .provider-nav-section-label {
-  display: none;
-}
 
 .provider-nav-item {
   display: flex;
@@ -164,7 +227,7 @@
 }
 
 .provider-nav-item.active {
-  background: var(--color-primary-transparent);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   color: var(--color-primary);
   font-weight: 600;
 }
@@ -181,15 +244,10 @@
   border-radius: 0 3px 3px 0;
 }
 
-.provider-sidebar.collapsed .provider-nav-item {
-  justify-content: center;
-  padding: 12px;
-  margin: 0 12px 2px;
+.provider-nav-item.active .provider-nav-icon {
+  color: var(--color-primary);
 }
 
-.provider-sidebar.collapsed .provider-nav-item::before {
-  display: none;
-}
 
 .provider-nav-icon {
   flex-shrink: 0;
@@ -201,9 +259,6 @@
   text-overflow: ellipsis;
 }
 
-.provider-sidebar.collapsed .provider-nav-text {
-  display: none;
-}
 
 /* Overlay for mobile drawer - hidden on desktop */
 .provider-sidebar-overlay {
@@ -243,15 +298,18 @@
   margin-bottom: 0;
 }
 
-.provider-sidebar.collapsed .provider-sidebar-footer .provider-sidebar-switch span,
-.provider-sidebar.collapsed .provider-sidebar-switch {
-  justify-content: center;
-  padding: 10px;
+.provider-sidebar-signout {
+  margin-bottom: 0;
+  margin-top: 2px;
+  color: var(--color-error, #dc2626);
+  background: transparent;
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
 }
 
-.provider-sidebar.collapsed .provider-sidebar-switch .provider-nav-text,
-.provider-sidebar.collapsed .provider-sidebar-switch:not(.provider-sidebar-back) span {
-  display: none;
+.provider-sidebar-signout:hover {
+  background: color-mix(in srgb, var(--color-error, #dc2626) 8%, transparent);
+  color: var(--color-error, #dc2626);
 }
 
 /* ---- Content wrapper ---- */
@@ -262,10 +320,6 @@
   min-width: 0;
   margin-left: 280px;
   transition: margin-left var(--transition-smooth);
-}
-
-.provider-sidebar.collapsed ~ .provider-content-wrapper {
-  margin-left: 72px;
 }
 
 /* ---- Header ---- */
@@ -642,59 +696,37 @@
 /* ---- Responsive: Tablet (768-1280px) ---- */
 @media (max-width: 1280px) {
   .provider-sidebar {
-    width: 72px;
-  }
-
-  .provider-sidebar.collapsed {
-    width: 72px;
-  }
-
-  .provider-sidebar-brand {
-    justify-content: center;
-    padding: 20px 12px;
-  }
-
-  .provider-sidebar-title {
-    display: none;
-  }
-
-  .provider-sidebar-toggle {
-    display: none;
-  }
-
-  .provider-nav-section-label {
-    display: none;
-  }
-
-  .provider-nav-item {
-    justify-content: center;
-    padding: 12px;
-    margin: 0 12px 2px;
-  }
-
-  .provider-nav-text {
-    display: none;
-  }
-
-  .provider-sidebar-footer .provider-sidebar-switch span,
-  .provider-sidebar-switch .provider-nav-text {
-    display: none;
-  }
-
-  .provider-sidebar-switch {
-    justify-content: center;
-  }
-
-  .provider-sidebar-switch.provider-sidebar-back {
-    display: none;
+    width: 240px;
   }
 
   .provider-content-wrapper {
-    margin-left: 72px;
+    margin-left: 240px;
   }
 
   .provider-search-wrap {
     width: 200px;
+  }
+
+  .provider-sidebar-logo {
+    height: 28px;
+  }
+
+  .provider-sidebar-title {
+    font-size: 0.85rem;
+  }
+
+  .provider-branch-indicator {
+    margin: 0 8px 4px;
+    padding: 8px 12px;
+  }
+
+  .provider-branch-name {
+    font-size: 0.75rem;
+  }
+
+  .provider-nav-item {
+    padding: 8px 14px;
+    font-size: 0.85rem;
   }
 }
 
@@ -711,10 +743,6 @@
     box-shadow: var(--shadow-xl);
   }
 
-  .provider-sidebar.collapsed {
-    width: 280px;
-  }
-
   .provider-sidebar-overlay {
     display: none;
     position: fixed;
@@ -725,43 +753,6 @@
 
   .provider-sidebar.mobile-open .provider-sidebar-overlay {
     display: block;
-  }
-
-  .provider-sidebar-brand {
-    justify-content: flex-start;
-  }
-
-  .provider-sidebar-title {
-    display: block;
-  }
-
-  .provider-sidebar-toggle {
-    display: none;
-  }
-
-  .provider-nav-section-label {
-    display: block;
-  }
-
-  .provider-nav-item {
-    justify-content: flex-start;
-  }
-
-  .provider-nav-text {
-    display: block;
-  }
-
-  .provider-sidebar-footer .provider-sidebar-switch {
-    display: flex;
-    justify-content: flex-start;
-  }
-
-  .provider-sidebar-switch .provider-nav-text {
-    display: inline;
-  }
-
-  .provider-sidebar-back {
-    display: flex;
   }
 
   .provider-content-wrapper {

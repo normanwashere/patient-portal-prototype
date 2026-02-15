@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type { TenantConfig, TenantFeatures } from '../types/tenant';
 import { tenants as defaultTenants, defaultTenant } from './tenantConfig';
 
-const BUILTIN_IDS = ['metroGeneral', 'meralcoWellness', 'healthFirst'];
+const BUILTIN_IDS = ['metroGeneral', 'meralcoWellness', 'healthFirst', 'maxicare'];
 
 interface ThemeContextType {
     tenant: TenantConfig;
@@ -64,6 +64,13 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         root.style.setProperty('--color-text', colors.text);
         root.style.setProperty('--color-text-muted', colors.textMuted);
         root.style.setProperty('--color-border', colors.border);
+
+        // Generate org-tinted background shades from primary color
+        // These allow gradients/backgrounds to subtly reflect the org's brand
+        root.style.setProperty('--color-bg-tint-soft', `color-mix(in srgb, ${colors.primary} 3%, white)`);
+        root.style.setProperty('--color-bg-tint', `color-mix(in srgb, ${colors.primary} 5%, white)`);
+        root.style.setProperty('--color-bg-tint-medium', `color-mix(in srgb, ${colors.primary} 8%, white)`);
+        root.style.setProperty('--color-bg-tint-strong', `color-mix(in srgb, ${colors.primary} 12%, white)`);
     }, [tenant]);
 
     return (
