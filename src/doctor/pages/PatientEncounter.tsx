@@ -2079,7 +2079,6 @@ export const PatientEncounter = () => {
                             size={14}
                             style={{ color: 'var(--color-primary)', opacity: 0.7, cursor: 'pointer', flexShrink: 0 }}
                             onClick={(e) => { e.stopPropagation(); setLookupDrug(item.name.split(' ')[0]); }}
-                            title="View drug information"
                           />
                         </span>
                         <span

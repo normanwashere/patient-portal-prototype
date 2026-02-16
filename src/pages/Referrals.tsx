@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     Send, ArrowRight, Clock, CheckCircle2, Calendar, AlertTriangle,
-    User, Building2, FileText, Printer, ExternalLink, Activity, Search,
-    X, ChevronRight, XCircle, Shield
+    User, Building2, FileText, Printer, Activity, Search,
+    X, XCircle
 } from 'lucide-react';
 import { useData, type PatientReferralView } from '../context/DataContext';
 import { useTheme } from '../theme/ThemeContext';
@@ -86,7 +86,7 @@ export default function Referrals() {
     /* ── Print referral letter ── */
     const handlePrint = useCallback((ref: PatientReferralView) => {
         const patientName = userProfile?.name ?? 'Patient';
-        const logoUrl = tenant.logo;
+        const logoUrl = tenant.logoUrl;
         const orgName = tenant.name;
 
         const html = `<!DOCTYPE html>
@@ -282,7 +282,6 @@ export default function Referrals() {
                         <ReferralCard
                             key={ref.id}
                             referral={ref}
-                            isMobile={isMobile}
                             onViewDetails={() => openDetail(ref)}
                             onPrint={() => handlePrint(ref)}
                         />
@@ -328,8 +327,8 @@ function SummaryCard({ label, count, color, icon }: { label: string; count: numb
 }
 
 /* ── Referral Card ── */
-function ReferralCard({ referral: ref, isMobile, onViewDetails, onPrint }: {
-    referral: PatientReferralView; isMobile: boolean;
+function ReferralCard({ referral: ref, onViewDetails, onPrint }: {
+    referral: PatientReferralView;
     onViewDetails: () => void; onPrint: () => void;
 }) {
     const statusStyle = STATUS_COLORS[ref.status] ?? STATUS_COLORS.Pending;

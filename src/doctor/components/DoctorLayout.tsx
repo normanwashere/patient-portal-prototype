@@ -496,7 +496,7 @@ export const DoctorLayout = () => {
                   key={item.to}
                   to={item.to}
                   onClick={() => setShowMoreMenu(false)}
-                  className={({ isActive }) => ''}
+                  className={() => ''}
                   style={({ isActive }) => ({
                     display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 6,
                     padding: '14px 8px', borderRadius: 12, textDecoration: 'none',
