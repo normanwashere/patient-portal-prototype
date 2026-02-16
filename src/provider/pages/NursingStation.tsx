@@ -33,7 +33,7 @@ const S: Record<string, React.CSSProperties> = {
   title: { fontSize: 24, fontWeight: 700, color: 'var(--color-text)', margin: 0 },
   subtitle: { fontSize: 14, color: 'var(--color-text-muted)', margin: 0 },
   tabs: { display: 'flex', gap: 4, flexWrap: 'wrap', borderBottom: '1px solid var(--color-border)', marginBottom: 20, paddingBottom: 0 },
-  tab: { padding: '12px 16px', fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', background: 'transparent', border: 'none', cursor: 'pointer', borderBottom: '2px solid transparent', marginBottom: -1, borderRadius: '8px 8px 0 0', display: 'flex', alignItems: 'center', gap: 8 },
+  tab: { padding: '12px 16px', fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', background: 'transparent', borderWidth: 0, borderStyle: 'none' as const, borderBottomWidth: 2, borderBottomStyle: 'solid' as const, borderBottomColor: 'transparent', cursor: 'pointer', marginBottom: -1, borderRadius: '8px 8px 0 0', display: 'flex', alignItems: 'center', gap: 8 },
   tabActive: { color: 'var(--color-primary)', borderBottomColor: 'var(--color-primary)' },
   card: { background: 'var(--color-surface)', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,.06)', border: '1px solid var(--color-border)', marginBottom: 20 },
   cardTitle: { fontSize: 16, fontWeight: 600, color: 'var(--color-text)', marginBottom: 16, margin: 0 },

@@ -57,7 +57,7 @@ const S: Record<string, React.CSSProperties> = {
   tabs: { display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--color-border)', paddingBottom: 0, overflowX: 'auto' as const },
   tab: {
     padding: '10px 16px', fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)',
-    background: 'transparent', border: 'none', cursor: 'pointer', borderBottom: '2px solid transparent',
+    background: 'transparent', borderWidth: 0, borderStyle: 'none' as const, cursor: 'pointer', borderBottomWidth: 2, borderBottomStyle: 'solid' as const, borderBottomColor: 'transparent',
     marginBottom: -1, whiteSpace: 'nowrap' as const, display: 'inline-flex', alignItems: 'center', gap: 6,
   },
   tabActive: { color: 'var(--color-primary)', borderBottomColor: 'var(--color-primary)' },

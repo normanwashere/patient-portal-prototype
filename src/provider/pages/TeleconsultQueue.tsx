@@ -14,7 +14,7 @@
  *   no-show / cancelled
  */
 
-import { useState, useMemo, type CSSProperties } from 'react';
+import { useState, useEffect, useMemo, type CSSProperties } from 'react';
 import {
   Video, Phone, Clock, User, UserCheck, Activity,
   Coffee, Stethoscope, Building2, Calendar, CalendarClock, Search,
@@ -202,6 +202,13 @@ export const TeleconsultQueue = () => {
   const [newType, setNewType] = useState<'now' | 'later'>('now');
   const [newPriority, setNewPriority] = useState<'Normal' | 'Urgent' | 'Follow-Up'>('Normal');
   const [newScheduledTime, setNewScheduledTime] = useState('');
+
+  // ── Live timer: tick waitMinutes every 60s ──
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   // Doctor status change
   const [doctorStatusModal, setDoctorStatusModal] = useState<string | null>(null);

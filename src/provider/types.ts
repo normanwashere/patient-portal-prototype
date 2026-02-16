@@ -176,6 +176,23 @@ export interface Equipment {
     nextMaintenance: string;
 }
 
+// ---- Facility Schedule & Capacity ----
+export type FacilityCategoryId = 'lab' | 'imaging' | 'cardio' | 'special';
+
+export interface FacilitySchedule {
+    id: string;
+    tenantId: string;
+    branchId: string;
+    categoryId: FacilityCategoryId;
+    procedureName?: string;
+    daysOfWeek: number[];       // 0=Sun..6=Sat
+    startTime: string;          // 'HH:mm' e.g. '07:00'
+    endTime: string;            // 'HH:mm' e.g. '17:00'
+    slotDurationMin: number;    // 15, 30, 60
+    dailyCap: number;           // max bookings per day
+    bookedSlots: Record<string, number>;  // 'YYYY-MM-DD' -> count booked
+}
+
 // ---- Queue Config ----
 export interface QueueConfig {
     id: string;
@@ -490,6 +507,29 @@ export interface StationVisit {
     notes?: string;
 }
 
+// ---- Pause / Hold ----
+export type PauseReason = 'fasting_required' | 'return_tomorrow' | 'preparation_needed' | 'personal_request' | 'facility_closing' | 'other';
+
+export const PAUSE_REASON_LABELS: Record<PauseReason, string> = {
+    fasting_required: 'Fasting Required',
+    return_tomorrow: 'Returning Tomorrow',
+    preparation_needed: 'Preparation Needed',
+    personal_request: 'Personal Request',
+    facility_closing: 'Facility Closing',
+    other: 'Other',
+};
+
+export interface PauseInfo {
+    pausedAt: string;
+    reason: PauseReason;
+    resumeDate?: string;
+    notes?: string;
+    pausedAtStation: StationType;
+    preservedOrders: DoctorOrder[];
+}
+
+export type QueuePatientStatus = 'QUEUED' | 'READY' | 'IN_SESSION' | 'COMPLETED' | 'NO_SHOW' | 'TRANSFERRED' | 'PAUSED';
+
 export interface QueuePatient {
     id: string;
     patientName: string;
@@ -497,7 +537,7 @@ export interface QueuePatient {
     ticketNumber: string;
     stationType: StationType;
     stationName: string;
-    status: 'QUEUED' | 'READY' | 'IN_SESSION' | 'COMPLETED' | 'NO_SHOW' | 'TRANSFERRED';
+    status: QueuePatientStatus;
     queuedAt: string;
     waitMinutes: number;
     priority: 'Normal' | 'Senior' | 'PWD' | 'Emergency';
@@ -516,6 +556,9 @@ export interface QueuePatient {
     // MULTI_STREAM: doctor-ordered re-queues
     doctorOrders: DoctorOrder[];
     currentOrderIndex: number; // -1 = no orders, otherwise index into doctorOrders
+
+    /** Pause / hold state — set when patient needs to leave and return later */
+    pauseInfo?: PauseInfo;
 }
 
 /** Consultation room definition for queue display */

@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
+import { getPatientTenant } from '../../provider/data/providerMockData';
 
 export const DoctorQueue = () => {
   const {
@@ -47,8 +48,9 @@ export const DoctorQueue = () => {
   // Use 'Consult' station type to match queue patients' stationType/stationName
   const consultRoomId = 'Consult';
 
+  const tenantId = tenant.id;
   const myQueue = queuePatients
-    .filter(p => (p.stationType === 'Consult' || p.stationType === 'Return-Consult') && (p.assignedDoctor === currentStaff?.name || !p.assignedDoctor))
+    .filter(p => getPatientTenant(p.patientId) === tenantId && (p.stationType === 'Consult' || p.stationType === 'Return-Consult') && (p.assignedDoctor === currentStaff?.name || !p.assignedDoctor))
     .sort((a, b) => {
       const order = { IN_SESSION: 0, READY: 1, QUEUED: 2 };
       const ao = order[a.status as keyof typeof order] ?? 3;
@@ -60,6 +62,7 @@ export const DoctorQueue = () => {
   const inSession = myQueue.filter(p => p.status === 'IN_SESSION');
   const ready = myQueue.filter(p => p.status === 'READY');
   const queued = myQueue.filter(p => p.status === 'QUEUED');
+  const paused = myQueue.filter(p => p.status === 'PAUSED');
 
   const handleCallNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -292,6 +295,41 @@ export const DoctorQueue = () => {
         <>
           <div className="doc-section-label">Waiting ({queued.length})</div>
           {queued.map(renderCard)}
+        </>
+      )}
+      {paused.length > 0 && (
+        <>
+          <div className="doc-section-label" style={{ color: '#d97706' }}>Paused ({paused.length})</div>
+          {paused.map(p => (
+            <div
+              key={p.id}
+              className="doc-patient-card"
+              style={{ borderLeft: '3px solid #fbbf24', opacity: 0.75, background: '#fffbeb' }}
+            >
+              <div className="doc-row doc-row--between" style={{ marginBottom: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706' }}>{p.ticketNumber}</span>
+                <span style={{
+                  fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6,
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  background: '#fef3c7', color: '#92400e',
+                }}>
+                  <PauseCircle size={12} /> Paused
+                </span>
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', marginBottom: 4 }}>
+                {p.patientName}
+              </div>
+              {p.chiefComplaint && (
+                <div className="doc-label-sm" style={{ fontStyle: 'italic', marginBottom: 8, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                  <Stethoscope size={13} style={{ marginTop: 2, flexShrink: 0 }} /> "{p.chiefComplaint}"
+                </div>
+              )}
+              <div className="doc-label-sm" style={{ marginBottom: 4 }}>
+                {p.pauseInfo?.reason?.replace(/_/g, ' ') ?? 'Paused'}
+                {p.pauseInfo?.notes && <span style={{ color: '#78350f' }}> — {p.pauseInfo.notes}</span>}
+              </div>
+            </div>
+          ))}
         </>
       )}
     </>

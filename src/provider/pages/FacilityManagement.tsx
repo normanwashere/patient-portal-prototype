@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   Building2,
   Stethoscope,
@@ -13,12 +13,23 @@ import {
   User,
   Clock,
   CheckCircle,
+  CalendarClock,
+  Activity,
+  Edit3,
+  Save,
+  X,
+  Plus,
+  Minus,
+  ChevronLeft,
+  ChevronRight,
+  CalendarDays,
+  BarChart2,
 } from 'lucide-react';
 import React from 'react';
 import { useProvider } from '../context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { useToast } from '../../context/ToastContext';
-import type { Room, Equipment } from '../types';
+import type { Room, Equipment, FacilitySchedule, FacilityCategoryId } from '../types';
 
 const ROOM_TYPE_ICONS: Record<Room['type'], React.ComponentType<{ size?: number }>> = {
   Consultation: Stethoscope,
@@ -67,7 +78,7 @@ const styles: Record<string, React.CSSProperties> = {
   page: { padding: 24, background: 'var(--color-background)', minHeight: '100%' },
   title: { fontSize: 24, fontWeight: 700, color: 'var(--color-text)', marginBottom: 24 },
   tabs: { display: 'flex', gap: 4, marginBottom: 24, flexWrap: 'wrap', borderBottom: '1px solid var(--color-border)', paddingBottom: 0 },
-  tab: { padding: '12px 16px', fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', background: 'none', border: 'none', borderBottom: '3px solid transparent', cursor: 'pointer', marginBottom: -1 },
+  tab: { padding: '12px 16px', fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', background: 'none', borderWidth: 0, borderStyle: 'none' as const, borderBottomWidth: 3, borderBottomStyle: 'solid' as const, borderBottomColor: 'transparent', cursor: 'pointer', marginBottom: -1 },
   tabActive: { color: 'var(--color-primary)', borderBottomColor: 'var(--color-primary)' },
   card: { background: 'var(--color-surface)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--color-border)', padding: 16 },
   badge: { padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600 },
@@ -87,12 +98,28 @@ const styles: Record<string, React.CSSProperties> = {
 const ROOM_STATUSES: Room['status'][] = ['Available', 'Occupied', 'Maintenance', 'Cleaning'];
 const EQUIPMENT_STATUSES: Equipment['status'][] = ['Available', 'In Use', 'Maintenance', 'Out of Service'];
 
+interface ScheduleEditDraft {
+  dailyCap: number;
+  startTime: string;
+  endTime: string;
+  slotDurationMin: number;
+  daysOfWeek: number[];
+}
+
 export const FacilityManagement = () => {
   const { tenant } = useTheme();
-  const { rooms, equipment, updateRoomStatus, updateEquipmentStatus, addAuditLog } = useProvider();
+  const { rooms, equipment, updateRoomStatus, updateEquipmentStatus, addAuditLog, facilitySchedules, updateFacilitySchedule, bookFacilitySlot } = useProvider();
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState<'rooms' | 'equipment' | 'services'>('rooms');
+  const [activeTab, setActiveTab] = useState<'rooms' | 'equipment' | 'services' | 'schedules'>('rooms');
   const [roomFilter, setRoomFilter] = useState<string | null>(null);
+  const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<ScheduleEditDraft | null>(null);
+  const [simulateDate, setSimulateDate] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+  const [scheduleViewMode, setScheduleViewMode] = useState<'week' | 'month'>('week');
+  const [monthCalendarMonth, setMonthCalendarMonth] = useState<Date>(() => new Date());
 
   const admissionsEnabled = tenant.features.admissions === true;
   const labFulfillmentEnabled = tenant.features.visits.clinicLabFulfillmentEnabled;
@@ -134,6 +161,53 @@ export const FacilityManagement = () => {
     showToast(`Equipment "${eqName}" updated to ${newStatus}`, 'success');
   };
 
+  const startEditing = useCallback((sched: FacilitySchedule) => {
+    setEditingScheduleId(sched.id);
+    setEditDraft({
+      dailyCap: sched.dailyCap,
+      startTime: sched.startTime,
+      endTime: sched.endTime,
+      slotDurationMin: sched.slotDurationMin,
+      daysOfWeek: [...sched.daysOfWeek],
+    });
+  }, []);
+
+  const cancelEditing = useCallback(() => {
+    setEditingScheduleId(null);
+    setEditDraft(null);
+  }, []);
+
+  const saveEditing = useCallback(() => {
+    if (!editingScheduleId || !editDraft) return;
+    updateFacilitySchedule(editingScheduleId, {
+      dailyCap: editDraft.dailyCap,
+      startTime: editDraft.startTime,
+      endTime: editDraft.endTime,
+      slotDurationMin: editDraft.slotDurationMin,
+      daysOfWeek: editDraft.daysOfWeek,
+    });
+    addAuditLog('schedule_update', 'Scheduling', `Updated schedule ${editingScheduleId}`);
+    showToast('Schedule updated successfully', 'success');
+    setEditingScheduleId(null);
+    setEditDraft(null);
+  }, [editingScheduleId, editDraft, updateFacilitySchedule, addAuditLog, showToast]);
+
+  const toggleDow = useCallback((dow: number) => {
+    setEditDraft(prev => {
+      if (!prev) return prev;
+      const has = prev.daysOfWeek.includes(dow);
+      return {
+        ...prev,
+        daysOfWeek: has ? prev.daysOfWeek.filter(d => d !== dow) : [...prev.daysOfWeek, dow].sort(),
+      };
+    });
+  }, []);
+
+  const handleSimulateBooking = useCallback((schedId: string) => {
+    bookFacilitySlot(schedId, simulateDate);
+    showToast(`Simulated booking on ${simulateDate}`, 'success');
+  }, [bookFacilitySlot, simulateDate, showToast]);
+
   const LAB_IMAGING_CATEGORIES = ['Laboratory', 'Imaging'];
 
   const serviceByCategory = useMemo(() => {
@@ -146,10 +220,97 @@ export const FacilityManagement = () => {
     return Array.from(map.entries());
   }, [labFulfillmentEnabled]);
 
+  // ── Tenant-filtered facility schedules ──
+  const tenantSchedules = useMemo(
+    () => facilitySchedules.filter(s => s.tenantId === tenant.id),
+    [facilitySchedules, tenant.id],
+  );
+
+  const CATEGORY_LABELS: Record<FacilityCategoryId, { label: string; icon: React.ComponentType<{ size?: number }> }> = {
+    lab: { label: 'Laboratory', icon: FlaskConical },
+    imaging: { label: 'Radiology / Imaging', icon: Scan },
+    cardio: { label: 'Cardiovascular', icon: Activity },
+    special: { label: 'Special Procedures', icon: Stethoscope },
+  };
+
+  const schedulesByCategory = useMemo(() => {
+    const map = new Map<FacilityCategoryId, FacilitySchedule[]>();
+    tenantSchedules.forEach(s => {
+      if (!map.has(s.categoryId)) map.set(s.categoryId, []);
+      map.get(s.categoryId)!.push(s);
+    });
+    return Array.from(map.entries());
+  }, [tenantSchedules]);
+
+  const DOW_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const DOW_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  const getNext7DaysUsage = (sched: FacilitySchedule) => {
+    const days: { date: string; iso: string; dow: number; booked: number; cap: number; operates: boolean }[] = [];
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const dow = d.getDay();
+      const operates = sched.daysOfWeek.includes(dow);
+      const booked = sched.bookedSlots[iso] ?? 0;
+      days.push({ date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), iso, dow, booked, cap: sched.dailyCap, operates });
+    }
+    return days;
+  };
+
+  const getMonthCalendarDays = useCallback((sched: FacilitySchedule, month: Date) => {
+    const year = month.getFullYear();
+    const m = month.getMonth();
+    const firstDay = new Date(year, m, 1);
+    const lastDay = new Date(year, m + 1, 0);
+    const startPad = firstDay.getDay();
+    const totalDays = lastDay.getDate();
+    const todayISO = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+
+    const cells: { day: number; iso: string; dow: number; booked: number; cap: number; operates: boolean; isToday: boolean; inMonth: boolean }[] = [];
+    for (let i = 0; i < startPad; i++) {
+      cells.push({ day: 0, iso: '', dow: i, booked: 0, cap: 0, operates: false, isToday: false, inMonth: false });
+    }
+    for (let d = 1; d <= totalDays; d++) {
+      const date = new Date(year, m, d);
+      const dow = date.getDay();
+      const iso = `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const operates = sched.daysOfWeek.includes(dow);
+      const booked = sched.bookedSlots[iso] ?? 0;
+      cells.push({ day: d, iso, dow, booked, cap: sched.dailyCap, operates, isToday: iso === todayISO, inMonth: true });
+    }
+    const remainder = cells.length % 7;
+    if (remainder > 0) {
+      for (let i = 0; i < 7 - remainder; i++) {
+        cells.push({ day: 0, iso: '', dow: 0, booked: 0, cap: 0, operates: false, isToday: false, inMonth: false });
+      }
+    }
+    return cells;
+  }, []);
+
+  const monthLabel = useMemo(() => monthCalendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }), [monthCalendarMonth]);
+
+  const prevMonth = useCallback(() => setMonthCalendarMonth(prev => {
+    const d = new Date(prev);
+    d.setMonth(d.getMonth() - 1);
+    return d;
+  }), []);
+
+  const nextMonth = useCallback(() => setMonthCalendarMonth(prev => {
+    const d = new Date(prev);
+    d.setMonth(d.getMonth() + 1);
+    return d;
+  }), []);
+
+  const goToToday = useCallback(() => setMonthCalendarMonth(new Date()), []);
+
   const tabs = [
     { id: 'rooms' as const, label: 'Rooms', icon: LayoutGrid },
     { id: 'equipment' as const, label: 'Equipment', icon: Wrench },
     { id: 'services' as const, label: 'Services', icon: Stethoscope },
+    { id: 'schedules' as const, label: 'Schedules & Capacity', icon: CalendarClock },
   ];
 
   return (
@@ -374,6 +535,246 @@ export const FacilityManagement = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── Schedules & Capacity Tab ── */}
+      {activeTab === 'schedules' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* View toggle + summary stats */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', flex: 1 }}>
+              {schedulesByCategory.map(([catId, scheds]) => {
+                const catInfo = CATEGORY_LABELS[catId];
+                const CatIcon = catInfo.icon;
+                const totalCap = scheds.reduce((sum, s) => sum + s.dailyCap, 0);
+                return (
+                  <div key={catId} style={{ ...styles.card, flex: '1 1 140px', padding: '10px 14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <CatIcon size={14} />
+                      <span style={{ fontWeight: 700, fontSize: 12, color: 'var(--color-text)' }}>{catInfo.label}</span>
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-primary)' }}>{totalCap}</div>
+                    <div style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{scheds.length} schedule{scheds.length > 1 ? 's' : ''}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', background: 'var(--color-surface)', borderRadius: 'var(--radius)', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+              <button onClick={() => setScheduleViewMode('week')} style={{ padding: '8px 14px', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, background: scheduleViewMode === 'week' ? 'var(--color-primary)' : 'transparent', color: scheduleViewMode === 'week' ? '#fff' : 'var(--color-text-muted)' }}>
+                <BarChart2 size={14} /> Week
+              </button>
+              <button onClick={() => setScheduleViewMode('month')} style={{ padding: '8px 14px', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, background: scheduleViewMode === 'month' ? 'var(--color-primary)' : 'transparent', color: scheduleViewMode === 'month' ? '#fff' : 'var(--color-text-muted)' }}>
+                <CalendarDays size={14} /> Month
+              </button>
+            </div>
+          </div>
+
+          {/* Schedules by category */}
+          {schedulesByCategory.map(([catId, scheds]) => {
+            const catInfo = CATEGORY_LABELS[catId];
+            const CatIcon = catInfo.icon;
+            return (
+              <div key={catId}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <CatIcon size={18} style={{ color: 'var(--color-primary)' }} />
+                  {catInfo.label}
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {scheds.map(sched => {
+                    const days = getNext7DaysUsage(sched);
+                    const todayUsage = days[0];
+                    const todayPct = todayUsage.operates ? Math.round((todayUsage.booked / todayUsage.cap) * 100) : 0;
+                    const isEditing = editingScheduleId === sched.id;
+                    return (
+                      <div key={sched.id} style={{ ...styles.card, padding: 0, overflow: 'hidden', border: isEditing ? '2px solid var(--color-primary)' : undefined }}>
+                        {/* Header with edit button */}
+                        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text)' }}>
+                              {sched.procedureName ?? catInfo.label}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                              Branch: {sched.branchId} · {sched.startTime} – {sched.endTime} · {sched.slotDurationMin}min slots
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                            <span style={{ ...styles.badge, background: 'color-mix(in srgb, var(--color-primary) 12%, transparent)', color: 'var(--color-primary)' }}>
+                              Cap: {sched.dailyCap}/day
+                            </span>
+                            <span style={{ ...styles.badge, background: 'color-mix(in srgb, var(--color-info) 12%, transparent)', color: 'var(--color-info)' }}>
+                              {sched.daysOfWeek.map(d => DOW_NAMES[d]).join(', ')}
+                            </span>
+                            {!isEditing ? (
+                              <button onClick={() => { setEditingScheduleId(sched.id); setEditDraft({ dailyCap: sched.dailyCap, startTime: sched.startTime, endTime: sched.endTime, slotDurationMin: sched.slotDurationMin, daysOfWeek: [...sched.daysOfWeek] }); }} style={{ ...styles.btn, ...styles.btnSecondary, padding: '4px 10px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <Edit3 size={12} /> Edit
+                              </button>
+                            ) : (
+                              <div style={{ display: 'flex', gap: 4 }}>
+                                <button onClick={() => { if (editDraft) { updateFacilitySchedule(sched.id, editDraft); showToast('Schedule updated', 'success'); } setEditingScheduleId(null); setEditDraft(null); }} style={{ ...styles.btn, background: 'var(--color-success)', color: '#fff', padding: '4px 10px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <Save size={12} /> Save
+                                </button>
+                                <button onClick={() => { setEditingScheduleId(null); setEditDraft(null); }} style={{ ...styles.btn, ...styles.btnSecondary, padding: '4px 10px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <X size={12} /> Cancel
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Inline edit form */}
+                        {isEditing && editDraft && (
+                          <div style={{ padding: '12px 16px', background: 'color-mix(in srgb, var(--color-primary) 4%, var(--color-background))', borderBottom: '1px solid var(--color-border)', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4, textTransform: 'uppercase' }}>Daily Cap</label>
+                              <input type="number" min={1} max={200} value={editDraft.dailyCap} onChange={e => setEditDraft({ ...editDraft, dailyCap: parseInt(e.target.value) || 1 })} style={{ ...styles.select, width: 70 }} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4, textTransform: 'uppercase' }}>Start</label>
+                              <input type="time" value={editDraft.startTime} onChange={e => setEditDraft({ ...editDraft, startTime: e.target.value })} style={{ ...styles.select, width: 100 }} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4, textTransform: 'uppercase' }}>End</label>
+                              <input type="time" value={editDraft.endTime} onChange={e => setEditDraft({ ...editDraft, endTime: e.target.value })} style={{ ...styles.select, width: 100 }} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4, textTransform: 'uppercase' }}>Slot (min)</label>
+                              <select value={editDraft.slotDurationMin} onChange={e => setEditDraft({ ...editDraft, slotDurationMin: parseInt(e.target.value) })} style={{ ...styles.select, width: 70 }}>
+                                {[15, 20, 30, 45, 60].map(v => <option key={v} value={v}>{v}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4, textTransform: 'uppercase' }}>Operating Days</label>
+                              <div style={{ display: 'flex', gap: 3 }}>
+                                {DOW_NAMES.map((name, idx) => {
+                                  const active = editDraft.daysOfWeek.includes(idx);
+                                  return (
+                                    <button key={idx} onClick={() => setEditDraft({ ...editDraft, daysOfWeek: active ? editDraft.daysOfWeek.filter(d => d !== idx) : [...editDraft.daysOfWeek, idx].sort() })} style={{ width: 32, height: 28, borderRadius: 6, border: '1px solid ' + (active ? 'var(--color-primary)' : 'var(--color-border)'), background: active ? 'var(--color-primary)' : 'var(--color-surface)', color: active ? '#fff' : 'var(--color-text-muted)', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
+                                      {name.slice(0, 2)}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ── WEEK VIEW: 7-day bar chart ── */}
+                        {scheduleViewMode === 'week' && (
+                          <div style={{ padding: '12px 16px' }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              Next 7 Days — Capacity Usage
+                            </div>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              {days.map((day, i) => {
+                                const pct = day.operates ? Math.round((day.booked / day.cap) * 100) : 0;
+                                const barColor = !day.operates ? '#e5e7eb' : pct >= 100 ? 'var(--color-error)' : pct >= 80 ? 'var(--color-warning)' : 'var(--color-success)';
+                                const remaining = day.operates ? Math.max(0, day.cap - day.booked) : 0;
+                                return (
+                                  <div key={day.iso} style={{ flex: 1, textAlign: 'center' }}>
+                                    <div style={{ fontSize: 10, fontWeight: 600, color: i === 0 ? 'var(--color-primary)' : 'var(--color-text-muted)', marginBottom: 4 }}>
+                                      {i === 0 ? 'Today' : DOW_NAMES[day.dow]}
+                                    </div>
+                                    <div style={{ fontSize: 9, color: 'var(--color-text-muted)', marginBottom: 4 }}>{day.date}</div>
+                                    <div style={{ height: 48, background: '#f1f5f9', borderRadius: 4, position: 'relative', overflow: 'hidden' }}>
+                                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: day.operates ? `${Math.min(pct, 100)}%` : '0%', background: barColor, borderRadius: '0 0 4px 4px', transition: 'height 0.3s' }} />
+                                    </div>
+                                    <div style={{ fontSize: 10, fontWeight: 700, marginTop: 4, color: !day.operates ? '#9ca3af' : pct >= 100 ? 'var(--color-error)' : 'var(--color-text)' }}>
+                                      {!day.operates ? 'Closed' : pct >= 100 ? 'Full' : `${remaining} left`}
+                                    </div>
+                                    <div style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>{day.operates ? `${day.booked}/${day.cap}` : '—'}</div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ── MONTH VIEW: calendar grid ── */}
+                        {scheduleViewMode === 'month' && (() => {
+                          const mYear = monthCalendarMonth.getFullYear();
+                          const mMonth = monthCalendarMonth.getMonth();
+                          const firstDay = new Date(mYear, mMonth, 1);
+                          const lastDay = new Date(mYear, mMonth + 1, 0);
+                          const startPad = firstDay.getDay();
+                          const todayStr = new Date().toISOString().slice(0, 10);
+                          return (
+                            <div style={{ padding: '12px 16px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                <button onClick={() => setMonthCalendarMonth(new Date(mYear, mMonth - 1, 1))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4 }}><ChevronLeft size={16} /></button>
+                                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>
+                                  {firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                </span>
+                                <button onClick={() => setMonthCalendarMonth(new Date(mYear, mMonth + 1, 1))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4 }}><ChevronRight size={16} /></button>
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
+                                {DOW_NAMES.map(n => <div key={n} style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)', paddingBottom: 4 }}>{n}</div>)}
+                                {Array.from({ length: startPad }, (_, i) => <div key={`p-${i}`} />)}
+                                {Array.from({ length: lastDay.getDate() }, (_, i) => {
+                                  const d = i + 1;
+                                  const dateObj = new Date(mYear, mMonth, d);
+                                  const iso = `${mYear}-${String(mMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                                  const dow = dateObj.getDay();
+                                  const operates = sched.daysOfWeek.includes(dow);
+                                  const booked = sched.bookedSlots[iso] ?? 0;
+                                  const cap = sched.dailyCap;
+                                  const pct = operates ? Math.round((booked / cap) * 100) : 0;
+                                  const isToday = iso === todayStr;
+                                  const bg = !operates ? '#f8fafc' : pct >= 100 ? '#fef2f2' : pct >= 80 ? '#fffbeb' : '#f0fdf4';
+                                  const border = isToday ? '2px solid var(--color-primary)' : '1px solid ' + (!operates ? '#f1f5f9' : pct >= 100 ? '#fecaca' : pct >= 80 ? '#fde68a' : '#bbf7d0');
+                                  const textColor = !operates ? '#cbd5e1' : pct >= 100 ? 'var(--color-error)' : pct >= 80 ? '#d97706' : 'var(--color-success)';
+                                  return (
+                                    <div key={d} style={{ background: bg, border, borderRadius: 6, padding: '4px 2px', textAlign: 'center', minHeight: 44 }}>
+                                      <div style={{ fontSize: 11, fontWeight: isToday ? 800 : 600, color: isToday ? 'var(--color-primary)' : 'var(--color-text)' }}>{d}</div>
+                                      {operates ? (
+                                        <>
+                                          <div style={{ fontSize: 9, fontWeight: 700, color: textColor }}>{pct >= 100 ? 'Full' : `${cap - booked}`}</div>
+                                          <div style={{ height: 3, background: '#e5e7eb', borderRadius: 2, margin: '2px 3px 0', overflow: 'hidden' }}>
+                                            <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: pct >= 100 ? 'var(--color-error)' : pct >= 80 ? 'var(--color-warning)' : 'var(--color-success)', borderRadius: 2 }} />
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <div style={{ fontSize: 8, color: '#cbd5e1' }}>closed</div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 10, color: 'var(--color-text-muted)' }}>
+                                <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: '#bbf7d0', marginRight: 4 }} />Available</span>
+                                <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: '#fde68a', marginRight: 4 }} />Limited</span>
+                                <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: '#fecaca', marginRight: 4 }} />Full</span>
+                                <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: '#f1f5f9', marginRight: 4 }} />Closed</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Today's utilization bar */}
+                        <div style={{ padding: '0 16px 12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11 }}>
+                            <span style={{ fontWeight: 600, color: 'var(--color-text-muted)' }}>Today:</span>
+                            <div style={{ flex: 1, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
+                              <div style={{ height: '100%', borderRadius: 3, transition: 'width 0.3s', width: todayUsage.operates ? `${Math.min(todayPct, 100)}%` : '0%', background: todayPct >= 100 ? 'var(--color-error)' : todayPct >= 80 ? 'var(--color-warning)' : 'var(--color-success)' }} />
+                            </div>
+                            <span style={{ fontWeight: 700, fontSize: 11, color: todayPct >= 100 ? 'var(--color-error)' : 'var(--color-text)' }}>
+                              {todayUsage.operates ? `${todayUsage.booked}/${todayUsage.cap} (${todayPct}%)` : 'Closed today'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {schedulesByCategory.length === 0 && (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--color-text-muted)' }}>
+              No facility schedules configured for {tenant.name}.
+            </div>
+          )}
         </div>
       )}
     </div>

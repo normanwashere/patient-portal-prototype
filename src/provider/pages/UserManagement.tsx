@@ -27,7 +27,7 @@ const styles: Record<string, React.CSSProperties> = {
   tab: {
     padding: '12px 16px', fontSize: 14, fontWeight: 600,
     color: 'var(--color-text-muted)', background: 'none', border: 'none',
-    borderBottom: '3px solid transparent', cursor: 'pointer', marginBottom: -1,
+    borderBottomWidth: 3, borderBottomStyle: 'solid' as const, borderBottomColor: 'transparent', cursor: 'pointer', marginBottom: -1,
   },
   tabActive: { color: 'var(--color-primary)', borderBottomColor: 'var(--color-primary)' },
   card: {

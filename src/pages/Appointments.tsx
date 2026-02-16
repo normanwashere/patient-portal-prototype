@@ -4,12 +4,40 @@ import { BackButton } from '../components/Common/BackButton';
 import { Clock, User, CheckCircle } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 
-const SERVICES = ['General Consultation', 'Cardiology', 'Pediatrics', 'Dental'];
-const DOCTORS = [
-    { id: 1, name: 'Dr. Sarah Smith', specialty: 'General Practice', available: 'Today, 2:00 PM' },
-    { id: 2, name: 'Dr. John Doe', specialty: 'General Practice', available: 'Today, 4:30 PM' },
-    { id: 3, name: 'Dr. Emily Chen', specialty: 'Cardiology', available: 'Tomorrow, 9:00 AM' },
-];
+const TENANT_SERVICES: Record<string, string[]> = {
+    maxicare: ['Internal Medicine', 'Family Medicine', 'Cardiology', 'OB-GYN', 'Dermatology', 'Pediatrics'],
+    metroGeneral: ['General Consultation', 'Cardiology', 'Pediatrics', 'OB-GYN', 'Dental', 'Dermatology'],
+    default: ['General Consultation', 'Cardiology', 'Pediatrics', 'Dental'],
+};
+
+const TENANT_DOCTORS: Record<string, { id: number; name: string; specialty: string; available: string }[]> = {
+    maxicare: [
+        { id: 1, name: 'Dr. Carmela Ong', specialty: 'Internal Medicine', available: 'Today, 2:00 PM' },
+        { id: 2, name: 'Dr. Jen Diaz', specialty: 'Family Medicine', available: 'Today, 4:30 PM' },
+        { id: 3, name: 'Dr. Ramon Bautista', specialty: 'Cardiology', available: 'Tomorrow, 9:00 AM' },
+        { id: 4, name: 'Dr. Patricia Santos', specialty: 'OB-GYN', available: 'Tomorrow, 10:30 AM' },
+        { id: 5, name: 'Dr. Maria Cruz', specialty: 'Dermatology', available: addDaysStr(2) + ', 1:00 PM' },
+        { id: 6, name: 'Dr. Leo Villanueva', specialty: 'Pediatrics', available: addDaysStr(3) + ', 9:00 AM' },
+    ],
+    metroGeneral: [
+        { id: 1, name: 'Dr. Ricardo Santos', specialty: 'Cardiology', available: 'Today, 10:00 AM' },
+        { id: 2, name: 'Dr. Maria Clara Reyes', specialty: 'Pediatrics', available: 'Today, 1:00 PM' },
+        { id: 3, name: 'Dr. Albert Go', specialty: 'OB-GYN', available: 'Tomorrow, 9:00 AM' },
+        { id: 4, name: 'Dr. Carmen Diaz', specialty: 'Dermatology', available: 'Tomorrow, 2:00 PM' },
+        { id: 5, name: 'Dr. Elena Martinez', specialty: 'General Consultation', available: addDaysStr(2) + ', 10:00 AM' },
+        { id: 6, name: 'Dr. Thomas Ramos', specialty: 'Dental', available: addDaysStr(2) + ', 3:00 PM' },
+    ],
+    default: [
+        { id: 1, name: 'Dr. Sarah Smith', specialty: 'General Practice', available: 'Today, 2:00 PM' },
+        { id: 2, name: 'Dr. John Doe', specialty: 'General Practice', available: 'Today, 4:30 PM' },
+        { id: 3, name: 'Dr. Emily Chen', specialty: 'Cardiology', available: 'Tomorrow, 9:00 AM' },
+    ],
+};
+
+function addDaysStr(n: number) {
+    const d = new Date(); d.setDate(d.getDate() + n);
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
 
 import './Appointments.css';
 
@@ -19,6 +47,10 @@ export const Appointments: React.FC = () => {
     const [step, setStep] = React.useState(1);
     const [selectedService, setSelectedService] = React.useState('');
     const [selectedDoctor, setSelectedDoctor] = React.useState<any>(null);
+
+    const services = TENANT_SERVICES[tenant.id] ?? TENANT_SERVICES.default;
+    const doctors = TENANT_DOCTORS[tenant.id] ?? TENANT_DOCTORS.default;
+    const filteredDoctors = doctors.filter(d => d.specialty === selectedService || !selectedService);
 
     const handleBook = () => {
         setStep(4); // Success
@@ -37,7 +69,7 @@ export const Appointments: React.FC = () => {
             {step === 1 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <h3 style={{ fontSize: '1rem', color: 'var(--color-text-muted)' }}>Select Service</h3>
-                    {SERVICES.map(service => (
+                    {services.map(service => (
                         <button
                             key={service}
                             onClick={() => { setSelectedService(service); setStep(2); }}
@@ -61,7 +93,7 @@ export const Appointments: React.FC = () => {
             {step === 2 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <h3 style={{ fontSize: '1rem', color: 'var(--color-text-muted)' }}>Select Doctor for {selectedService}</h3>
-                    {DOCTORS.map(doc => (
+                    {(filteredDoctors.length > 0 ? filteredDoctors : doctors).map(doc => (
                         <button
                             key={doc.id}
                             onClick={() => { setSelectedDoctor(doc); setStep(3); }}

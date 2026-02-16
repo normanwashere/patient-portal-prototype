@@ -40,6 +40,7 @@ import {
   MOCK_HOMECARE_REQUESTS,
   MOCK_CONSULT_ROOMS,
   PROVIDER_BRANCHES,
+  FACILITY_SCHEDULES,
 } from '../data/providerMockData';
 import type { ProviderBranch } from '../data/providerMockData';
 import { useTheme } from '../../theme/ThemeContext';
@@ -85,6 +86,9 @@ import type {
   ConsultRoom,
   ProviderLOARequest,
   ProviderLOAStatus,
+  PauseReason,
+  PauseInfo,
+  FacilitySchedule,
 } from '../types';
 
 type CurrentApp = 'provider' | 'doctor';
@@ -174,6 +178,10 @@ interface ProviderContextType {
   completePatient: (patientId: string) => void;
   markNoShow: (patientId: string) => void;
   skipPatient: (patientId: string) => void;
+  /** Pause a patient's journey — they'll return later (e.g. fasting, next day) */
+  pausePatient: (patientId: string, reason: PauseReason, notes?: string, resumeDate?: string) => void;
+  /** Resume a paused patient's journey — re-queue them at the station where they paused */
+  resumePatient: (patientId: string) => void;
 
   // ── Clinical notes ──
   signNote: (noteId: string) => void;
@@ -303,6 +311,11 @@ interface ProviderContextType {
   addProviderLoa: (req: Omit<ProviderLOARequest, 'id'>) => void;
   updateProviderLoaStatus: (id: string, status: ProviderLOAStatus, justification?: string) => void;
 
+  // ── Facility Schedules ──
+  facilitySchedules: FacilitySchedule[];
+  bookFacilitySlot: (scheduleId: string, dateStr: string) => void;
+  updateFacilitySchedule: (scheduleId: string, updates: Partial<Pick<FacilitySchedule, 'dailyCap' | 'startTime' | 'endTime' | 'daysOfWeek' | 'slotDurationMin'>>) => void;
+
   // Computed values
   pendingLabOrders: LabOrder[];
   criticalAlerts: CDSSAlert[];
@@ -387,6 +400,7 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // HomeCare requests
   const [homeCareRequests, setHomeCareRequests] = useState<HomeCareRequest[]>(MOCK_HOMECARE_REQUESTS);
+  const [facilitySchedules, setFacilitySchedules] = useState<FacilitySchedule[]>(FACILITY_SCHEDULES);
 
   // ── Wait-time ticker — increments waitMinutes every 30s for active patients & TC sessions ──
   const waitTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -650,6 +664,60 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       return [...others, { ...patient, status: 'QUEUED' as const, waitMinutes: 0 }];
     });
   }, []);
+
+  /** Pause a patient's journey — they'll return later (fasting, next day, etc.) */
+  const bookFacilitySlot = useCallback((scheduleId: string, dateStr: string) => {
+    setFacilitySchedules(prev =>
+      prev.map(s => {
+        if (s.id !== scheduleId) return s;
+        const current = s.bookedSlots[dateStr] ?? 0;
+        return { ...s, bookedSlots: { ...s.bookedSlots, [dateStr]: current + 1 } };
+      })
+    );
+    _audit('book_facility_slot', 'Scheduling', `Booked slot on ${dateStr} for schedule ${scheduleId}`);
+  }, [_audit]);
+
+  const updateFacilitySchedule = useCallback((scheduleId: string, updates: Partial<Pick<FacilitySchedule, 'dailyCap' | 'startTime' | 'endTime' | 'daysOfWeek' | 'slotDurationMin'>>) => {
+    setFacilitySchedules(prev =>
+      prev.map(s => s.id === scheduleId ? { ...s, ...updates } : s)
+    );
+    _audit('update_facility_schedule', 'Scheduling', `Updated schedule ${scheduleId}: ${JSON.stringify(updates)}`);
+  }, [_audit]);
+
+  const pausePatient = useCallback((patientId: string, reason: PauseReason, notes?: string, resumeDate?: string) => {
+    setQueuePatients((prev) =>
+      prev.map((p) => {
+        if (p.patientId !== patientId && p.id !== patientId) return p;
+        const info: PauseInfo = {
+          pausedAt: now(),
+          reason,
+          notes,
+          resumeDate,
+          pausedAtStation: p.stationType,
+          preservedOrders: p.doctorOrders.filter((o) => o.status !== 'completed'),
+        };
+        return { ...p, status: 'PAUSED' as const, pauseInfo: info };
+      })
+    );
+    _audit('pause_patient', 'Queue', `Paused patient ${patientId} — ${reason}${notes ? `: ${notes}` : ''}`);
+  }, [_audit]);
+
+  /** Resume a paused patient's journey — re-queue at the station where they paused */
+  const resumePatient = useCallback((patientId: string) => {
+    setQueuePatients((prev) =>
+      prev.map((p) => {
+        if ((p.patientId !== patientId && p.id !== patientId) || p.status !== 'PAUSED') return p;
+        return {
+          ...p,
+          status: 'QUEUED' as const,
+          waitMinutes: 0,
+          currentStationEnteredAt: now(),
+          pauseInfo: undefined,
+        };
+      })
+    );
+    _audit('resume_patient', 'Queue', `Resumed paused patient ${patientId}`);
+  }, [_audit]);
 
   /** Defer a specific order — reset it to 'queued' and move the patient to the bottom of the queue */
   const deferOrder = useCallback((patientId: string, orderId: string) => {
@@ -1121,6 +1189,13 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
     { id: 'loa-r5', patientName: 'Rosa Bautista', type: 'Surgery', provider: 'Metro General Hospital', requestDate: 'Feb 6, 2026', amount: '₱250,000', status: 'Rejected', diagnosis: 'Cholecystolithiasis', justification: 'Non-emergent, requires pre-authorization' },
     { id: 'loa-mc1', patientName: 'Andrea Reyes', patientId: 'p-self', type: 'In-patient Admission', provider: 'Maxicare', requestDate: 'Feb 16, 2026', amount: '₱25,000', status: 'Pending', diagnosis: '', justification: '' },
     { id: 'loa-mc2', patientName: 'Andrea Reyes', patientId: 'p-self', type: 'Annual Physical Exam', provider: 'Maxicare PCC - Bridgetowne', requestDate: 'Feb 2, 2026', amount: '₱0.00', status: 'Approved', diagnosis: 'Routine wellness', justification: 'Annual benefit' },
+    { id: 'loa-mc3', patientName: 'Andrea Reyes', patientId: 'p-mc1', type: 'Cardiac Stress Test', provider: 'Maxicare PCC - Ayala North Exchange', requestDate: 'Feb 10, 2026', amount: '₱3,500', status: 'Approved', diagnosis: 'Hypertension — baseline cardiac eval', justification: 'Pre-authorized per cardiologist referral' },
+    { id: 'loa-mc4', patientName: 'Andrea Reyes', patientId: 'p-mc1', type: 'Pelvic Ultrasound', provider: 'Maxicare PCC - BGC', requestDate: 'Feb 11, 2026', amount: '₱2,800', status: 'Pending', diagnosis: 'Annual wellness screening', justification: '' },
+    { id: 'loa-mc5', patientName: 'Mark Anthony Lim', patientId: 'p-mc2', type: 'Annual Physical Exam', provider: 'Maxicare PCC - Bridgetowne', requestDate: 'Jan 28, 2026', amount: '₱0.00', status: 'Approved', diagnosis: 'Routine wellness', justification: 'Annual benefit' },
+    { id: 'loa-mc6', patientName: 'Mark Anthony Lim', patientId: 'p-mc2', type: 'Laboratory - HbA1c Panel', provider: 'Maxicare PCC - Bridgetowne', requestDate: 'Feb 11, 2026', amount: '₱950', status: 'Approved', diagnosis: 'Metabolic screening', justification: 'Covered under preventive benefit' },
+    { id: 'loa-mc7', patientName: 'Grace Lim', patientId: 'p-mc3', type: 'Prenatal Labs Package', provider: 'Maxicare PCC - BGC', requestDate: 'Feb 9, 2026', amount: '₱4,200', status: 'Approved', diagnosis: 'Pregnancy 28 weeks — prenatal panel', justification: 'Prenatal benefit coverage' },
+    { id: 'loa-mc8', patientName: 'Roberto Lim', patientId: 'p-mc6', type: 'Laboratory - Renal Panel', provider: 'Maxicare PCC - Bridgetowne', requestDate: 'Feb 12, 2026', amount: '₱1,800', status: 'Pending', diagnosis: 'DM Type 2 — nephropathy screening', justification: '' },
+    { id: 'loa-mc9', patientName: 'Paolo Reyes', patientId: 'p-mc4', type: 'ER Visit', provider: 'Maxicare PCC - BGC', requestDate: 'Feb 5, 2026', amount: '₱8,500', status: 'Approved', diagnosis: 'Hypertensive urgency — BP 180/110', justification: 'Emergency presentation' },
   ];
 
   const [providerLoaRequests, setProviderLoaRequests] = useState<ProviderLOARequest[]>(INITIAL_LOA);
@@ -1163,7 +1238,7 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       auditLogs, paymentTransactions, internalMessages, cdssAlerts, dashboardKpis, appointments,
       // Queue
       transferPatient, addDoctorOrders, startOrder, completeOrder, completeCurrentOrder, checkInPatient,
-      callNextPatient, startPatient, completePatient, markNoShow, skipPatient, deferOrder,
+      callNextPatient, startPatient, completePatient, markNoShow, skipPatient, pausePatient, resumePatient, deferOrder,
       // Clinical
       signNote, saveDraftNote, addClinicalNote,
       // Prescriptions
@@ -1208,6 +1283,8 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       homeCareRequests, updateHomeCareStatus, addHomeCareRequest,
       // LOA
       providerLoaRequests, addProviderLoa, updateProviderLoaStatus,
+      // Facility Schedules
+      facilitySchedules, bookFacilitySlot, updateFacilitySchedule,
       // Computed
       pendingLabOrders, criticalAlerts, todayAppointments, queueStats,
     }),
@@ -1222,7 +1299,7 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       tcSessions, tcDoctors, tcStats, activeTeleconsultCall,
       currentBranchId, homeCareRequests, providerLoaRequests,
       switchStaff, switchApp, toggleQueueMode, setDoctorMode, setActiveTeleconsultCall, transferPatient, addDoctorOrders, startOrder, completeOrder, completeCurrentOrder,
-      checkInPatient, callNextPatient, startPatient, completePatient, markNoShow, skipPatient, deferOrder,
+      checkInPatient, callNextPatient, startPatient, completePatient, markNoShow, skipPatient, pausePatient, resumePatient, deferOrder,
       signNote, saveDraftNote, addClinicalNote, approvePrescription, denyPrescription, addPrescription, updatePrescription,
       updateLabOrderStatus, addLabOrder, dismissAlert, actionAlert, addCdssAlert, updateAppointmentStatus, addAppointment, cancelAppointment,
       markMessageRead, sendMessage, updateNursingTaskStatus, addTriageRecord, addNursingTask,

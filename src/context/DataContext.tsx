@@ -83,9 +83,7 @@ export interface DoctorRequest {
 }
 
 // Unified Step Status
-
-// Unified Step Status
-export type StepStatus = 'PENDING' | 'QUEUED' | 'READY' | 'IN_SESSION' | 'COMPLETED';
+export type StepStatus = 'PENDING' | 'QUEUED' | 'READY' | 'IN_SESSION' | 'COMPLETED' | 'PAUSED';
 export type StepType = 'TRIAGE' | 'CONSULT' | 'LAB' | 'IMAGING' | 'PHARMACY' | 'BILLING';
 
 export interface QueueStep {
@@ -222,8 +220,16 @@ interface DataContextType {
     activeSteps: QueueStep[];
     pendingSteps: QueueStep[];
     completedSteps: QueueStep[];
+    pausedSteps: QueueStep[];
     currentStepIndex: number;
     visitProgress: number;
+    // Pause / Resume
+    isQueuePaused: boolean;
+    pauseReason: string | null;
+    pauseNotes: string | null;
+    pauseResumeDate: string | null;
+    pauseQueue: (reason: string, notes?: string, resumeDate?: string) => void;
+    resumeQueue: () => void;
     notifications: Notification[];
     unreadNotificationsCount: number;
     markAsRead: (id: string) => void;
@@ -612,12 +618,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [steps, setSteps] = useState<QueueStep[]>(INITIAL_STEPS);
     const [isSimulating, setIsSimulating] = useState(false);
 
+    // Pause state
+    const [isQueuePaused, setIsQueuePaused] = useState(false);
+    const [pauseReason, setPauseReason] = useState<string | null>(null);
+    const [pauseNotes, setPauseNotes] = useState<string | null>(null);
+    const [pauseResumeDate, setPauseResumeDate] = useState<string | null>(null);
+
     const linearSteps = useMemo(() => steps, [steps]);
     const multiStreamSteps = useMemo(() => steps, [steps]);
 
     const activeSteps = useMemo(() => steps.filter(s => ['QUEUED', 'READY', 'IN_SESSION'].includes(s.status)), [steps]);
     const pendingSteps = useMemo(() => steps.filter(s => s.status === 'PENDING'), [steps]);
     const completedSteps = useMemo(() => steps.filter(s => s.status === 'COMPLETED'), [steps]);
+    const pausedSteps = useMemo(() => steps.filter(s => s.status === 'PAUSED'), [steps]);
 
     const currentStepIndex = useMemo(() => {
         const activeIdxs = steps
@@ -661,8 +674,46 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, []);
 
     const toggleQueueMode = React.useCallback(() => setQueueMode(prev => prev === 'LINEAR' ? 'MULTI_STREAM' : 'LINEAR'), []);
-    const joinQueue = React.useCallback(() => { setIsQueueActive(true); resetSteps(); }, [resetSteps]);
-    const leaveQueue = React.useCallback(() => { setIsQueueActive(false); resetSteps(); }, [resetSteps]);
+    const joinQueue = React.useCallback(() => {
+        // If resuming from paused state, un-pause and re-queue the paused steps
+        if (isQueuePaused) {
+            setSteps(prev => prev.map(s => s.status === 'PAUSED' ? { ...s, status: 'QUEUED' as StepStatus } : s));
+            setIsQueuePaused(false);
+            setPauseReason(null);
+            setPauseNotes(null);
+            setPauseResumeDate(null);
+            return;
+        }
+        setIsQueueActive(true);
+        resetSteps();
+    }, [resetSteps, isQueuePaused]);
+    const leaveQueue = React.useCallback(() => { setIsQueueActive(false); setIsQueuePaused(false); setPauseReason(null); setPauseNotes(null); setPauseResumeDate(null); resetSteps(); }, [resetSteps]);
+
+    const pauseQueue = React.useCallback((reason: string, notes?: string, resumeDate?: string) => {
+        setIsQueuePaused(true);
+        setPauseReason(reason);
+        setPauseNotes(notes ?? null);
+        setPauseResumeDate(resumeDate ?? null);
+        // Freeze active steps to PAUSED
+        setSteps(prev => prev.map(s =>
+            ['QUEUED', 'READY', 'IN_SESSION'].includes(s.status)
+                ? { ...s, status: 'PAUSED' as StepStatus }
+                : s
+        ));
+        showToast('Your visit has been paused. Progress saved.', 'info');
+    }, [showToast]);
+
+    const resumeQueue = React.useCallback(() => {
+        setIsQueuePaused(false);
+        setPauseReason(null);
+        setPauseNotes(null);
+        setPauseResumeDate(null);
+        // Re-queue paused steps
+        setSteps(prev => prev.map(s =>
+            s.status === 'PAUSED' ? { ...s, status: 'QUEUED' as StepStatus } : s
+        ));
+        showToast('Welcome back! Your visit has resumed.', 'success');
+    }, [showToast]);
 
     const advanceQueue = React.useCallback(() => {
         setSteps(prev => {
@@ -784,8 +835,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             claims,
             queueMode, toggleQueueMode, isQueueActive, joinQueue, leaveQueue,
             steps, linearSteps, multiStreamSteps, advanceQueue,
-            activeSteps, pendingSteps, completedSteps, currentStepIndex, visitProgress,
+            activeSteps, pendingSteps, completedSteps, pausedSteps, currentStepIndex, visitProgress,
             queueForStep, startStep, checkIn, completeStep, queueAllAvailable, canQueueStep, isVisitComplete,
+            isQueuePaused, pauseReason, pauseNotes, pauseResumeDate, pauseQueue, resumeQueue,
             queueInfo, isSimulating, toggleSimulation: () => setIsSimulating(prev => !prev),
             notifications, unreadNotificationsCount, markAsRead, markReadByRoute,
             currentPatientId, switchPatient, addDependent, availablePatients

@@ -140,6 +140,100 @@ const PATIENT_PROFILES: Record<string, PatientProfile> = {
       plan: '1. Order 75g OGTT urgently — fasting, 3 blood draws over 2 hours. Schedule within this week.\n2. Continue Prenatal Vitamins, Ferrous Sulfate 325mg, Calcium + Vitamin D\n3. Add Docusate Sodium 100mg daily PRN for constipation\n4. Lower back: warm compress, prenatal stretching, avoid prolonged standing. Refer to PT if worsening.\n5. Fetal kick counts: monitor daily, report if < 10 movements in 2 hours\n6. Warning signs reviewed: headache, visual changes, edema, vaginal bleeding, fluid leakage, decreased fetal movement — present to ER immediately\n7. Next prenatal visit in 2 weeks (30 weeks)\n8. If GDM confirmed: initiate MNT, consider endocrinology referral',
     },
   },
+  // Paolo Reyes — Annual wellness consultation
+  'p-mc4': {
+    dob: 'Nov 3, 1985', age: '40', gender: 'Male', bloodType: 'AB+', contact: '0917-555-0404',
+    allergies: [],
+    activeMeds: ['None'],
+    transcript: [
+      { speaker: D, text: 'Good morning, Paolo. I see you\'re here for your annual wellness check.', ts: '00:05' },
+      { speaker: P, text: 'Yes, Doc. My wife insisted — I haven\'t had a checkup in three years.', ts: '00:14' },
+      { speaker: D, text: 'Better late than never. Any complaints? Headaches, chest pain, shortness of breath?', ts: '00:25' },
+      { speaker: P, text: 'I get occasional headaches after long days at the office. Nothing serious.', ts: '00:36' },
+      { speaker: D, text: 'How about your diet and exercise?', ts: '00:45' },
+      { speaker: P, text: 'Honestly, I eat out a lot. Fast food, rice heavy. Exercise is maybe once a month.', ts: '00:56' },
+      { speaker: D, text: 'We\'ll check your vitals and run some labs. Let\'s see where we stand.', ts: '01:08' },
+    ],
+    soap: {
+      subjective: 'Chief complaint: Annual wellness consultation.\nHPI: 40M, no active complaints. Occasional tension headaches. Sedentary lifestyle, high-carb fast-food diet. No exercise routine. Last checkup 3 years ago.\nMedications: None.\nAllergies: NKDA.',
+      objective: 'Vitals: BP 138/88 mmHg, HR 82 bpm, RR 16/min, Temp 36.5°C, SpO2 99%, Weight 86 kg, Height 170 cm, BMI 29.8.\nGeneral: Overweight, no acute distress.\nCardiac: Regular rate and rhythm, no murmurs.\nLungs: Clear bilaterally.\nAbdomen: Soft, non-tender, mild central adiposity.',
+      assessment: '1. Overweight (ICD-10: E66.3) — BMI 29.8, approaching obese.\n2. Stage 1 hypertension (ICD-10: I10) — BP 138/88. Requires confirmation.\n3. Sedentary lifestyle risk — screening labs indicated.',
+      plan: '1. Order CBC, FBS, HbA1c, Lipid Panel, Creatinine, Urinalysis\n2. Repeat BP check in 2 weeks to confirm hypertension\n3. Lifestyle counseling: DASH diet, reduce fast food, exercise 150 min/week\n4. Follow-up with lab results in 1 week\n5. Consider antihypertensive if BP remains > 135/85 on repeat',
+    },
+  },
+  // Arturo Villanueva — Chest pain evaluation
+  'p-mc14': {
+    dob: 'Feb 18, 1968', age: '57', gender: 'Male', bloodType: 'O-', contact: '0918-555-1414',
+    allergies: ['Sulfa drugs (rash)'],
+    activeMeds: ['Aspirin 81mg daily', 'Metoprolol 50mg daily', 'Atorvastatin 40mg daily'],
+    transcript: [
+      { speaker: D, text: 'Good morning, Mr. Villanueva. I understand you\'ve been having chest pains.', ts: '00:05' },
+      { speaker: P, text: 'Yes Doc, started about five days ago. It\'s a tightness in my chest when I walk uphill.', ts: '00:15' },
+      { speaker: D, text: 'Does it radiate anywhere — to your arm, jaw, or back?', ts: '00:25' },
+      { speaker: P, text: 'Sometimes to my left shoulder. It goes away if I stop and rest.', ts: '00:36' },
+      { speaker: D, text: 'How long does each episode last?', ts: '00:45' },
+      { speaker: P, text: 'About three to five minutes. It always stops when I sit down.', ts: '00:56' },
+      { speaker: D, text: 'Any shortness of breath, sweating, nausea, or dizziness?', ts: '01:08' },
+      { speaker: P, text: 'A little breathless during the chest tightness. No sweating or nausea.', ts: '01:20' },
+      { speaker: D, text: 'Family history of heart disease?', ts: '01:30' },
+      { speaker: P, text: 'My father had a heart attack at 60. My brother has high blood pressure.', ts: '01:42' },
+      { speaker: D, text: 'Given your symptoms and family history, I want to run some tests today — ECG, troponin, and a stress test.', ts: '01:55' },
+      { speaker: P, text: 'Okay, Doc. Do you think it\'s serious?', ts: '02:08' },
+      { speaker: D, text: 'We need to rule out unstable angina. The pattern sounds like stable angina, but we should be thorough.', ts: '02:20' },
+    ],
+    soap: {
+      subjective: 'Chief complaint: Chest tightness × 5 days.\nHPI: 57M with exertional substernal chest tightness radiating to left shoulder, provoked by uphill walking, relieved by rest within 3-5 min. Mild exertional dyspnea. No diaphoresis, nausea, syncope, or rest pain.\nPMH: HTN, hyperlipidemia. Father — MI at 60.\nMedications: Aspirin 81mg daily, Metoprolol 50mg daily, Atorvastatin 40mg daily.\nAllergies: Sulfa drugs (rash).',
+      objective: 'Vitals: BP 142/88 mmHg, HR 76 bpm, RR 16/min, Temp 36.5°C, SpO2 98%, BMI 27.2.\nCardiac: Regular rate and rhythm, normal S1/S2, no murmurs.\nLungs: Clear bilaterally.\nExtremities: No edema, pulses 2+.',
+      assessment: '1. Suspected stable angina (ICD-10: I20.8) — classic exertional pattern, positive family history, on dual therapy.\n2. Essential HTN (ICD-10: I10) — sub-optimally controlled at 142/88.\n3. Hyperlipidemia (ICD-10: E78.5) — on moderate statin, reassess target.',
+      plan: '1. Stat 12-lead ECG and Troponin I\n2. Order exercise stress test within 48 hours\n3. Prescribe Nitroglycerin SL 0.4mg PRN\n4. Uptitrate Metoprolol to 100mg if tolerated\n5. Consider high-intensity statin (Atorvastatin 80mg)\n6. Follow-up in 1 week with stress test results\n7. Educate on ACS warning signs — seek ER immediately if rest pain > 20 min',
+    },
+  },
+  // Lorna Diaz — Recurring dizziness & vertigo
+  'p-mc13': {
+    dob: 'Sep 10, 1958', age: '67', gender: 'Female', bloodType: 'A-', contact: '0919-555-1313',
+    allergies: ['Aspirin (GI bleeding)'],
+    activeMeds: ['Amlodipine 10mg daily', 'Metformin 500mg BID', 'Betahistine 16mg TID'],
+    transcript: [
+      { speaker: D, text: 'Good morning, Mrs. Diaz. How have the dizzy spells been?', ts: '00:05' },
+      { speaker: P, text: 'They\'re still happening, Doc. Especially when I turn my head quickly or get up from bed.', ts: '00:15' },
+      { speaker: D, text: 'Does the room spin, or do you feel lightheaded — like you might faint?', ts: '00:28' },
+      { speaker: P, text: 'The room spins. It\'s a spinning sensation that lasts about 30 seconds to a minute.', ts: '00:40' },
+      { speaker: D, text: 'Any nausea or vomiting during the episodes?', ts: '00:52' },
+      { speaker: P, text: 'Yes, I feel nauseous but I don\'t usually vomit. It\'s worse in the morning.', ts: '01:04' },
+      { speaker: D, text: 'Any hearing changes, ringing in your ears, or feeling of fullness in one ear?', ts: '01:16' },
+      { speaker: P, text: 'No hearing problems. Just the spinning.', ts: '01:28' },
+      { speaker: D, text: 'This sounds like it could be BPPV. I\'d like to do the Dix-Hallpike test today.', ts: '01:40' },
+    ],
+    soap: {
+      subjective: 'Chief complaint: Recurring dizziness and vertigo × 3 weeks.\nHPI: 67F with positional vertigo — room-spinning episodes triggered by head turning and rising from bed. Duration 30-60 seconds. Morning predominance. Associated nausea, no vomiting. No hearing loss, tinnitus, or aural fullness. No falls. On Betahistine 16mg TID × 2 weeks — partial relief.\nPMH: HTN (Amlodipine), T2DM (Metformin).\nAllergies: Aspirin (GI bleeding).',
+      objective: 'Vitals: BP 128/76 mmHg, HR 72 bpm, Temp 36.4°C, SpO2 99%.\nNeuro: CN II-XII intact. Dix-Hallpike: positive — rotatory nystagmus (right ear, latency 3s, duration 15s, fatigable). Romberg: negative. Gait: steady.\nENT: TMs clear bilaterally. Weber: midline. Rinne: AC > BC bilaterally.',
+      assessment: '1. Benign Paroxysmal Positional Vertigo — right posterior canal (ICD-10: H81.10). Dix-Hallpike positive.\n2. HTN (ICD-10: I10) — controlled on Amlodipine 10mg.\n3. T2DM (ICD-10: E11.65) — on Metformin, check HbA1c.',
+      plan: '1. Perform Epley maneuver (canalith repositioning) today — right side\n2. Continue Betahistine 16mg TID × 2 more weeks, then taper\n3. Meclizine 25mg PRN for acute episodes\n4. Vestibular rehabilitation exercises (Brandt-Daroff) — handout provided\n5. Precautions: rise slowly, avoid sudden head movements, fall prevention\n6. Order HbA1c to assess diabetes control\n7. Follow-up in 2 weeks. If no improvement, consider MRI IAC to rule out vestibular schwannoma',
+    },
+  },
+  // Fernando Reyes — Chronic cough 2 weeks
+  'p-mc12': {
+    dob: 'Apr 25, 1975', age: '50', gender: 'Male', bloodType: 'B-', contact: '0917-555-1212',
+    allergies: [],
+    activeMeds: ['Montelukast 10mg daily'],
+    transcript: [
+      { speaker: D, text: 'Hello, Fernando. What brings you in today?', ts: '00:05' },
+      { speaker: P, text: 'I\'ve had this cough for about two weeks now. It won\'t go away.', ts: '00:14' },
+      { speaker: D, text: 'Is it a dry cough or are you producing phlegm?', ts: '00:22' },
+      { speaker: P, text: 'Mostly dry, but sometimes there\'s a little clear mucus. Worse at night.', ts: '00:34' },
+      { speaker: D, text: 'Any fever, weight loss, or night sweats?', ts: '00:45' },
+      { speaker: P, text: 'No fever. No weight loss. Just the cough keeping me up at night.', ts: '00:56' },
+      { speaker: D, text: 'Any history of asthma, allergies, or acid reflux?', ts: '01:08' },
+      { speaker: P, text: 'I was told I have mild asthma as a teenager. I take Montelukast but nothing else.', ts: '01:20' },
+      { speaker: D, text: 'Let me listen to your chest and we\'ll go from there.', ts: '01:30' },
+    ],
+    soap: {
+      subjective: 'Chief complaint: Persistent dry cough × 2 weeks.\nHPI: 50M with non-productive dry cough, occasional clear sputum. Nocturnal predominance. No fever, hemoptysis, weight loss, night sweats, or dyspnea. PMH: childhood asthma (mild). On Montelukast 10mg daily.\nAllergies: NKDA.',
+      objective: 'Vitals: BP 124/78 mmHg, HR 74 bpm, RR 16/min, Temp 36.5°C, SpO2 99%.\nLungs: Scattered expiratory wheezes bilaterally, no crackles. Prolonged expiratory phase.\nENT: Mild post-nasal drip. Throat: mild cobblestoning.',
+      assessment: '1. Cough-variant asthma (ICD-10: J45.20) — nocturnal cough with wheezes, history of childhood asthma.\n2. Post-nasal drip (ICD-10: R09.82) — contributing factor.\n3. Rule out GERD-related cough.',
+      plan: '1. Start Salbutamol MDI 2 puffs PRN for acute symptoms\n2. Add Fluticasone/Salmeterol (Seretide 250/50) 1 puff BID as controller\n3. Continue Montelukast 10mg daily\n4. Intranasal Fluticasone 2 sprays each nostril daily for post-nasal drip\n5. Order Chest X-ray PA/Lateral to rule out pneumonia or mass\n6. Spirometry if symptoms persist beyond 4 weeks\n7. Trial of PPI if cough persists despite asthma treatment (GERD-related cough)\n8. Follow-up in 2 weeks',
+    },
+  },
 };
 
 // Default profile for unknown patients (generic / Metro General)

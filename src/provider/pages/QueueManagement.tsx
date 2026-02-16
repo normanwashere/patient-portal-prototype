@@ -28,13 +28,15 @@ import {
   ExternalLink,
   Tv,
   HeartPulse,
+  PauseCircle,
+  PlayCircle,
 } from 'lucide-react';
 import { useProvider } from '../context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import { getPatientTenant } from '../data/providerMockData';
-import type { QueuePatient, StationType, DoctorOrderType } from '../types';
-import { LINEAR_STATION_ORDER } from '../types';
+import type { QueuePatient, StationType, DoctorOrderType, PauseReason } from '../types';
+import { LINEAR_STATION_ORDER, PAUSE_REASON_LABELS } from '../types';
 
 /* ═══════════════════════════════════════════════════
    CONSTANTS & TYPES
@@ -147,16 +149,16 @@ const S: Record<string, CSSProperties> = {
   arrow: { display: 'flex', alignItems: 'center', padding: '0 2px', color: 'var(--color-text-muted)', flexShrink: 0 },
 
   // Patient card (shared)
-  card: { background: 'var(--color-background)', borderRadius: 8, border: '1px solid var(--color-border)', padding: 0, display: 'flex', flexDirection: 'column', gap: 0, transition: 'box-shadow .15s', overflow: 'hidden' as const },
-  cardInner: { padding: '8px 10px 6px', display: 'flex', flexDirection: 'column' as const, gap: 4 },
-  cardRow: { display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' as const },
-  ticket: { fontWeight: 800, fontSize: 13, color: 'var(--color-primary)', fontFamily: 'monospace', letterSpacing: 0.5 },
-  name: { fontWeight: 600, fontSize: 12, color: 'var(--color-text)', flex: 1, overflow: 'hidden' as const, textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const },
-  priBadge: { fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8, whiteSpace: 'nowrap' as const },
+  card: { background: 'var(--color-background)', borderRadius: 10, border: '1px solid var(--color-border)', padding: 0, display: 'flex', flexDirection: 'column', gap: 0, transition: 'box-shadow .15s', overflow: 'hidden' as const },
+  cardInner: { padding: '10px 12px 8px', display: 'flex', flexDirection: 'column' as const, gap: 6 },
+  cardRow: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const },
+  ticket: { fontWeight: 800, fontSize: 12, color: 'var(--color-primary)', fontFamily: 'monospace', letterSpacing: 0.5, background: 'color-mix(in srgb, var(--color-primary) 8%, transparent)', padding: '2px 6px', borderRadius: 4 },
+  name: { fontWeight: 700, fontSize: 13, color: 'var(--color-text)', flex: 1, overflow: 'hidden' as const, textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const },
+  priBadge: { fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 8, whiteSpace: 'nowrap' as const },
   wait: { fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 2, fontFamily: 'monospace' },
-  complaint: { fontSize: 10, color: 'var(--color-text-muted)', overflow: 'hidden' as const, textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const },
+  complaint: { fontSize: 10, color: 'var(--color-text-muted)', overflow: 'hidden' as const, textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, lineHeight: '1.3' },
   status: { fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 8 },
-  actions: { display: 'flex', gap: 3, flexWrap: 'wrap' as const, padding: '5px 10px 8px', borderTop: '1px solid var(--color-border)', background: 'color-mix(in srgb, var(--color-primary) 2%, var(--color-background))' },
+  actions: { display: 'flex', gap: 4, flexWrap: 'wrap' as const, padding: '8px 12px', borderTop: '1px solid var(--color-border)', alignItems: 'center', background: 'color-mix(in srgb, var(--color-primary) 2%, var(--color-background))' },
 
   // MULTI-STREAM 3-section layout
   msContainer: { display: 'flex', flexDirection: 'column', gap: 24 },
@@ -231,6 +233,7 @@ export const QueueManagement = () => {
     addDoctorOrders, startOrder, completeOrder, completeCurrentOrder,
     callNextPatient, startPatient, completePatient,
     markNoShow, skipPatient, deferOrder,
+    pausePatient, resumePatient,
   } = useProvider();
 
   const labEnabled = tenant.features.visits.clinicLabFulfillmentEnabled;
@@ -255,6 +258,7 @@ export const QueueManagement = () => {
       avgWaitTime: waitTimes.length > 0 ? Math.round(waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length) : 0,
       longestWait: waitTimes.length > 0 ? Math.max(...waitTimes) : 0,
       completedToday: tenantQueuePatients.filter(p => p.status === 'COMPLETED').length,
+      pausedCount: tenantQueuePatients.filter(p => p.status === 'PAUSED').length,
     };
   }, [tenantQueuePatients]);
 
@@ -270,7 +274,9 @@ export const QueueManagement = () => {
   // Room assignment modal — opened when advancing from Triage/Check-In to Consult
   const [assignRoomFor, setAssignRoomFor] = useState<{ patientId: string; patientName: string; fromStation: StationType } | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<DoctorOrderType[]>([]);
-
+  const [pauseTarget, setPauseTarget] = useState<string | null>(null);
+  const [pauseReasonInput, setPauseReasonInput] = useState<string>('fasting_required');
+  const [pauseNotesInput, setPauseNotesInput] = useState('');
 
   // ── Derived data ──
   const visibleStations: StationType[] = useMemo(
@@ -284,16 +290,23 @@ export const QueueManagement = () => {
     return tenantQueuePatients.filter((p) => p.patientName.toLowerCase().includes(q) || p.ticketNumber.toLowerCase().includes(q));
   }, [tenantQueuePatients, search]);
 
-  // LINEAR: group by station
+  // LINEAR: group by station — exclude PAUSED patients from station lanes
   const byStation = useMemo(() => {
     const m = new Map<StationType, QueuePatient[]>();
     for (const st of visibleStations) m.set(st, []);
     for (const p of filtered) {
+      if (p.status === 'PAUSED') continue;
       const list = m.get(p.stationType);
       if (list) list.push(p);
     }
     return m;
   }, [filtered, visibleStations]);
+
+  // Separate paused patients — they get their own swim lane
+  const pausedPatients = useMemo(
+    () => filtered.filter(p => p.status === 'PAUSED'),
+    [filtered],
+  );
 
   // MULTI_STREAM: group by section
   const msSections = useMemo(() => {
@@ -302,6 +315,7 @@ export const QueueManagement = () => {
     const post: QueuePatient[] = [];
     const done: QueuePatient[] = [];
     for (const p of filtered) {
+      if (p.status === 'PAUSED') continue;
       const sec = getPatientSection(p);
       if (sec === 'pre-consult') pre.push(p);
       else if (sec === 'orders') orders.push(p);
@@ -429,6 +443,7 @@ export const QueueManagement = () => {
     const borderLeft = p.status === 'IN_SESSION' ? '3px solid var(--color-success)'
       : p.status === 'READY' ? '3px solid var(--color-primary)'
       : p.status === 'COMPLETED' ? '3px solid #a3a3a3'
+      : p.status === 'PAUSED' ? '3px solid #fbbf24'
       : '3px solid transparent';
 
     // Status label
@@ -436,22 +451,24 @@ export const QueueManagement = () => {
       : p.status === 'READY' ? 'Ready'
       : p.status === 'QUEUED' ? 'Queued'
       : p.status === 'COMPLETED' ? 'Done'
+      : p.status === 'PAUSED' ? 'Paused'
       : p.status;
 
     const statusColor = p.status === 'IN_SESSION' ? { bg: 'color-mix(in srgb, var(--color-success) 12%, transparent)', fg: 'var(--color-success)' }
       : p.status === 'READY' ? { bg: 'color-mix(in srgb, var(--color-primary) 12%, transparent)', fg: 'var(--color-primary)' }
       : p.status === 'COMPLETED' ? { bg: '#f3f4f6', fg: '#6b7280' }
+      : p.status === 'PAUSED' ? { bg: '#fef3c7', fg: '#92400e' }
       : { bg: 'var(--color-gray-100, #f3f4f6)', fg: 'var(--color-text-muted)' };
 
     return (
       <div style={{ ...S.card, borderLeft }}>
         <div style={S.cardInner}>
-          {/* Row 1: Ticket + Name + Priority */}
+          {/* Row 1: Ticket + Name */}
           <div style={S.cardRow}>
             <span style={S.ticket}>{p.ticketNumber}</span>
             <span style={S.name}>{p.patientName}</span>
             {isReturn && (
-              <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 5, background: '#7c3aed', color: '#ede9fe', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 8, fontWeight: 700, padding: '2px 5px', borderRadius: 5, background: '#7c3aed', color: '#ede9fe', whiteSpace: 'nowrap' }}>
                 RET
               </span>
             )}
@@ -460,31 +477,43 @@ export const QueueManagement = () => {
             )}
           </div>
 
-          {/* Row 2: Status + Wait + Complaint */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 6, background: statusColor.bg, color: statusColor.fg, whiteSpace: 'nowrap' as const }}>
+          {/* Row 2: Status badge + Wait timer */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+              background: statusColor.bg, color: statusColor.fg, whiteSpace: 'nowrap' as const,
+              display: 'inline-flex', alignItems: 'center', gap: 3,
+            }}>
+              {p.status === 'IN_SESSION' && <Play size={8} />}
               {statusLabel}
             </span>
             <span style={{ ...S.wait, color: waitColor(p.waitMinutes) }}>
               <Clock size={9} /> +{p.waitMinutes}m
             </span>
-            {p.chiefComplaint && (
-              <span style={S.complaint} title={p.chiefComplaint}>— {p.chiefComplaint}</span>
-            )}
           </div>
 
-          {/* Row 3 (optional): Assigned doctor / nurse */}
+          {/* Row 3: Chief complaint — own line for readability */}
+          {p.chiefComplaint && (
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', lineHeight: '1.3', display: 'flex', alignItems: 'flex-start', gap: 4 }}>
+              <span style={{ color: 'var(--color-text-muted)', flexShrink: 0, marginTop: 1 }}>💬</span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }} title={p.chiefComplaint}>
+                {p.chiefComplaint}
+              </span>
+            </div>
+          )}
+
+          {/* Row 4 (optional): Assigned doctor / nurse */}
           {(p.assignedDoctor || p.assignedNurse) && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 9, color: 'var(--color-text-muted)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--color-text-muted)' }}>
               {p.assignedDoctor && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Stethoscope size={8} style={{ flexShrink: 0 }} /> {p.assignedDoctor}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  <Stethoscope size={9} style={{ flexShrink: 0 }} /> {p.assignedDoctor}
                 </span>
               )}
-              {p.assignedDoctor && p.assignedNurse && <span style={{ opacity: 0.4 }}>·</span>}
+              {p.assignedDoctor && p.assignedNurse && <span style={{ opacity: 0.3 }}>·</span>}
               {p.assignedNurse && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <HeartPulse size={8} style={{ flexShrink: 0 }} /> {p.assignedNurse}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  <HeartPulse size={9} style={{ flexShrink: 0 }} /> {p.assignedNurse}
                 </span>
               )}
             </div>
@@ -524,22 +553,38 @@ export const QueueManagement = () => {
             {/* QUEUED: Call / Skip / No-Show */}
             {p.status === 'QUEUED' && (
               <>
-                <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => handleCall(p.stationType)}>
-                  <PhoneCall size={10} /> Call
+                <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm, padding: '5px 10px' }} onClick={() => handleCall(p.stationType)}>
+                  <PhoneCall size={11} /> Call
                 </button>
-                <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }} onClick={() => handleSkip(p.id)}>
-                  <SkipForward size={10} /> Skip
+                <button
+                  style={{
+                    ...S.btn, ...S.btnSm,
+                    background: '#f1f5f9', color: '#475569', padding: '5px 8px',
+                    border: '1px solid #e2e8f0', borderRadius: 6,
+                  }}
+                  onClick={() => handleSkip(p.id)}
+                  title="Skip to end of queue"
+                >
+                  <SkipForward size={11} /> Skip
                 </button>
-                <button style={{ ...S.btn, ...S.btnGhost, ...S.btnSm, color: 'var(--color-error)' }} onClick={() => handleNoShow(p.id)}>
-                  <XCircle size={10} />
+                <button
+                  style={{
+                    ...S.btn, ...S.btnSm,
+                    background: '#fef2f2', color: '#b91c1c', padding: '5px 8px',
+                    border: '1px solid #fecaca', borderRadius: 6,
+                  }}
+                  onClick={() => handleNoShow(p.id)}
+                  title="Mark no-show"
+                >
+                  <XCircle size={11} /> No Show
                 </button>
               </>
             )}
 
             {/* READY: Start */}
             {p.status === 'READY' && (
-              <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => handleStart(p.id)}>
-                <Play size={10} /> Start
+              <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm, padding: '5px 10px' }} onClick={() => handleStart(p.id)}>
+                <Play size={11} /> Start
               </button>
             )}
 
@@ -552,12 +597,18 @@ export const QueueManagement = () => {
                       onClick={() => { setAddOrdersFor(p.id); setSelectedOrders([]); }}>
                       <Plus size={10} /> Orders
                     </button>
-                    {showAdvance && (
-                      <button style={{ ...S.btn, ...S.btnSuccess, ...S.btnSm }}
-                        onClick={() => handleAdvance(p.id, p.stationType)}>
-                        <ArrowRight size={10} /> {isLinear ? 'Return' : nextStation(p.stationType)}
-                      </button>
-                    )}
+                    <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }}
+                      onClick={() => { transferPatient(p.id, 'Pharmacy'); showToast('Sent to Pharmacy', 'success'); }}>
+                      <Pill size={10} /> Pharmacy
+                    </button>
+                    <button style={{ ...S.btn, ...S.btnOutline, ...S.btnSm }}
+                      onClick={() => { transferPatient(p.id, 'Billing'); showToast('Sent to Billing', 'success'); }}>
+                      <CreditCard size={10} /> Billing
+                    </button>
+                    <button style={{ ...S.btn, ...S.btnSuccess, ...S.btnSm }}
+                      onClick={() => { completePatient(p.id); showToast('Visit completed', 'success'); }}>
+                      <CheckCircle size={10} /> Complete
+                    </button>
                   </>
                 )}
 
@@ -598,6 +649,33 @@ export const QueueManagement = () => {
                     </button>
                   )
                 )}
+              </>
+            )}
+
+            {/* Pause button — available for all active statuses, pushed to far right */}
+            {(p.status === 'QUEUED' || p.status === 'READY' || p.status === 'IN_SESSION') && (
+              <button
+                style={{
+                  ...S.btn, ...S.btnSm, marginLeft: 'auto',
+                  background: '#fef3c7', color: '#92400e', padding: '5px 8px',
+                  border: '1px solid #fde68a', borderRadius: 6,
+                }}
+                onClick={() => { setPauseTarget(p.id); }}
+                title="Pause patient's journey"
+              >
+                <PauseCircle size={11} /> Pause
+              </button>
+            )}
+
+            {/* PAUSED: Resume */}
+            {p.status === 'PAUSED' && (
+              <>
+                <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => { resumePatient(p.id); showToast(`${p.patientName} resumed`, 'success'); }}>
+                  <PlayCircle size={10} /> Resume
+                </button>
+                <span style={{ fontSize: 10, color: '#92400e', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <PauseCircle size={10} /> {p.pauseInfo?.reason?.replace(/_/g, ' ') ?? 'Paused'}
+                </span>
               </>
             )}
 
@@ -918,6 +996,7 @@ export const QueueManagement = () => {
   };
 
   const renderLinear = () => (
+    <>
     <div style={S.kanban}>
       {visibleStations.map((station, i) => {
         const patients = byStation.get(station) ?? [];
@@ -971,7 +1050,102 @@ export const QueueManagement = () => {
           </div>
         );
       })}
-    </div>
+
+      </div>
+
+      {/* ── Paused Patients — Separate full-width swim lane below the flow ── */}
+      {pausedPatients.length > 0 && (
+        <div style={{
+          marginTop: 16, padding: 16, borderRadius: 12,
+          background: '#fffbeb', border: '2px solid #fde68a',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <PauseCircle size={18} style={{ color: '#d97706' }} />
+              <span style={{ fontSize: 14, fontWeight: 800, color: '#92400e' }}>Paused Patients</span>
+              <span style={{
+                fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
+                background: '#f59e0b', color: '#fff',
+              }}>{pausedPatients.length}</span>
+            </div>
+            <span style={{ fontSize: 11, color: '#92400e' }}>
+              Not counted in station queues
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {pausedPatients.map((p) => (
+              <div key={p.id} style={{
+                ...S.card,
+                borderLeft: '3px solid #fbbf24',
+                background: '#fff',
+                flex: '1 1 280px',
+                maxWidth: 360,
+              }}>
+                <div style={S.cardInner}>
+                  {/* Row 1: Ticket + Name + Priority */}
+                  <div style={{ ...S.cardRow, marginBottom: 4 }}>
+                    <span style={{ ...S.ticket, background: '#fef3c7', color: '#92400e' }}>{p.ticketNumber}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700 }}>{p.patientName}</span>
+                    {p.priority !== 'Normal' && (
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: p.priority === 'Urgent' ? '#fee2e2' : '#fef3c7', color: p.priority === 'Urgent' ? '#dc2626' : '#d97706' }}>
+                        {p.priority}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Pause reason */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#92400e', fontWeight: 600, marginBottom: 3 }}>
+                    <PauseCircle size={11} />
+                    {PAUSE_REASON_LABELS[p.pauseInfo?.reason as keyof typeof PAUSE_REASON_LABELS] ?? p.pauseInfo?.reason?.replace(/_/g, ' ') ?? 'Paused'}
+                  </div>
+                  {p.pauseInfo?.notes && (
+                    <div style={{ fontSize: 10, color: '#78350f', fontStyle: 'italic', marginBottom: 3 }}>
+                      {p.pauseInfo.notes}
+                    </div>
+                  )}
+
+                  {/* Returns-to station badge */}
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '4px 10px', borderRadius: 6, marginBottom: 4,
+                    background: 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
+                    fontSize: 11, fontWeight: 700, color: 'var(--color-primary)',
+                  }}>
+                    <ArrowRight size={11} /> Returns to: {p.pauseInfo?.pausedAtStation ?? p.stationType}
+                  </div>
+
+                  {/* Paused-at time + expected return */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 10, color: '#78350f', marginBottom: 2 }}>
+                    {p.pauseInfo?.pausedAt && (
+                      <span>Paused at {new Date(p.pauseInfo.pausedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    )}
+                    {p.pauseInfo?.resumeDate && (
+                      <span>• Returns {new Date(p.pauseInfo.resumeDate).toLocaleDateString()}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div style={{ ...S.actions, borderTop: '1px solid #fde68a' }}>
+                  <button
+                    style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }}
+                    onClick={() => {
+                      resumePatient(p.id);
+                      showToast(`${p.patientName} resumed — back to ${p.pauseInfo?.pausedAtStation ?? p.stationType}`, 'success');
+                    }}
+                  >
+                    <PlayCircle size={10} /> Resume
+                  </button>
+                  <span style={{ fontSize: 10, color: '#92400e', fontWeight: 600, marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Clock size={10} /> {p.waitMinutes}m paused
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 
   // ═══════════════════════════════════════════════════
@@ -1252,7 +1426,11 @@ export const QueueManagement = () => {
                             )}
                             {(ord.status === 'queued' || ord.status === 'in-progress') && (
                               <button
-                                style={{ ...S.btn, ...S.btnGhost, ...S.btnSm }}
+                                style={{
+                                  ...S.btn, ...S.btnSm,
+                                  background: '#eef2ff', color: '#4338ca', padding: '5px 8px',
+                                  border: '1px solid #c7d2fe', borderRadius: 6,
+                                }}
                                 title="Move to bottom of queue — patient is at another station"
                                 onClick={() => { deferOrder(p.id, ord.id); showToast(`${p.ticketNumber} deferred`, 'info'); }}
                               >
@@ -1340,6 +1518,48 @@ export const QueueManagement = () => {
         </div>
       </div>
 
+      {/* Paused patients */}
+      {pausedPatients.length > 0 && (
+        <div style={{ ...S.msSection, borderColor: '#fbbf24' }}>
+          <div style={{ ...S.msSectionHeader, background: '#fffbeb' }}>
+            <PauseCircle size={18} style={{ color: '#d97706' }} />
+            <span style={{ ...S.msSectionTitle, color: '#92400e' }}>Paused Patients</span>
+            <span style={{ ...S.msSectionBadge, background: '#fbbf24', color: '#78350f' }}>{pausedPatients.length}</span>
+            <span style={{ fontSize: 11, color: '#92400e', marginLeft: 'auto' }}>
+              Patients on hold — progress preserved
+            </span>
+          </div>
+          <div style={{ ...S.msSectionBody, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {pausedPatients.map((p) => (
+              <div key={p.id} style={{ ...S.card, borderLeft: '3px solid #fbbf24', background: '#fffbeb', minWidth: 220, maxWidth: 280 }}>
+                <div style={S.cardInner}>
+                  <div style={S.cardRow}>
+                    <span style={{ ...S.ticket, background: '#fef3c7', color: '#92400e' }}>{p.ticketNumber}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700 }}>{p.patientName}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#92400e', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                    <PauseCircle size={11} />
+                    {PAUSE_REASON_LABELS[p.pauseInfo?.reason as keyof typeof PAUSE_REASON_LABELS] ?? 'Paused'}
+                  </div>
+                  <div style={{
+                    marginTop: 6, padding: '4px 8px', borderRadius: 6,
+                    background: '#fde68a', display: 'inline-flex', alignItems: 'center', gap: 5,
+                    fontSize: 10, fontWeight: 700, color: '#78350f',
+                  }}>
+                    <ArrowRight size={10} /> Returns to: {p.pauseInfo?.pausedAtStation ?? p.stationType}
+                  </div>
+                </div>
+                <div style={S.actions}>
+                  <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm }} onClick={() => { resumePatient(p.id); showToast(`${p.patientName} resumed`, 'success'); }}>
+                    <PlayCircle size={10} /> Resume
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Done summary */}
       {msSections.done.length > 0 && (
         <div style={{ padding: 12, background: 'var(--color-surface)', borderRadius: 'var(--radius)', border: '1px solid var(--color-border)' }}>
@@ -1417,6 +1637,12 @@ export const QueueManagement = () => {
               <span style={S.statLabel}>Completed</span>
               <span style={{ ...S.statValue, color: 'var(--color-success)' }}>{tenantQueueStats.completedToday}</span>
             </div>
+            {tenantQueueStats.pausedCount > 0 && (
+              <div style={S.statCard}>
+                <span style={S.statLabel}>Paused</span>
+                <span style={{ ...S.statValue, color: '#d97706' }}>{tenantQueueStats.pausedCount}</span>
+              </div>
+            )}
           </div>
 
           {/* Controls */}
@@ -1589,6 +1815,54 @@ export const QueueManagement = () => {
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setAssignRoomFor(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Pause Patient Modal ── */}
+      {pauseTarget && (
+        <div style={S.modalOverlay} onClick={() => setPauseTarget(null)}>
+          <div style={{ ...S.modal, maxWidth: 420 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 800 }}>Pause Patient Journey</h3>
+              <button style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setPauseTarget(null)}><X size={18} /></button>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>
+              Patient's progress will be saved. They can resume when they return.
+            </p>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--color-text)', marginBottom: 6 }}>Reason</label>
+            <select
+              value={pauseReasonInput}
+              onChange={(e) => setPauseReasonInput(e.target.value)}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--color-border)', fontSize: 13, marginBottom: 14 }}
+            >
+              {Object.entries(PAUSE_REASON_LABELS).map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--color-text)', marginBottom: 6 }}>Notes (optional)</label>
+            <textarea
+              value={pauseNotesInput}
+              onChange={(e) => setPauseNotesInput(e.target.value)}
+              placeholder="E.g., Patient ate breakfast, needs 8hr fast..."
+              rows={2}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--color-border)', fontSize: 13, resize: 'none', fontFamily: 'inherit', marginBottom: 16 }}
+            />
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button style={{ ...S.btn, ...S.btnGhost }} onClick={() => setPauseTarget(null)}>Cancel</button>
+              <button
+                style={{ ...S.btn, ...S.btnPrimary, background: '#f59e0b' }}
+                onClick={() => {
+                  pausePatient(pauseTarget, pauseReasonInput as PauseReason, pauseNotesInput || undefined);
+                  const pt = tenantQueuePatients.find(p => p.id === pauseTarget);
+                  showToast(`${pt?.patientName ?? 'Patient'} paused — ${PAUSE_REASON_LABELS[pauseReasonInput as PauseReason] ?? pauseReasonInput}`, 'info');
+                  setPauseTarget(null);
+                  setPauseNotesInput('');
+                  setPauseReasonInput('fasting_required');
+                }}
+              >
+                <PauseCircle size={12} /> Pause Patient
+              </button>
             </div>
           </div>
         </div>

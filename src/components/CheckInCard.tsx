@@ -6,7 +6,9 @@ import {
     Stethoscope,
     FlaskConical,
     Pill,
-    Receipt
+    Receipt,
+    PauseCircle,
+    PlayCircle
 } from 'lucide-react';
 import '../pages/Queue.css'; // Import Journey styles
 import { useData } from '../context/DataContext';
@@ -27,7 +29,11 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
         isQueueActive,
         currentStepIndex,
         visitProgress,
-        isVisitComplete
+        isVisitComplete,
+        isQueuePaused,
+        pauseReason,
+        pausedSteps,
+        resumeQueue
     } = useData();
 
     const currentStep = steps[currentStepIndex];
@@ -66,8 +72,67 @@ export const CheckInCard: React.FC<CheckInCardProps> = ({
 
     const statusInfo = getStatusLabel();
 
+    const PAUSE_REASON_MAP: Record<string, string> = {
+        fasting_required: 'Fasting Required',
+        return_tomorrow: 'Returning Tomorrow',
+        preparation_needed: 'Preparation Needed',
+        personal_request: 'Personal Request',
+        facility_closing: 'Facility Closing',
+        other: 'Other',
+    };
+
     // After check-in: show queue number and current stage or Completion
     if (isQueueActive && queueInfo) {
+        // ── Paused State Card ──
+        if (isQueuePaused) {
+            return (
+                <div className="journey-card dashboard-widget" style={{ borderColor: '#fbbf24' }}>
+                    <div style={{ height: 4, background: '#fbbf24', borderRadius: '1.25rem 1.25rem 0 0' }} />
+                    <div className="journey-header compact" style={{ paddingBottom: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <PauseCircle size={18} style={{ color: '#d97706' }} />
+                            <div>
+                                <h2 className="journey-title" style={{ fontSize: '1rem', color: '#92400e' }}>Visit Paused</h2>
+                                <p className="journey-subtitle">{PAUSE_REASON_MAP[pauseReason ?? ''] ?? 'Paused'}</p>
+                            </div>
+                        </div>
+                        <Link to="/queue" className="view-journey-link">
+                            Details <ArrowRight size={14} />
+                        </Link>
+                    </div>
+                    <div style={{
+                        margin: '0 1rem 1rem', padding: '0.75rem 1rem', borderRadius: '0.75rem',
+                        background: '#fffbeb', border: '1px solid #fde68a', fontSize: '0.75rem', color: '#78350f',
+                    }}>
+                        Progress saved — resume from <strong>{pausedSteps[0]?.label ?? 'your step'}</strong>
+                    </div>
+                    <div style={{ padding: '0 1rem 1rem', display: 'flex', gap: 8 }}>
+                        <button
+                            onClick={resumeQueue}
+                            style={{
+                                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                padding: '10px 16px', background: 'var(--color-primary)', color: 'white',
+                                border: 'none', borderRadius: 10, fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
+                            }}
+                        >
+                            <PlayCircle size={16} /> Resume Visit
+                        </button>
+                        <Link
+                            to="/queue"
+                            style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                padding: '10px 16px', background: '#f1f5f9', color: '#475569',
+                                border: 'none', borderRadius: 10, fontSize: '0.85rem', fontWeight: 600,
+                                textDecoration: 'none',
+                            }}
+                        >
+                            View
+                        </Link>
+                    </div>
+                </div>
+            );
+        }
+
         if (isVisitComplete) {
             return (
                 <div className="journey-card dashboard-widget completed">

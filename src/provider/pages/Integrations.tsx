@@ -60,12 +60,12 @@ const S: Record<string, React.CSSProperties> = {
   },
   tab: {
     padding: '12px 20px', fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)',
-    background: 'transparent', border: 'none', cursor: 'pointer',
-    borderBottom: '2px solid transparent', marginBottom: -1,
+    background: 'transparent', borderWidth: 0, borderStyle: 'none' as const, cursor: 'pointer',
+    borderBottomWidth: 2, borderBottomStyle: 'solid' as const, borderBottomColor: 'transparent', marginBottom: -1,
     borderRadius: '8px 8px 0 0', display: 'flex', alignItems: 'center', gap: 8,
     whiteSpace: 'nowrap' as const, flexShrink: 0,
   },
-  tabActive: { color: 'var(--color-primary)', borderBottom: '2px solid var(--color-primary)' },
+  tabActive: { color: 'var(--color-primary)', borderBottomColor: 'var(--color-primary)' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20, marginBottom: 32 },
   card: {
     background: 'var(--color-surface)', borderRadius: 12, padding: 0,

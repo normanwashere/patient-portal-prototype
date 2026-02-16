@@ -45,7 +45,7 @@ const styles: Record<string, CSSProperties> = {
   title: { fontSize: 24, fontWeight: 700, color: 'var(--color-text)', marginBottom: 8 },
   subtitle: { color: 'var(--color-text-muted)', marginBottom: 24, fontSize: 14 },
   tabs: { display: 'flex', gap: 4, marginBottom: 24, flexWrap: 'wrap', borderBottom: '1px solid var(--color-border)', paddingBottom: 0 },
-  tab: { padding: '12px 16px', fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', background: 'none', border: 'none', borderBottom: '3px solid transparent', cursor: 'pointer', marginBottom: -1 },
+  tab: { padding: '12px 16px', fontSize: 14, fontWeight: 600, color: 'var(--color-text-muted)', background: 'none', borderWidth: 0, borderStyle: 'none' as const, borderBottomWidth: 3, borderBottomStyle: 'solid' as const, borderBottomColor: 'transparent', cursor: 'pointer', marginBottom: -1 },
   tabActive: { color: 'var(--color-primary)', borderBottomColor: 'var(--color-primary)' },
   card: { background: 'var(--color-surface)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--color-border)' },
   badge: { padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600 },

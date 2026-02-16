@@ -179,14 +179,14 @@ export const Layout: React.FC = () => {
                         </Link>
 
                         {visits.clinicVisitEnabled && (
-                            <Link to="/appointments/book" state={{ type: 'in-person' }} className={clsx('drawer-item', isActive('/appointments/book') && location.state?.type === 'in-person' && 'active')}>
+                            <Link to="/appointments/book?type=in-person" className={clsx('drawer-item', isActive('/appointments/book') && location.search.includes('type=in-person') && 'active')}>
                                 <Building2 size={20} />
                                 <span>Book In-Person</span>
                             </Link>
                         )}
 
                         {visits.teleconsultEnabled && (
-                            <Link to="/appointments/book" state={{ type: 'teleconsult' }} className={clsx('drawer-item', isActive('/appointments/book') && location.state?.type === 'teleconsult' && 'active')}>
+                            <Link to="/appointments/book?type=teleconsult" className={clsx('drawer-item', isActive('/appointments/book') && location.search.includes('type=teleconsult') && 'active')}>
                                 <Video size={20} />
                                 <span>Book Teleconsult</span>
                             </Link>

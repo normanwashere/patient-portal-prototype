@@ -206,7 +206,7 @@ export const AppointmentHistory: React.FC = () => {
                             <p><strong>Specialty:</strong> {selectedAppt.specialty}</p>
                             <p><strong>Date:</strong> {selectedAppt.date} at {selectedAppt.time}</p>
                             <p><strong>Type:</strong> {selectedAppt.type}</p>
-                            <p><strong>Location:</strong> {selectedAppt.location || 'Online'}</p>
+                            <p><strong>{selectedAppt.type?.toLowerCase().includes('home') ? 'Provider:' : 'Location:'}</strong> {selectedAppt.location || 'Online'}</p>
                             <p><strong>Status:</strong> {selectedAppt.status}</p>
                         </div>
                         <div className="modal-footer" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>

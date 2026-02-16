@@ -906,4 +906,21 @@
     }
 }
 
+/* ── Paused Step Styling ── */
+.timeline-step.paused .step-card {
+    border-color: #fbbf24;
+    background: #fffbeb;
+    opacity: 0.9;
+}
+
+.timeline-step.paused .timeline-icon-circle {
+    background: #fbbf24;
+    color: white;
+}
+
+.step-status-badge.paused {
+    background: #fef3c7;
+    color: #92400e;
+}
+
 /* Dark Mode Support - DISABLED for consistency and high contrast */

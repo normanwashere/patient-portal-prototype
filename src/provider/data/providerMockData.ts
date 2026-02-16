@@ -38,19 +38,25 @@ import type {
   ChatMessage,
   HomeCareRequest,
   ConsultRoom,
+  FacilitySchedule,
 } from '../types';
 
 const BRANCH_MAIN = 'metro-hosp-main';
 const BRANCH_NAME = 'Metro General Hospital - Main';
 const BRANCH_NORTH = 'metro-hosp-north';
 const BRANCH_NORTH_NAME = 'Metro General Hospital - North';
-const BRANCH_MC_AYALA = 'mc-pcc-ayala';
+const BRANCH_MC_AYALA = 'maxicare-ayala-north';
 const BRANCH_MC_AYALA_NAME = 'Maxicare PCC - Ayala North Exchange';
 void BRANCH_MC_AYALA; // used in appointment data below
-const BRANCH_MC_BGC = 'mc-pcc-bgc';
+const BRANCH_MC_BGC = 'maxicare-bgc';
 const BRANCH_MC_BGC_NAME = 'Maxicare PCC - BGC';
-const BRANCH_MC_BRIDGE = 'mc-pcc-bridgetowne';
+const BRANCH_MC_BRIDGE = 'maxicare-bridgetowne';
 const BRANCH_MC_BRIDGE_NAME = 'Maxicare PCC - Bridgetowne';
+const BRANCH_MC_CENTRIS = 'maxicare-centris';
+const BRANCH_MC_SOLIVEN = 'maxicare-vv-soliven';
+const BRANCH_MC_CUBAO = 'maxicare-cubao';
+const BRANCH_MC_FAIRVIEW = 'maxicare-fairview';
+const BRANCH_MC_ALABANG = 'maxicare-alabang';
 
 // Date helpers (must be above all data arrays that reference them)
 const todayFormatted = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -100,6 +106,7 @@ export const PATIENT_TENANT_MAP: Record<string, string> = {
   'p-mc15': 'maxicare', // Cynthia Abad
   'p-mc16': 'maxicare', // Eduardo Bautista
   'p-mc17': 'maxicare', // Maricel Torres
+  'p-mc-pause1': 'maxicare', // Ramon Cruz (paused)
 };
 
 /** Helper: returns the tenantId for a given patient, defaults to 'metroGeneral' */
@@ -1641,6 +1648,141 @@ export const MOCK_EQUIPMENT: Equipment[] = [
 ];
 
 // =============================================
+// 7b. FACILITY SCHEDULES & CAPACITY
+// =============================================
+
+function _seedBooked(base: Record<string, number>, dailyCap: number): Record<string, number> {
+  const result = { ...base };
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(); d.setDate(d.getDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    if (!(key in result)) {
+      result[key] = Math.floor(Math.random() * dailyCap * 0.6);
+    }
+  }
+  return result;
+}
+
+const _today = new Date();
+const _fmt = (off: number) => { const d = new Date(_today); d.setDate(d.getDate() + off); return d.toISOString().slice(0, 10); };
+
+export const FACILITY_SCHEDULES: FacilitySchedule[] = [
+  // ── Metro General Hospital ──
+  // Lab — Mon-Sat, 07:00-17:00, 15min slots, cap 40
+  { id: 'fs-mg-lab', tenantId: 'metroGeneral', branchId: BRANCH_MAIN, categoryId: 'lab', daysOfWeek: [1,2,3,4,5,6], startTime: '07:00', endTime: '17:00', slotDurationMin: 15, dailyCap: 40,
+    bookedSlots: _seedBooked({ [_fmt(0)]: 34, [_fmt(1)]: 28, [_fmt(2)]: 40, [_fmt(3)]: 15 }, 40) },
+  // Imaging (general) — Mon-Fri, 08:00-16:00, 30min slots, cap 16
+  { id: 'fs-mg-img', tenantId: 'metroGeneral', branchId: BRANCH_MAIN, categoryId: 'imaging', daysOfWeek: [1,2,3,4,5], startTime: '08:00', endTime: '16:00', slotDurationMin: 30, dailyCap: 16,
+    bookedSlots: _seedBooked({ [_fmt(0)]: 12, [_fmt(1)]: 16, [_fmt(3)]: 8 }, 16) },
+  // Imaging (MRI) — Mon/Wed/Fri, 08:00-16:00, 60min slots, cap 6
+  { id: 'fs-mg-mri', tenantId: 'metroGeneral', branchId: BRANCH_MAIN, categoryId: 'imaging', procedureName: 'MRI - Lumbar', daysOfWeek: [1,3,5], startTime: '08:00', endTime: '16:00', slotDurationMin: 60, dailyCap: 6,
+    bookedSlots: _seedBooked({ [_fmt(0)]: 5, [_fmt(2)]: 6 }, 6) },
+  // Cardio — Mon-Fri, 08:00-12:00, 30min slots, cap 8
+  { id: 'fs-mg-cardio', tenantId: 'metroGeneral', branchId: BRANCH_MAIN, categoryId: 'cardio', daysOfWeek: [1,2,3,4,5], startTime: '08:00', endTime: '12:00', slotDurationMin: 30, dailyCap: 8,
+    bookedSlots: _seedBooked({ [_fmt(0)]: 6, [_fmt(1)]: 4 }, 8) },
+  // Special — Mon/Thu, 08:00-14:00, 60min slots, cap 4
+  { id: 'fs-mg-special', tenantId: 'metroGeneral', branchId: BRANCH_MAIN, categoryId: 'special', daysOfWeek: [1,4], startTime: '08:00', endTime: '14:00', slotDurationMin: 60, dailyCap: 4,
+    bookedSlots: _seedBooked({ [_fmt(0)]: 3 }, 4) },
+  // Metro North branch — Lab only
+  { id: 'fs-mn-lab', tenantId: 'metroGeneral', branchId: BRANCH_NORTH, categoryId: 'lab', daysOfWeek: [1,2,3,4,5,6], startTime: '07:00', endTime: '15:00', slotDurationMin: 15, dailyCap: 24,
+    bookedSlots: _seedBooked({ [_fmt(0)]: 18, [_fmt(1)]: 10 }, 24) },
+
+  // ── Maxicare PCC — Ayala ──
+  // Lab — Mon-Sat, 07:00-17:00, 15min slots, cap 30
+  // Today: LIMITED (26/30), Tomorrow: FULL (30/30), Day+2: available (14/30), Day+3: low (6/30), Day+4: LIMITED (27/30), Day+5: available (18/30), Day+6: available (10/30)
+  { id: 'fs-mc-ayala-lab', tenantId: 'maxicare', branchId: BRANCH_MC_AYALA, categoryId: 'lab', daysOfWeek: [1,2,3,4,5,6], startTime: '07:00', endTime: '17:00', slotDurationMin: 15, dailyCap: 30,
+    bookedSlots: { [_fmt(0)]: 26, [_fmt(1)]: 30, [_fmt(2)]: 14, [_fmt(3)]: 6, [_fmt(4)]: 27, [_fmt(5)]: 18, [_fmt(6)]: 10 } },
+  // Imaging (general) — Mon-Fri, 08:00-16:00, 30min slots, cap 12
+  // Today: LIMITED (10/12), Tomorrow: FULL (12/12), Day+2: available (5/12), Day+3: available (3/12), Day+4: LIMITED (11/12)
+  { id: 'fs-mc-ayala-img', tenantId: 'maxicare', branchId: BRANCH_MC_AYALA, categoryId: 'imaging', daysOfWeek: [1,2,3,4,5], startTime: '08:00', endTime: '16:00', slotDurationMin: 30, dailyCap: 12,
+    bookedSlots: { [_fmt(0)]: 10, [_fmt(1)]: 12, [_fmt(2)]: 5, [_fmt(3)]: 3, [_fmt(4)]: 11, [_fmt(5)]: 2, [_fmt(6)]: 7 } },
+  // Imaging (MRI) — Tue/Thu only, 08:00-14:00, 60min slots, cap 4
+  // Spread across operating days: FULL, available, LIMITED
+  { id: 'fs-mc-ayala-mri', tenantId: 'maxicare', branchId: BRANCH_MC_AYALA, categoryId: 'imaging', procedureName: 'MRI - Lumbar', daysOfWeek: [2,4], startTime: '08:00', endTime: '14:00', slotDurationMin: 60, dailyCap: 4,
+    bookedSlots: { [_fmt(0)]: 3, [_fmt(1)]: 4, [_fmt(2)]: 1, [_fmt(3)]: 2, [_fmt(4)]: 4, [_fmt(5)]: 0, [_fmt(6)]: 3 } },
+  // Imaging (CT) — Mon/Wed/Fri, 08:00-15:00, 45min slots, cap 6
+  // Today: LIMITED (5/6), Day+2: FULL (6/6), Day+4: available (2/6)
+  { id: 'fs-mc-ayala-ct', tenantId: 'maxicare', branchId: BRANCH_MC_AYALA, categoryId: 'imaging', procedureName: 'CT Scan - Head', daysOfWeek: [1,3,5], startTime: '08:00', endTime: '15:00', slotDurationMin: 45, dailyCap: 6,
+    bookedSlots: { [_fmt(0)]: 5, [_fmt(1)]: 1, [_fmt(2)]: 6, [_fmt(3)]: 0, [_fmt(4)]: 2, [_fmt(5)]: 4, [_fmt(6)]: 3 } },
+  // Cardio — Mon/Wed/Fri, 08:00-12:00, 30min slots, cap 6
+  // Today: LIMITED (5/6), Day+2: available (2/6), Day+4: FULL (6/6)
+  { id: 'fs-mc-ayala-cardio', tenantId: 'maxicare', branchId: BRANCH_MC_AYALA, categoryId: 'cardio', daysOfWeek: [1,3,5], startTime: '08:00', endTime: '12:00', slotDurationMin: 30, dailyCap: 6,
+    bookedSlots: { [_fmt(0)]: 5, [_fmt(1)]: 0, [_fmt(2)]: 2, [_fmt(3)]: 1, [_fmt(4)]: 6, [_fmt(5)]: 3, [_fmt(6)]: 4 } },
+  // Special — Wed only, 09:00-14:00, 60min slots, cap 3
+  // Next Wed: FULL (3/3), Week after: available (1/3)
+  { id: 'fs-mc-ayala-special', tenantId: 'maxicare', branchId: BRANCH_MC_AYALA, categoryId: 'special', daysOfWeek: [3], startTime: '09:00', endTime: '14:00', slotDurationMin: 60, dailyCap: 3,
+    bookedSlots: { [_fmt(0)]: 2, [_fmt(1)]: 3, [_fmt(2)]: 0, [_fmt(3)]: 1, [_fmt(4)]: 3, [_fmt(5)]: 0, [_fmt(6)]: 2 } },
+
+  // ── Maxicare PCC — BGC ──
+  // Lab — Mon-Sat, 07:30-16:00, 15min slots, cap 24
+  // Today: LIMITED (21/24), Tomorrow: available (10/24), Day+2: FULL (24/24), Day+3: available (8/24), Day+4: LIMITED (22/24)
+  { id: 'fs-mc-bgc-lab', tenantId: 'maxicare', branchId: BRANCH_MC_BGC, categoryId: 'lab', daysOfWeek: [1,2,3,4,5,6], startTime: '07:30', endTime: '16:00', slotDurationMin: 15, dailyCap: 24,
+    bookedSlots: { [_fmt(0)]: 21, [_fmt(1)]: 10, [_fmt(2)]: 24, [_fmt(3)]: 8, [_fmt(4)]: 22, [_fmt(5)]: 15, [_fmt(6)]: 5 } },
+  // Imaging — Mon-Fri, 08:00-15:00, 30min slots, cap 10
+  // Today: LIMITED (8/10), Tomorrow: FULL (10/10), Day+2: available (3/10)
+  { id: 'fs-mc-bgc-img', tenantId: 'maxicare', branchId: BRANCH_MC_BGC, categoryId: 'imaging', daysOfWeek: [1,2,3,4,5], startTime: '08:00', endTime: '15:00', slotDurationMin: 30, dailyCap: 10,
+    bookedSlots: { [_fmt(0)]: 8, [_fmt(1)]: 10, [_fmt(2)]: 3, [_fmt(3)]: 6, [_fmt(4)]: 9, [_fmt(5)]: 1, [_fmt(6)]: 5 } },
+  // Cardio — Tue/Thu, 08:00-12:00, 30min slots, cap 4
+  // Operating days: FULL, LIMITED, available alternating
+  { id: 'fs-mc-bgc-cardio', tenantId: 'maxicare', branchId: BRANCH_MC_BGC, categoryId: 'cardio', daysOfWeek: [2,4], startTime: '08:00', endTime: '12:00', slotDurationMin: 30, dailyCap: 4,
+    bookedSlots: { [_fmt(0)]: 1, [_fmt(1)]: 4, [_fmt(2)]: 0, [_fmt(3)]: 3, [_fmt(4)]: 2, [_fmt(5)]: 4, [_fmt(6)]: 1 } },
+
+  // ── Maxicare PCC — Bridgetowne ──
+  // Lab — Mon-Sat, 07:00-16:00, 15min slots, cap 20
+  // Today: available (9/20), Tomorrow: LIMITED (17/20), Day+2: FULL (20/20), Day+3: available (5/20)
+  { id: 'fs-mc-bridge-lab', tenantId: 'maxicare', branchId: BRANCH_MC_BRIDGE, categoryId: 'lab', daysOfWeek: [1,2,3,4,5,6], startTime: '07:00', endTime: '16:00', slotDurationMin: 15, dailyCap: 20,
+    bookedSlots: { [_fmt(0)]: 9, [_fmt(1)]: 17, [_fmt(2)]: 20, [_fmt(3)]: 5, [_fmt(4)]: 14, [_fmt(5)]: 11, [_fmt(6)]: 3 } },
+  // Imaging — Mon-Fri, 08:00-15:00, 30min slots, cap 8
+  // Today: LIMITED (7/8), Tomorrow: available (2/8), Day+2: FULL (8/8)
+  { id: 'fs-mc-bridge-img', tenantId: 'maxicare', branchId: BRANCH_MC_BRIDGE, categoryId: 'imaging', daysOfWeek: [1,2,3,4,5], startTime: '08:00', endTime: '15:00', slotDurationMin: 30, dailyCap: 8,
+    bookedSlots: { [_fmt(0)]: 7, [_fmt(1)]: 2, [_fmt(2)]: 8, [_fmt(3)]: 4, [_fmt(4)]: 6, [_fmt(5)]: 1, [_fmt(6)]: 5 } },
+  // Cardio — Mon/Wed/Fri, 08:00-12:00, 30min slots, cap 4
+  // Today: available (1/4), Day+2: FULL (4/4), Day+4: LIMITED (3/4)
+  { id: 'fs-mc-bridge-cardio', tenantId: 'maxicare', branchId: BRANCH_MC_BRIDGE, categoryId: 'cardio', daysOfWeek: [1,3,5], startTime: '08:00', endTime: '12:00', slotDurationMin: 30, dailyCap: 4,
+    bookedSlots: { [_fmt(0)]: 1, [_fmt(1)]: 0, [_fmt(2)]: 4, [_fmt(3)]: 2, [_fmt(4)]: 3, [_fmt(5)]: 0, [_fmt(6)]: 2 } },
+  // Special Procedures — Tue/Thu, 09:00-14:00, 60min slots, cap 3
+  // Alternating: FULL, available, LIMITED
+  { id: 'fs-mc-bridge-special', tenantId: 'maxicare', branchId: BRANCH_MC_BRIDGE, categoryId: 'special', daysOfWeek: [2,4], startTime: '09:00', endTime: '14:00', slotDurationMin: 60, dailyCap: 3,
+    bookedSlots: { [_fmt(0)]: 1, [_fmt(1)]: 3, [_fmt(2)]: 0, [_fmt(3)]: 2, [_fmt(4)]: 3, [_fmt(5)]: 1, [_fmt(6)]: 0 } },
+
+  // ── Maxicare PCC — Centris ──
+  { id: 'fs-mc-centris-lab', tenantId: 'maxicare', branchId: BRANCH_MC_CENTRIS, categoryId: 'lab', daysOfWeek: [1,2,3,4,5,6], startTime: '06:00', endTime: '16:00', slotDurationMin: 15, dailyCap: 25,
+    bookedSlots: { [_fmt(0)]: 18, [_fmt(1)]: 25, [_fmt(2)]: 12, [_fmt(3)]: 22, [_fmt(4)]: 8, [_fmt(5)]: 15, [_fmt(6)]: 3 } },
+  { id: 'fs-mc-centris-img', tenantId: 'maxicare', branchId: BRANCH_MC_CENTRIS, categoryId: 'imaging', daysOfWeek: [1,2,3,4,5], startTime: '08:00', endTime: '16:00', slotDurationMin: 30, dailyCap: 10,
+    bookedSlots: { [_fmt(0)]: 7, [_fmt(1)]: 10, [_fmt(2)]: 4, [_fmt(3)]: 9, [_fmt(4)]: 6, [_fmt(5)]: 2, [_fmt(6)]: 8 } },
+  { id: 'fs-mc-centris-cardio', tenantId: 'maxicare', branchId: BRANCH_MC_CENTRIS, categoryId: 'cardio', daysOfWeek: [1,3,5], startTime: '08:00', endTime: '12:00', slotDurationMin: 30, dailyCap: 4,
+    bookedSlots: { [_fmt(0)]: 3, [_fmt(1)]: 0, [_fmt(2)]: 4, [_fmt(3)]: 1, [_fmt(4)]: 2, [_fmt(5)]: 4, [_fmt(6)]: 0 } },
+
+  // ── Maxicare PCC — VV Soliven ──
+  { id: 'fs-mc-soliven-lab', tenantId: 'maxicare', branchId: BRANCH_MC_SOLIVEN, categoryId: 'lab', daysOfWeek: [1,2,3,4,5,6], startTime: '06:00', endTime: '17:00', slotDurationMin: 15, dailyCap: 28,
+    bookedSlots: { [_fmt(0)]: 24, [_fmt(1)]: 15, [_fmt(2)]: 28, [_fmt(3)]: 19, [_fmt(4)]: 11, [_fmt(5)]: 25, [_fmt(6)]: 7 } },
+  { id: 'fs-mc-soliven-img', tenantId: 'maxicare', branchId: BRANCH_MC_SOLIVEN, categoryId: 'imaging', daysOfWeek: [1,2,3,4,5], startTime: '08:00', endTime: '15:00', slotDurationMin: 30, dailyCap: 10,
+    bookedSlots: { [_fmt(0)]: 10, [_fmt(1)]: 6, [_fmt(2)]: 3, [_fmt(3)]: 10, [_fmt(4)]: 8, [_fmt(5)]: 1, [_fmt(6)]: 5 } },
+  { id: 'fs-mc-soliven-cardio', tenantId: 'maxicare', branchId: BRANCH_MC_SOLIVEN, categoryId: 'cardio', daysOfWeek: [2,4], startTime: '08:00', endTime: '12:00', slotDurationMin: 30, dailyCap: 4,
+    bookedSlots: { [_fmt(0)]: 1, [_fmt(1)]: 4, [_fmt(2)]: 2, [_fmt(3)]: 0, [_fmt(4)]: 4, [_fmt(5)]: 3, [_fmt(6)]: 1 } },
+
+  // ── Maxicare PCC — Cubao ──
+  { id: 'fs-mc-cubao-lab', tenantId: 'maxicare', branchId: BRANCH_MC_CUBAO, categoryId: 'lab', daysOfWeek: [1,2,3,4,5,6], startTime: '06:00', endTime: '16:00', slotDurationMin: 15, dailyCap: 22,
+    bookedSlots: { [_fmt(0)]: 14, [_fmt(1)]: 22, [_fmt(2)]: 9, [_fmt(3)]: 18, [_fmt(4)]: 5, [_fmt(5)]: 20, [_fmt(6)]: 11 } },
+  { id: 'fs-mc-cubao-img', tenantId: 'maxicare', branchId: BRANCH_MC_CUBAO, categoryId: 'imaging', daysOfWeek: [1,2,3,4,5], startTime: '08:00', endTime: '14:00', slotDurationMin: 30, dailyCap: 8,
+    bookedSlots: { [_fmt(0)]: 5, [_fmt(1)]: 8, [_fmt(2)]: 2, [_fmt(3)]: 7, [_fmt(4)]: 8, [_fmt(5)]: 3, [_fmt(6)]: 6 } },
+
+  // ── Maxicare PCC — Fairview ──
+  { id: 'fs-mc-fairview-lab', tenantId: 'maxicare', branchId: BRANCH_MC_FAIRVIEW, categoryId: 'lab', daysOfWeek: [1,2,3,4,5,6], startTime: '06:00', endTime: '15:00', slotDurationMin: 15, dailyCap: 18,
+    bookedSlots: { [_fmt(0)]: 10, [_fmt(1)]: 13, [_fmt(2)]: 18, [_fmt(3)]: 4, [_fmt(4)]: 16, [_fmt(5)]: 7, [_fmt(6)]: 12 } },
+  { id: 'fs-mc-fairview-img', tenantId: 'maxicare', branchId: BRANCH_MC_FAIRVIEW, categoryId: 'imaging', daysOfWeek: [1,3,5], startTime: '08:00', endTime: '14:00', slotDurationMin: 30, dailyCap: 6,
+    bookedSlots: { [_fmt(0)]: 4, [_fmt(1)]: 0, [_fmt(2)]: 6, [_fmt(3)]: 2, [_fmt(4)]: 5, [_fmt(5)]: 1, [_fmt(6)]: 3 } },
+
+  // ── Maxicare PCC — Alabang ──
+  { id: 'fs-mc-alabang-lab', tenantId: 'maxicare', branchId: BRANCH_MC_ALABANG, categoryId: 'lab', daysOfWeek: [1,2,3,4,5,6], startTime: '07:00', endTime: '16:00', slotDurationMin: 15, dailyCap: 24,
+    bookedSlots: { [_fmt(0)]: 20, [_fmt(1)]: 10, [_fmt(2)]: 24, [_fmt(3)]: 16, [_fmt(4)]: 8, [_fmt(5)]: 22, [_fmt(6)]: 5 } },
+  { id: 'fs-mc-alabang-img', tenantId: 'maxicare', branchId: BRANCH_MC_ALABANG, categoryId: 'imaging', daysOfWeek: [1,2,3,4,5], startTime: '08:00', endTime: '15:00', slotDurationMin: 30, dailyCap: 8,
+    bookedSlots: { [_fmt(0)]: 6, [_fmt(1)]: 8, [_fmt(2)]: 3, [_fmt(3)]: 5, [_fmt(4)]: 8, [_fmt(5)]: 2, [_fmt(6)]: 7 } },
+  { id: 'fs-mc-alabang-cardio', tenantId: 'maxicare', branchId: BRANCH_MC_ALABANG, categoryId: 'cardio', daysOfWeek: [2,4], startTime: '08:00', endTime: '12:00', slotDurationMin: 30, dailyCap: 4,
+    bookedSlots: { [_fmt(0)]: 2, [_fmt(1)]: 4, [_fmt(2)]: 1, [_fmt(3)]: 3, [_fmt(4)]: 0, [_fmt(5)]: 4, [_fmt(6)]: 2 } },
+];
+
+// =============================================
 // 8a. CONSULTATION ROOMS (for queue display)
 // =============================================
 
@@ -1753,6 +1895,46 @@ export const MOCK_QUEUE_PATIENTS: QueuePatient[] = [
       { id: 'ord-1101', type: 'Lab-CBC', label: 'Lab CBC', targetStation: 'Lab', status: 'completed', orderedAt: '2026-02-12T08:15:00', completedAt: '2026-02-12T08:45:00' },
     ], -1,
     [{ station: 'Check-In', enteredAt: '2026-02-12T08:00:00', exitedAt: '2026-02-12T08:05:00' }, { station: 'Triage', enteredAt: '2026-02-12T08:05:00', exitedAt: '2026-02-12T08:15:00' }, { station: 'Consult', enteredAt: '2026-02-12T08:15:00', exitedAt: '2026-02-12T09:00:00' }, { station: 'Lab', enteredAt: '2026-02-12T09:00:00', exitedAt: '2026-02-12T08:45:00' }, { station: 'Return-Consult', enteredAt: '2026-02-12T09:00:00', exitedAt: '2026-02-12T09:20:00' }, { station: 'Billing', enteredAt: '2026-02-12T09:20:00' }]),
+
+  // ────── PAUSED PATIENTS ──────
+
+  // Beatriz: paused at Lab — needs to fast before FBS draw (came in after breakfast)
+  {
+    ...qpBase('qp-pause01', 'p-pause1', 'Beatriz Navarro', 'T020', 'Lab', 'PAUSED', '2026-02-12T08:10:00', 45, 'Normal', 'Annual labs — FBS, HbA1c', 'Dr. Ricardo Santos', undefined,
+      [
+        { id: 'ord-p01', type: 'Lab-Chemistry', label: 'Lab Chemistry (FBS)', targetStation: 'Lab', status: 'queued', orderedAt: '2026-02-12T08:40:00' },
+        { id: 'ord-p02', type: 'Lab-CBC', label: 'Lab CBC', targetStation: 'Lab', status: 'queued', orderedAt: '2026-02-12T08:40:00' },
+      ], 0,
+      [{ station: 'Check-In', enteredAt: '2026-02-12T08:00:00', exitedAt: '2026-02-12T08:05:00' }, { station: 'Triage', enteredAt: '2026-02-12T08:05:00', exitedAt: '2026-02-12T08:12:00' }, { station: 'Consult', enteredAt: '2026-02-12T08:12:00', exitedAt: '2026-02-12T08:40:00' }, { station: 'Lab', enteredAt: '2026-02-12T08:40:00' }]),
+    pauseInfo: {
+      pausedAt: '2026-02-12T08:45:00',
+      reason: 'fasting_required',
+      resumeDate: '2026-02-13',
+      notes: 'Patient ate breakfast. Advised to return tomorrow morning fasting (8+ hours).',
+      pausedAtStation: 'Lab',
+      preservedOrders: [
+        { id: 'ord-p01', type: 'Lab-Chemistry', label: 'Lab Chemistry (FBS)', targetStation: 'Lab', status: 'queued', orderedAt: '2026-02-12T08:40:00' },
+        { id: 'ord-p02', type: 'Lab-CBC', label: 'Lab CBC', targetStation: 'Lab', status: 'queued', orderedAt: '2026-02-12T08:40:00' },
+      ],
+    },
+  },
+  // Maxicare: Ramon Cruz — paused at Imaging — needs preparation (full bladder for ultrasound)
+  {
+    ...qpBase('qp-pause-mc01', 'p-mc-pause1', 'Ramon Cruz', 'MC-020', 'Imaging', 'PAUSED', '2026-02-12T09:30:00', 30, 'Normal', 'Abdominal ultrasound — preparation needed', 'Dr. Carmela Ong', undefined,
+      [
+        { id: 'ord-mcp01', type: 'Ultrasound', label: 'Abdominal Ultrasound', targetStation: 'Imaging', status: 'queued', orderedAt: '2026-02-12T09:50:00' },
+      ], 0,
+      [{ station: 'Check-In', enteredAt: '2026-02-12T09:15:00', exitedAt: '2026-02-12T09:20:00' }, { station: 'Triage', enteredAt: '2026-02-12T09:20:00', exitedAt: '2026-02-12T09:28:00' }, { station: 'Consult', enteredAt: '2026-02-12T09:28:00', exitedAt: '2026-02-12T09:50:00' }, { station: 'Imaging', enteredAt: '2026-02-12T09:50:00' }]),
+    pauseInfo: {
+      pausedAt: '2026-02-12T09:55:00',
+      reason: 'preparation_needed',
+      notes: 'Full bladder required. Patient advised to drink 4-6 glasses of water and return in 1 hour.',
+      pausedAtStation: 'Imaging',
+      preservedOrders: [
+        { id: 'ord-mcp01', type: 'Ultrasound', label: 'Abdominal Ultrasound', targetStation: 'Imaging', status: 'queued', orderedAt: '2026-02-12T09:50:00' },
+      ],
+    },
+  },
 
   // ────── DONE ──────
 
@@ -2189,6 +2371,20 @@ export const MOCK_CDSS_ALERTS: CDSSAlert[] = [
 
   // Grace Lim (p-mc3) — 28-week prenatal glucose tolerance test overdue
   { id: 'cdss-mc05', patientId: 'p-mc3', type: 'preventive_care', severity: 'major', title: 'Overdue: Glucose Tolerance Test (OGTT)', message: 'Grace Lim is 28 weeks pregnant and has not yet completed the 75g Oral Glucose Tolerance Test (OGTT). ACOG guidelines recommend screening at 24–28 weeks for gestational diabetes.', recommendation: 'Order 75g OGTT urgently. If GDM is confirmed, initiate medical nutrition therapy and consider referral to endocrinology.', dismissed: false, actioned: false, createdAt: todayFormatted },
+
+  // ── Additional Maxicare CDSS alerts ──
+  // Arturo Villanueva (p-mc14) — chest pain patient, cardiac risk
+  { id: 'cdss-mc06', patientId: 'p-mc14', type: 'critical_value', severity: 'contraindicated', title: 'Elevated Troponin I — Rule Out ACS', message: 'Arturo Villanueva (57M) presenting with exertional chest pain. Troponin I result: 0.08 ng/mL (reference < 0.04). Borderline elevation requires serial troponin and clinical correlation.', recommendation: 'Repeat Troponin I in 3 hours. If rising trend, activate ACS protocol. Obtain stat 12-lead ECG. Consider admission for observation if troponin remains elevated.', dismissed: false, actioned: false, createdAt: todayFormatted },
+  { id: 'cdss-mc07', patientId: 'p-mc14', type: 'drug_allergy', severity: 'moderate', title: 'Sulfa Allergy — Avoid Thiazides', message: 'Arturo Villanueva has a documented Sulfa drug allergy. Thiazide diuretics (e.g., Hydrochlorothiazide) have sulfonamide cross-reactivity and should be used with caution.', recommendation: 'If diuretic needed for HTN, prefer loop diuretics (Furosemide) or non-sulfonamide alternatives. Document allergy prominently.', dismissed: false, actioned: false, createdAt: todayFormatted },
+
+  // Lorna Diaz (p-mc13) — elderly vertigo patient, fall risk
+  { id: 'cdss-mc08', patientId: 'p-mc13', type: 'preventive_care', severity: 'major', title: 'Fall Risk — Age 67 with Vertigo', message: 'Lorna Diaz (67F) has active BPPV with positional vertigo episodes. Patients > 65 with vestibular disorders have 2.6x higher fall risk. Current fall risk score: HIGH.', recommendation: 'Initiate fall prevention protocol: home safety assessment, physical therapy referral for balance training, review medications for sedation risk, consider vitamin D supplementation.', dismissed: false, actioned: false, createdAt: todayFormatted },
+
+  // Paolo Reyes (p-mc4) — newly discovered hypertension
+  { id: 'cdss-mc09', patientId: 'p-mc4', type: 'critical_value', severity: 'moderate', title: 'New-Onset Hypertension Detected', message: 'Paolo Reyes (40M) annual wellness visit reveals BP 138/88 mmHg. BMI 29.8. No prior HTN diagnosis. ACC/AHA guidelines classify this as Stage 1 Hypertension.', recommendation: 'Confirm with repeat BP in 2 weeks. If persistent, order BMP, lipid panel, ECG. Initiate lifestyle modifications (DASH diet, exercise). Calculate 10-year ASCVD risk score.', dismissed: false, actioned: false, createdAt: todayFormatted },
+
+  // Roberto Lim (p-mc6) — return consult, elderly diabetes
+  { id: 'cdss-mc10', patientId: 'p-mc6', type: 'dosage_range', severity: 'moderate', title: 'Metformin Dose Review — eGFR Declining', message: 'Roberto Lim (Senior) on Metformin 1000mg BID. Latest eGFR: 48 mL/min (previously 55). FDA recommends dose reduction at eGFR 30-45 and contraindicated below 30.', recommendation: 'Reduce Metformin to 500mg BID given declining eGFR. Recheck eGFR in 3 months. If eGFR < 30, discontinue Metformin and switch to insulin or SGLT2 inhibitor.', dismissed: false, actioned: false, createdAt: todayFormatted },
 ];
 
 // =============================================

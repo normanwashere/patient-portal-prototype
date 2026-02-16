@@ -375,8 +375,12 @@ export const MAXICARE_DATA: any = {
             appointments: [
                 { id: 'mc-101', doctor: 'Dr. Carmela Ong', specialty: 'Internal Medicine', date: addDays(7), time: '10:00 AM', status: 'Upcoming', type: 'In-Person', location: 'Maxicare PCC - Ayala North Exchange' },
                 { id: 'mc-102', doctor: 'Dr. Ramon Bautista', specialty: 'Cardiology', date: addDays(14), time: '02:00 PM', status: 'Upcoming', type: 'Teleconsult' },
+                { id: 'mc-105', doctor: 'Dr. Carmela Ong', specialty: 'Laboratory', date: addDays(5), time: '07:30 AM', status: 'Upcoming', type: 'HomeCare', location: 'Maxicare PCC - BGC' },
+                { id: 'mc-106', doctor: 'Dr. Ramon Bautista', specialty: 'Cardiology', date: addDays(9), time: '08:00 AM', status: 'Upcoming', type: 'Procedure', location: 'Maxicare PCC - Ayala North Exchange' },
                 { id: 'mc-103', doctor: 'Dr. Carmela Ong', specialty: 'Internal Medicine', date: subDays(21), time: '09:00 AM', status: 'Completed', type: 'In-Person', location: 'Maxicare PCC - Ayala North Exchange' },
                 { id: 'mc-104', doctor: 'Dr. Ramon Bautista', specialty: 'Cardiology', date: subDays(10), time: '03:00 PM', status: 'Completed', type: 'Teleconsult' },
+                { id: 'mc-107', doctor: 'Dr. Carmela Ong', specialty: 'Laboratory', date: subDays(7), time: '08:00 AM', status: 'Completed', type: 'HomeCare', location: 'Maxicare PCC - BGC' },
+                { id: 'mc-108', doctor: 'Dr. Carmela Ong', specialty: 'Laboratory', date: subDays(30), time: '08:00 AM', status: 'Completed', type: 'Procedure', location: 'Maxicare PCC - Ayala North Exchange' },
             ],
             medications: [
                 { id: 'm-mc1', name: 'Losartan', dosage: '50mg', instruction: 'Once daily in the morning', remaining: 60, refillDate: addDays(55), status: 'Active' },
@@ -390,20 +394,33 @@ export const MAXICARE_DATA: any = {
                 { id: 'r-mc4', title: 'HbA1c', type: 'Laboratory', date: subDays(19), doctor: 'Dr. Carmela Ong', status: 'Final', isCritical: true, hasFollowUp: true },
                 { id: 'r-mc5', title: 'Urinalysis', type: 'Laboratory', date: subDays(22), doctor: 'Dr. Carmela Ong', status: 'Final', isCritical: false },
                 { id: 'r-mc11', title: 'Pelvic Ultrasound', type: 'Imaging', date: subDays(8), doctor: 'Dr. Ramon Bautista', status: 'Final', isCritical: false },
+                { id: 'r-mc12', title: 'Thyroid Function Test (FT3, FT4, TSH)', type: 'Laboratory', date: subDays(1), doctor: 'Dr. Carmela Ong', status: 'Pending', isCritical: false },
+                { id: 'r-mc13', title: 'Fecalysis with Occult Blood', type: 'Laboratory', date: subDays(1), doctor: 'Dr. Carmela Ong', status: 'Pending', isCritical: false },
+                { id: 'r-mc14', title: 'Kidney Function Panel', type: 'Laboratory', date: subDays(7), doctor: 'Dr. Carmela Ong', status: 'Final', isCritical: false },
             ],
             notifications: [
                 { id: 'n-mc1', title: 'Appointment Reminder', message: 'You have an Internal Medicine appointment in 7 days.', date: '2 hours ago', read: false, type: 'info', link: '/appointments' },
-                { id: 'n-mc2', title: 'Lab Results Ready', message: 'Your CBC and Lipid Panel results are now available.', date: '1 day ago', read: false, type: 'info', link: '/results' }
+                { id: 'n-mc2', title: 'Lab Results Ready', message: 'Your CBC and Lipid Panel results are now available.', date: '1 day ago', read: false, type: 'info', link: '/results' },
+                { id: 'n-mc6', title: 'HomeCare Scheduled', message: 'Your home specimen collection is confirmed for ' + addDays(5) + ' at 7:30 AM.', date: '4 hours ago', read: false, type: 'success', link: '/appointments/history' },
+                { id: 'n-mc7', title: 'Procedure Booking Confirmed', message: 'Cardiac Stress Test scheduled at Maxicare PCC - Ayala on ' + addDays(9) + '.', date: '1 day ago', read: false, type: 'success', link: '/appointments/history' },
+                { id: 'n-mc8', title: 'LOA Approved', message: 'Your Letter of Authorization for Cardiac Stress Test has been approved.', date: '2 days ago', read: true, type: 'info', link: '/benefits' },
+                { id: 'n-mc9', title: 'Care Plan Updated', message: 'Dr. Ong has updated your Hypertension Management care plan.', date: '3 days ago', read: true, type: 'info', link: '/health' }
             ],
             invoices: [
                 { id: 'INV-MC001', date: subDays(3), description: 'Consultation Fee', provider: 'Dr. Carmela Ong', amount: 800, status: 'Paid', type: 'Consultation' },
                 { id: 'INV-MC002', date: subDays(5), description: 'Lab Fees', provider: 'Maxicare Lab', amount: 1200, status: 'Pending', type: 'Laboratory' }
             ],
             procedures: [
-                { id: 'proc-mc1', category: 'Laboratory', name: 'Annual Check-up Package', date: subDays(30), time: '8:00 AM', location: 'Maxicare PCC - BGC', status: 'Completed' }
+                { id: 'proc-mc1', category: 'Laboratory', name: 'Annual Check-up Package', date: subDays(30), time: '8:00 AM', location: 'Maxicare PCC - BGC', status: 'Completed' },
+                { id: 'proc-mc4', category: 'Cardiovascular', name: 'Cardiac Stress Test (Treadmill)', date: addDays(9), time: '8:00 AM', location: 'Maxicare PCC - Ayala North Exchange', status: 'Scheduled' },
+                { id: 'proc-mc5', category: 'Imaging', name: 'Pelvic Ultrasound', date: addDays(18), time: '9:30 AM', location: 'Maxicare PCC - BGC', status: 'Scheduled' },
+                { id: 'proc-mc6', category: 'Laboratory', name: 'Kidney Function Panel (Home Collection)', date: addDays(5), time: '7:30 AM', location: 'HomeCare', status: 'Scheduled' }
             ],
             loaRequests: [
-                { id: 'loa-mc1', type: 'Annual Physical Exam', provider: 'Maxicare PCC - BGC', date: subDays(30), status: 'Approved', amount: '₱ 0.00' }
+                { id: 'loa-mc1', type: 'Annual Physical Exam', provider: 'Maxicare PCC - BGC', date: subDays(30), status: 'Approved', amount: '₱ 0.00' },
+                { id: 'loa-mc3', type: 'Cardiac Stress Test', provider: 'Maxicare PCC - Ayala North Exchange', date: subDays(2), status: 'Approved', amount: '₱ 3,500.00' },
+                { id: 'loa-mc4', type: 'Imaging - Pelvic Ultrasound', provider: 'Maxicare PCC - BGC', date: subDays(1), status: 'Pending', amount: '₱ 2,800.00' },
+                { id: 'loa-mc5', type: 'Laboratory - Kidney Function Panel', provider: 'Maxicare PCC - BGC (HomeCare)', date: subDays(3), status: 'Approved', amount: '₱ 1,200.00' }
             ],
             claims: [
                 { id: 'clm-mc1', type: 'Dental Reimbursement', provider: 'Smile Dental Clinic', date: subDays(60), amount: '₱ 3,500.00', status: 'Processed', reimbursementMethod: 'Bank Transfer' }
@@ -476,7 +493,10 @@ export const MAXICARE_DATA: any = {
             appointments: [
                 { id: 'mc-201', doctor: 'Dr. Jen Diaz', specialty: 'Family Medicine', date: addDays(3), time: '09:00 AM', status: 'Upcoming', type: 'In-Person', location: 'Maxicare PCC - Bridgetowne' },
                 { id: 'mc-202', doctor: 'Dr. Carmela Ong', specialty: 'Internal Medicine', date: addDays(10), time: '02:30 PM', status: 'Upcoming', type: 'Teleconsult' },
+                { id: 'mc-204', doctor: 'Dr. Jen Diaz', specialty: 'Laboratory', date: addDays(6), time: '07:00 AM', status: 'Upcoming', type: 'HomeCare', location: 'Maxicare PCC - Bridgetowne' },
+                { id: 'mc-205', doctor: 'Dr. Jen Diaz', specialty: 'Laboratory', date: addDays(12), time: '08:30 AM', status: 'Upcoming', type: 'Procedure', location: 'Maxicare PCC - Bridgetowne' },
                 { id: 'mc-203', doctor: 'Dr. Jen Diaz', specialty: 'Family Medicine', date: subDays(14), time: '10:00 AM', status: 'Completed', type: 'In-Person', location: 'Maxicare PCC - Bridgetowne' },
+                { id: 'mc-206', doctor: 'Dr. Jen Diaz', specialty: 'Laboratory', date: subDays(5), time: '08:00 AM', status: 'Completed', type: 'HomeCare', location: 'Maxicare PCC - Bridgetowne' },
             ],
             medications: [
                 { id: 'm-mc4', name: 'Multivitamins', dosage: '1 tab', instruction: 'Once daily after breakfast', remaining: 45, refillDate: addDays(40), status: 'Active' },
@@ -493,7 +513,10 @@ export const MAXICARE_DATA: any = {
             notifications: [
                 { id: 'n-mc3', title: 'Appointment Reminder', message: 'You have a Family Medicine appointment in 3 days with Dr. Diaz.', date: '3 hours ago', read: false, type: 'info', link: '/appointments' },
                 { id: 'n-mc4', title: 'Lab Results Ready', message: 'Your Lipid Panel results require attention — elevated LDL.', date: '2 days ago', read: false, type: 'warning', link: '/results' },
-                { id: 'n-mc5', title: 'Medication Refill', message: 'Omeprazole is running low. Request a refill at your next visit.', date: '1 day ago', read: false, type: 'info', link: '/medications' }
+                { id: 'n-mc5', title: 'Medication Refill', message: 'Omeprazole is running low. Request a refill at your next visit.', date: '1 day ago', read: false, type: 'info', link: '/medications' },
+                { id: 'n-mc10', title: 'HomeCare Confirmed', message: 'Home specimen collection scheduled for ' + addDays(6) + ' at 7:00 AM.', date: '5 hours ago', read: false, type: 'success', link: '/appointments/history' },
+                { id: 'n-mc11', title: 'Procedure Booking Confirmed', message: 'HbA1c + Uric Acid procedure scheduled at Bridgetowne on ' + addDays(12) + '.', date: '1 day ago', read: false, type: 'success', link: '/appointments/history' },
+                { id: 'n-mc12', title: 'LOA Approved', message: 'Your Annual Physical Exam LOA has been approved.', date: '2 weeks ago', read: true, type: 'info', link: '/benefits' }
             ],
             invoices: [
                 { id: 'INV-MC003', date: subDays(14), description: 'Consultation Fee', provider: 'Dr. Jen Diaz', amount: 600, status: 'Paid', type: 'Consultation' },
@@ -502,10 +525,14 @@ export const MAXICARE_DATA: any = {
             ],
             procedures: [
                 { id: 'proc-mc2', category: 'Imaging', name: 'Chest X-Ray (PA)', date: subDays(14), time: '10:30 AM', location: 'Maxicare PCC - Bridgetowne', status: 'Completed' },
-                { id: 'proc-mc3', category: 'Laboratory', name: 'Annual Physical Exam Package', date: addDays(3), time: '9:00 AM', location: 'Maxicare PCC - Bridgetowne', status: 'Scheduled' }
+                { id: 'proc-mc3', category: 'Laboratory', name: 'Annual Physical Exam Package', date: addDays(3), time: '9:00 AM', location: 'Maxicare PCC - Bridgetowne', status: 'Scheduled' },
+                { id: 'proc-mc7', category: 'Laboratory', name: 'HbA1c + Serum Uric Acid', date: addDays(12), time: '8:30 AM', location: 'Maxicare PCC - Bridgetowne', status: 'Scheduled' },
+                { id: 'proc-mc8', category: 'Laboratory', name: 'Urinalysis (Home Collection)', date: addDays(6), time: '7:00 AM', location: 'HomeCare', status: 'Scheduled' }
             ],
             loaRequests: [
-                { id: 'loa-mc2', type: 'Annual Physical Exam', provider: 'Maxicare PCC - Bridgetowne', date: subDays(14), status: 'Approved', amount: '₱ 0.00' }
+                { id: 'loa-mc2', type: 'Annual Physical Exam', provider: 'Maxicare PCC - Bridgetowne', date: subDays(14), status: 'Approved', amount: '₱ 0.00' },
+                { id: 'loa-mc6', type: 'Laboratory - HbA1c Panel', provider: 'Maxicare PCC - Bridgetowne', date: subDays(1), status: 'Approved', amount: '₱ 950.00' },
+                { id: 'loa-mc7', type: 'Laboratory - Serum Uric Acid', provider: 'Maxicare PCC - Bridgetowne', date: subDays(1), status: 'Pending', amount: '₱ 450.00' }
             ],
             claims: [],
             doctorRequests: [

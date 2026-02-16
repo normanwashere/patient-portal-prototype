@@ -10,15 +10,31 @@ import {
     FileText,
     Download,
     Home,
-    Info
+    Info,
+    PauseCircle,
+    PlayCircle,
+    CalendarClock,
+    AlertCircle,
+    X
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
 import { Link } from 'react-router-dom';
 import './Queue.css';
 
+const PAUSE_REASONS = [
+    { id: 'fasting_required', label: 'I need to fast first', icon: '🍽️', description: 'Return after 8+ hours of fasting' },
+    { id: 'return_tomorrow', label: "I'll come back tomorrow", icon: '📅', description: 'Continue your journey the next day' },
+    { id: 'preparation_needed', label: 'Preparation needed', icon: '💧', description: 'E.g. full bladder for ultrasound' },
+    { id: 'personal_request', label: 'Personal reasons', icon: '🏠', description: 'Step away and return later' },
+] as const;
+
 export const Queue: React.FC = () => {
     const [expandedStepId, setExpandedStepId] = React.useState<string | null>(null);
+    const [showPauseModal, setShowPauseModal] = React.useState(false);
+    const [selectedPauseReason, setSelectedPauseReason] = React.useState<string | null>(null);
+    const [pauseNotesInput, setPauseNotesInput] = React.useState('');
+    const [pauseResumeDateInput, setPauseResumeDateInput] = React.useState('');
     const {
         steps,
         queueInfo,
@@ -28,10 +44,17 @@ export const Queue: React.FC = () => {
         activeSteps,
         pendingSteps,
         completedSteps,
+        pausedSteps,
         isVisitComplete,
         queueForStep,
         queueAllAvailable,
-        canQueueStep
+        canQueueStep,
+        isQueuePaused,
+        pauseReason,
+        pauseNotes,
+        pauseResumeDate,
+        pauseQueue,
+        resumeQueue
     } = useData();
     const { showToast } = useToast();
     const activeStepRef = React.useRef<HTMLDivElement>(null);
@@ -53,6 +76,20 @@ export const Queue: React.FC = () => {
 
     const handleAction = (msg: string) => {
         showToast(msg, 'info');
+    };
+
+    const handleConfirmPause = () => {
+        if (!selectedPauseReason) return;
+        pauseQueue(selectedPauseReason, pauseNotesInput || undefined, pauseResumeDateInput || undefined);
+        setShowPauseModal(false);
+        setSelectedPauseReason(null);
+        setPauseNotesInput('');
+        setPauseResumeDateInput('');
+    };
+
+    const getPauseReasonLabel = (reason: string) => {
+        const found = PAUSE_REASONS.find(r => r.id === reason);
+        return found?.label ?? reason;
     };
 
     const StepDetailContent: React.FC<{ step: any; isBoard?: boolean }> = ({ step, isBoard }) => {
@@ -120,19 +157,128 @@ export const Queue: React.FC = () => {
         <div className="journey-container">
             {/* Active Visit Header */}
             <div className="active-visit-header">
-                {isQueueActive && !isVisitComplete && (
+                {isQueueActive && !isVisitComplete && !isQueuePaused && (
                     <div className="active-pill">
                         <div className="pulsing-dot"></div>
                         Active Visit
                     </div>
                 )}
+                {isQueuePaused && (
+                    <div className="active-pill" style={{ background: '#fef3c7', color: '#92400e' }}>
+                        <PauseCircle size={14} style={{ marginRight: 4 }} />
+                        Visit Paused
+                    </div>
+                )}
                 <h1 className="journey-main-title">
-                    {isVisitComplete ? 'Visit Summary' : 'Your Patient Journey'}
+                    {isVisitComplete ? 'Visit Summary' : isQueuePaused ? 'Visit Paused' : 'Your Patient Journey'}
                 </h1>
                 <div className="journey-date">
                     <span>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span> • <span>General Check-up (Dr. Jen Diaz)</span>
                 </div>
             </div>
+
+            {/* ── Paused State Banner ── */}
+            {isQueuePaused && (
+                <div style={{
+                    background: 'linear-gradient(135deg, #fffbeb, #fef3c7)', border: '1px solid #fbbf24',
+                    borderRadius: '1.25rem', padding: '1.5rem', marginBottom: '1.5rem',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', textAlign: 'center',
+                }}>
+                    <div style={{
+                        width: 56, height: 56, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: '#fbbf24', color: 'white', boxShadow: '0 4px 12px rgba(251,191,36,0.3)',
+                    }}>
+                        <PauseCircle size={28} />
+                    </div>
+                    <div>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#92400e', marginBottom: 4 }}>
+                            Your visit is paused
+                        </h3>
+                        <p style={{ fontSize: '0.85rem', color: '#78350f', lineHeight: 1.5 }}>
+                            {getPauseReasonLabel(pauseReason ?? '')}
+                        </p>
+                        {pauseNotes && (
+                            <p style={{ fontSize: '0.75rem', color: '#92400e', marginTop: 6, fontStyle: 'italic' }}>
+                                "{pauseNotes}"
+                            </p>
+                        )}
+                        {pauseResumeDate && (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8, fontSize: '0.75rem', color: '#92400e' }}>
+                                <CalendarClock size={14} />
+                                <span>Expected return: <strong>{new Date(pauseResumeDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</strong></span>
+                            </div>
+                        )}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#78350f', background: '#fef3c7', padding: '8px 14px', borderRadius: 8, border: '1px solid #fde68a' }}>
+                        Your progress has been saved — you'll resume from <strong>{pausedSteps[0]?.label ?? 'your current step'}</strong> when you check in again.
+                    </div>
+                    <button
+                        onClick={resumeQueue}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: 8, padding: '12px 28px',
+                            background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: 12,
+                            fontSize: '0.95rem', fontWeight: 700, cursor: 'pointer',
+                            boxShadow: '0 4px 12px color-mix(in srgb, var(--color-primary), transparent 70%)',
+                        }}
+                    >
+                        <PlayCircle size={18} /> Resume Visit
+                    </button>
+                </div>
+            )}
+
+            {/* ── Paused timeline (show completed + paused steps) ── */}
+            {isQueuePaused && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                    {completedSteps.length > 0 && (
+                        <section>
+                            <h3 className="board-section-title">Completed</h3>
+                            <div className="step-list-mini">
+                                {completedSteps.map(step => (
+                                    <div key={step.id} className="mini-step-item completed">
+                                        <div className="mini-step-icon"><Check size={16} /></div>
+                                        <div className="mini-step-info">
+                                            <div className="mini-step-name">{step.label}</div>
+                                            <div className="mini-step-meta">{step.location} • Done</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                    <section>
+                        <h3 className="board-section-title" style={{ color: '#d97706' }}>Paused — Will Resume</h3>
+                        <div className="step-list-mini">
+                            {pausedSteps.map(step => (
+                                <div key={step.id} className="mini-step-item" style={{ borderColor: '#fbbf24', background: '#fffbeb' }}>
+                                    <div className="mini-step-icon" style={{ background: '#fef3c7', color: '#d97706' }}>
+                                        <PauseCircle size={16} />
+                                    </div>
+                                    <div className="mini-step-info">
+                                        <div className="mini-step-name">{step.label}</div>
+                                        <div className="mini-step-meta">{step.location} • Paused</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                    {pendingSteps.length > 0 && (
+                        <section>
+                            <h3 className="board-section-title">Remaining</h3>
+                            <div className="step-list-mini">
+                                {pendingSteps.map(step => (
+                                    <div key={step.id} className="mini-step-item">
+                                        <div className="mini-step-icon">{React.createElement(getIcon(step.type), { size: 16 })}</div>
+                                        <div className="mini-step-info">
+                                            <div className="mini-step-name">{step.label}</div>
+                                            <div className="mini-step-meta">{step.location} • Pending</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                </div>
+            )}
 
             {isVisitComplete ? (
                 /* Visit Completed View */
@@ -197,8 +343,9 @@ export const Queue: React.FC = () => {
                         <div className="timeline-container">
                             {steps.map((step) => {
                                 const isCompleted = step.status === 'COMPLETED';
+                                const isPaused = step.status === 'PAUSED';
                                 const isActive = ['QUEUED', 'READY', 'IN_SESSION'].includes(step.status);
-                                const statusClass = isCompleted ? 'completed' : isActive ? 'active' : '';
+                                const statusClass = isCompleted ? 'completed' : isPaused ? 'paused' : isActive ? 'active' : '';
                                 const StepIcon = getIcon(step.type);
 
                                 return (
@@ -219,7 +366,7 @@ export const Queue: React.FC = () => {
                                                     <h3 className="step-title">{step.label}</h3>
                                                     <p className="step-meta"><MapPin size={12} style={{ display: 'inline', marginRight: '4px' }} /> {step.location}</p>
                                                 </div>
-                                                <span className={`step-status-badge ${isActive ? 'in-progress' : isCompleted ? 'completed' : 'pending'}`}>
+                                                <span className={`step-status-badge ${isPaused ? 'paused' : isActive ? 'in-progress' : isCompleted ? 'completed' : 'pending'}`}>
                                                     {step.status.replace('_', ' ')}
                                                 </span>
                                             </div>
@@ -363,7 +510,23 @@ export const Queue: React.FC = () => {
                 </>
             )}
 
-            {!isVisitComplete && (
+            {/* Pause My Visit button — shown when queue is active and NOT paused */}
+            {isQueueActive && !isVisitComplete && !isQueuePaused && (
+                <button
+                    onClick={() => setShowPauseModal(true)}
+                    style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        width: '100%', padding: '14px', marginTop: '1rem',
+                        background: 'white', color: '#92400e', border: '1px solid #fde68a',
+                        borderRadius: 12, fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer',
+                        transition: 'all 0.2s',
+                    }}
+                >
+                    <PauseCircle size={18} /> Pause My Visit
+                </button>
+            )}
+
+            {!isVisitComplete && !isQueuePaused && (
                 /* Assistance Card */
                 <div style={{ background: 'var(--color-background)', borderRadius: '1rem', padding: '1.25rem', border: '1px solid var(--color-border)', marginTop: '1.5rem', display: 'flex', gap: '1rem', color: 'var(--color-text)' }}>
                     <div style={{ flexShrink: 0, background: 'var(--color-surface)', padding: '0.5rem', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}>
@@ -372,6 +535,128 @@ export const Queue: React.FC = () => {
                     <div>
                         <h4 style={{ fontWeight: 800, fontSize: '0.875rem', marginBottom: '0.25rem' }}>Need Assistance?</h4>
                         <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Our floor managers are wearing blue vests. Please approach them if you need help navigating.</p>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Pause Modal ── */}
+            {showPauseModal && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 1000,
+                    background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+                    display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                }} onClick={() => setShowPauseModal(false)}>
+                    <div
+                        style={{
+                            background: 'white', borderRadius: '1.5rem 1.5rem 0 0', width: '100%', maxWidth: 480,
+                            maxHeight: '85vh', overflowY: 'auto', padding: '1.5rem',
+                            animation: 'fadeInSlideUp 0.3s ease-out',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b' }}>Pause Your Visit</h3>
+                            <button onClick={() => setShowPauseModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                                <X size={20} color="#94a3b8" />
+                            </button>
+                        </div>
+
+                        <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+                            Your progress will be saved. You can resume your journey when you return.
+                        </p>
+
+                        {/* Reason Selection */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: '1.25rem' }}>
+                            {PAUSE_REASONS.map(reason => (
+                                <button
+                                    key={reason.id}
+                                    onClick={() => setSelectedPauseReason(reason.id)}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
+                                        background: selectedPauseReason === reason.id ? '#fffbeb' : '#f8fafc',
+                                        border: `2px solid ${selectedPauseReason === reason.id ? '#fbbf24' : '#e2e8f0'}`,
+                                        borderRadius: 12, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
+                                    }}
+                                >
+                                    <span style={{ fontSize: '1.25rem' }}>{reason.icon}</span>
+                                    <div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1e293b' }}>{reason.label}</div>
+                                        <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{reason.description}</div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Optional notes */}
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: 6 }}>
+                                Notes (optional)
+                            </label>
+                            <textarea
+                                value={pauseNotesInput}
+                                onChange={(e) => setPauseNotesInput(e.target.value)}
+                                placeholder="Any additional information..."
+                                rows={2}
+                                style={{
+                                    width: '100%', padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: 10,
+                                    fontSize: '0.85rem', resize: 'none', fontFamily: 'inherit',
+                                }}
+                            />
+                        </div>
+
+                        {/* Preferred return date */}
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: 6 }}>
+                                <CalendarClock size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+                                Preferred return date (optional)
+                            </label>
+                            <input
+                                type="date"
+                                value={pauseResumeDateInput}
+                                onChange={(e) => setPauseResumeDateInput(e.target.value)}
+                                min={new Date().toISOString().slice(0, 10)}
+                                style={{
+                                    width: '100%', padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: 10,
+                                    fontSize: '0.85rem', fontFamily: 'inherit',
+                                }}
+                            />
+                        </div>
+
+                        {/* Warning */}
+                        <div style={{
+                            display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px',
+                            background: '#fef3c7', borderRadius: 10, marginBottom: '1.25rem',
+                            fontSize: '0.75rem', color: '#92400e', lineHeight: 1.4,
+                        }}>
+                            <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                            <span>Paused visits expire after 48 hours. Please return within that window to continue your journey.</span>
+                        </div>
+
+                        {/* Actions */}
+                        <div style={{ display: 'flex', gap: 10 }}>
+                            <button
+                                onClick={() => setShowPauseModal(false)}
+                                style={{
+                                    flex: 1, padding: '12px', background: '#f1f5f9', color: '#475569',
+                                    border: 'none', borderRadius: 12, fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer',
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmPause}
+                                disabled={!selectedPauseReason}
+                                style={{
+                                    flex: 1, padding: '12px',
+                                    background: selectedPauseReason ? '#f59e0b' : '#e2e8f0',
+                                    color: selectedPauseReason ? 'white' : '#94a3b8',
+                                    border: 'none', borderRadius: 12, fontSize: '0.9rem', fontWeight: 700, cursor: selectedPauseReason ? 'pointer' : 'not-allowed',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                }}
+                            >
+                                <PauseCircle size={16} /> Pause Visit
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
