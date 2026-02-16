@@ -4,7 +4,8 @@ import {
     Home, FileText, CreditCard, Stethoscope, Users,
     Clock, Activity, TestTube, Pill, Syringe,
     Heart, Receipt, Video, Star, Calendar, ClipboardList,
-    ChevronDown, ChevronRight, LogOut, Bell, User, Building2, FlaskConical
+    ChevronDown, ChevronRight, LogOut, Bell, User, Building2, FlaskConical,
+    MapPin, UserPlus, Shield, FileEdit, ListOrdered, HeartHandshake
 } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import clsx from 'clsx';
@@ -116,7 +117,7 @@ export const Sidebar: React.FC = () => {
                         </Link>
                     )}
 
-                    {tenant.features.visits.teleconsultEnabled && (
+                    {tenant.features.visits.teleconsultNowEnabled && (
                         <Link to="/visits/teleconsult-intake" className={clsx('sidebar-item sub-item', isActive('/visits/teleconsult-intake') && 'active')}>
                             <Video size={18} />
                             <span>Teleconsult Now</span>
@@ -127,6 +128,14 @@ export const Sidebar: React.FC = () => {
                         <FlaskConical size={18} />
                         <span>Book Procedure</span>
                     </Link>
+
+                    {tenant.features.visits.homeCareEnabled && (
+                        <NavItem to="/visits/homecare" icon={HeartHandshake} label="HomeCare" />
+                    )}
+
+                    {tenant.features.queue && (
+                        <NavItem to="/queue" icon={ListOrdered} label="Queue Tracker" />
+                    )}
                 </NavGroup>
 
                 {/* 5. Community Pillar -> /community */}
@@ -145,19 +154,30 @@ export const Sidebar: React.FC = () => {
                     {tenant.features.carePlans && (
                         <NavItem to="/health/care-plans" icon={ClipboardList} label="Care Plans" badge={2} />
                     )}
+                    <NavItem to="/forms" icon={FileEdit} label="Forms" />
                 </NavGroup>
 
                 {/* 3. Coverage Pillar - visible if HMO or PhilHealth enabled */}
                 {(tenant.features.hmo || tenant.features.philHealth) && (
                     <NavGroup id="coverage" label="Coverage & Claims" icon={CreditCard} to="/coverage" badge={financeBadge}>
                         {tenant.features.hmo && <NavItem to="/benefits" icon={Heart} label="LOA & Benefits" />}
+                        {tenant.features.philHealth && <NavItem to="/coverage/philhealth" icon={Shield} label="PhilHealth" />}
                         <NavItem to="/billing" icon={Receipt} label="Billing History" badge={financeBadge} />
                     </NavGroup>
+                )}
+
+                {/* Find Clinics — shown when multiLocation enabled */}
+                {tenant.features.multiLocation && (
+                    <Link to="/branches" className={clsx('sidebar-item', isActive('/branches') && 'active')}>
+                        <MapPin size={20} />
+                        <span>Find Clinics</span>
+                    </Link>
                 )}
 
                 {/* 6. Users Pillar -> /profile */}
                 <NavGroup id="users" label="Users" icon={User} to="/profile" badge={unreadNotificationsCount}>
                     <NavItem to="/profile" icon={User} label="Profile" />
+                    <NavItem to="/profile/dependents" icon={UserPlus} label="Dependents" />
                     <NavItem to="/notifications" icon={Bell} label="Notifications" badge={unreadNotificationsCount} />
                 </NavGroup>
             </nav>

@@ -83,6 +83,8 @@ import type {
   HomeCareRequest,
   HomeCareRequestStatus,
   ConsultRoom,
+  ProviderLOARequest,
+  ProviderLOAStatus,
 } from '../types';
 
 type CurrentApp = 'provider' | 'doctor';
@@ -294,6 +296,12 @@ interface ProviderContextType {
   // ── HomeCare Requests ──
   homeCareRequests: HomeCareRequest[];
   updateHomeCareStatus: (requestId: string, status: HomeCareRequestStatus, updates?: Partial<HomeCareRequest>) => void;
+  addHomeCareRequest: (req: Omit<HomeCareRequest, 'id'>) => void;
+
+  // ── LOA Requests ──
+  providerLoaRequests: ProviderLOARequest[];
+  addProviderLoa: (req: Omit<ProviderLOARequest, 'id'>) => void;
+  updateProviderLoaStatus: (id: string, status: ProviderLOAStatus, justification?: string) => void;
 
   // Computed values
   pendingLabOrders: LabOrder[];
@@ -1098,6 +1106,38 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
     _audit('homecare_status', 'HomeCare', `Request ${requestId} → ${status}`);
   }, [_audit]);
 
+  const addHomeCareRequest = useCallback((req: Omit<HomeCareRequest, 'id'>) => {
+    const newReq: HomeCareRequest = { ...req, id: genId('hc') } as HomeCareRequest;
+    setHomeCareRequests((prev) => [newReq, ...prev]);
+    _audit('add_homecare', 'HomeCare', `New HomeCare request from ${req.patientName}`);
+  }, [_audit]);
+
+  // ═══════ LOA Requests ═══════
+  const INITIAL_LOA: ProviderLOARequest[] = [
+    { id: 'loa-r1', patientName: 'Maria Santos', type: 'Specialist', provider: 'Metro General Hospital', requestDate: 'Feb 10, 2026', amount: '₱15,000', status: 'Pending', diagnosis: 'Hypertensive Heart Disease', justification: '' },
+    { id: 'loa-r2', patientName: 'Jose Reyes', type: 'Laboratory', provider: 'Metro General Hospital', requestDate: 'Feb 9, 2026', amount: '₱3,500', status: 'Pending', diagnosis: 'Diabetes Mellitus Type 2', justification: '' },
+    { id: 'loa-r3', patientName: 'Ana Lopez', type: 'ER', provider: 'Metro General Hospital', requestDate: 'Feb 8, 2026', amount: '₱25,000', status: 'Approved', diagnosis: 'Acute Gastroenteritis', justification: 'Emergency presentation with severe dehydration' },
+    { id: 'loa-r4', patientName: 'Pedro Cruz', type: 'Inpatient', provider: 'Metro General Hospital', requestDate: 'Feb 7, 2026', amount: '₱120,000', status: 'Pending', diagnosis: 'Community-Acquired Pneumonia', justification: '' },
+    { id: 'loa-r5', patientName: 'Rosa Bautista', type: 'Surgery', provider: 'Metro General Hospital', requestDate: 'Feb 6, 2026', amount: '₱250,000', status: 'Rejected', diagnosis: 'Cholecystolithiasis', justification: 'Non-emergent, requires pre-authorization' },
+    { id: 'loa-mc1', patientName: 'Andrea Reyes', patientId: 'p-self', type: 'In-patient Admission', provider: 'Maxicare', requestDate: 'Feb 16, 2026', amount: '₱25,000', status: 'Pending', diagnosis: '', justification: '' },
+    { id: 'loa-mc2', patientName: 'Andrea Reyes', patientId: 'p-self', type: 'Annual Physical Exam', provider: 'Maxicare PCC - Bridgetowne', requestDate: 'Feb 2, 2026', amount: '₱0.00', status: 'Approved', diagnosis: 'Routine wellness', justification: 'Annual benefit' },
+  ];
+
+  const [providerLoaRequests, setProviderLoaRequests] = useState<ProviderLOARequest[]>(INITIAL_LOA);
+
+  const addProviderLoa = useCallback((req: Omit<ProviderLOARequest, 'id'>) => {
+    const newLoa: ProviderLOARequest = { ...req, id: genId('loa') };
+    setProviderLoaRequests((prev) => [newLoa, ...prev]);
+    _audit('add_loa', 'LOA', `New LOA from ${req.patientName} — ${req.type}`);
+  }, [_audit]);
+
+  const updateProviderLoaStatus = useCallback((id: string, status: ProviderLOAStatus, justification?: string) => {
+    setProviderLoaRequests((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status, justification: justification ?? r.justification } : r))
+    );
+    _audit('loa_status', 'LOA', `LOA ${id} → ${status}`);
+  }, [_audit]);
+
   // ═══════ Computed ═══════
   const pendingLabOrders = useMemo(() => labOrders.filter((o) => o.status === 'Ordered' || o.status === 'In Progress'), [labOrders]);
   const criticalAlerts = useMemo(() => cdssAlerts.filter((a) => !a.dismissed), [cdssAlerts]);
@@ -1165,7 +1205,9 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       // Branch
       currentBranchId, availableBranches, switchBranch,
       // HomeCare
-      homeCareRequests, updateHomeCareStatus,
+      homeCareRequests, updateHomeCareStatus, addHomeCareRequest,
+      // LOA
+      providerLoaRequests, addProviderLoa, updateProviderLoaStatus,
       // Computed
       pendingLabOrders, criticalAlerts, todayAppointments, queueStats,
     }),
@@ -1178,7 +1220,7 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       cdssAlerts, dashboardKpis, appointments, pendingLabOrders, criticalAlerts, todayAppointments, queueStats,
       conversations, chatMessages, totalUnreadMessages,
       tcSessions, tcDoctors, tcStats, activeTeleconsultCall,
-      currentBranchId, homeCareRequests,
+      currentBranchId, homeCareRequests, providerLoaRequests,
       switchStaff, switchApp, toggleQueueMode, setDoctorMode, setActiveTeleconsultCall, transferPatient, addDoctorOrders, startOrder, completeOrder, completeCurrentOrder,
       checkInPatient, callNextPatient, startPatient, completePatient, markNoShow, skipPatient, deferOrder,
       signNote, saveDraftNote, addClinicalNote, approvePrescription, denyPrescription, addPrescription, updatePrescription,
@@ -1191,7 +1233,8 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       addTcSession, updateTcSessionStatus, assignTcDoctor, startTcSession, endTcSession,
       markTcNoShow, cancelTcSession, updateTcDoctorStatus, checkInTcDoctor,
       sendChatMessage, createConversation, markConversationRead,
-      switchBranch, updateHomeCareStatus,
+      switchBranch, updateHomeCareStatus, addHomeCareRequest,
+      addProviderLoa, updateProviderLoaStatus,
     ]
   );
 

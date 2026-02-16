@@ -14,28 +14,10 @@ import {
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useToast } from '../../context/ToastContext';
 
-type LOAStatus = 'Pending' | 'Approved' | 'Rejected';
-type LOAType = 'Specialist' | 'Laboratory' | 'ER' | 'Inpatient' | 'Surgery';
+import type { ProviderLOARequest, ProviderLOAStatus } from '../../provider/types';
 
-interface LOARequest {
-  id: string;
-  patientName: string;
-  type: LOAType;
-  provider: string;
-  requestDate: string;
-  amount: string;
-  status: LOAStatus;
-  diagnosis: string;
-  justification: string;
-}
-
-const MOCK_LOA_REQUESTS: LOARequest[] = [
-  { id: 'loa-r1', patientName: 'Maria Santos', type: 'Specialist', provider: 'Metro General Hospital', requestDate: 'Feb 10, 2026', amount: '₱15,000', status: 'Pending', diagnosis: 'Hypertensive Heart Disease', justification: '' },
-  { id: 'loa-r2', patientName: 'Jose Reyes', type: 'Laboratory', provider: 'Metro General Hospital', requestDate: 'Feb 9, 2026', amount: '₱3,500', status: 'Pending', diagnosis: 'Diabetes Mellitus Type 2', justification: '' },
-  { id: 'loa-r3', patientName: 'Ana Lopez', type: 'ER', provider: 'Metro General Hospital', requestDate: 'Feb 8, 2026', amount: '₱25,000', status: 'Approved', diagnosis: 'Acute Gastroenteritis', justification: 'Emergency presentation with severe dehydration' },
-  { id: 'loa-r4', patientName: 'Pedro Cruz', type: 'Inpatient', provider: 'Metro General Hospital', requestDate: 'Feb 7, 2026', amount: '₱120,000', status: 'Pending', diagnosis: 'Community-Acquired Pneumonia', justification: '' },
-  { id: 'loa-r5', patientName: 'Rosa Bautista', type: 'Surgery', provider: 'Metro General Hospital', requestDate: 'Feb 6, 2026', amount: '₱250,000', status: 'Rejected', diagnosis: 'Cholecystolithiasis', justification: 'Non-emergent, requires pre-authorization' },
-];
+type LOAStatus = ProviderLOAStatus;
+type LOAType = string;
 
 const MOCK_PREAUTH = [
   { id: 'pa-1', patientName: 'Carlos Mendoza', procedure: 'Colonoscopy', hmoProvider: 'Maxicare', estimatedCost: '₱45,000', documents: ['Lab results', 'Referral form', 'Consent'], complete: false },
@@ -130,13 +112,21 @@ const styles: Record<string, React.CSSProperties> = {
   docItem: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', fontSize: 13 },
 };
 
-const TYPE_COLORS: Record<LOAType, { bg: string; color: string }> = {
+const TYPE_COLORS: Record<string, { bg: string; color: string }> = {
   Specialist: { bg: 'var(--color-info-light)', color: 'var(--color-info)' },
+  'Specialist Consultation': { bg: 'var(--color-info-light)', color: 'var(--color-info)' },
   Laboratory: { bg: 'var(--color-success-light)', color: 'var(--color-success)' },
+  'Laboratory & Diagnostics': { bg: 'var(--color-success-light)', color: 'var(--color-success)' },
   ER: { bg: 'var(--color-error-light)', color: 'var(--color-error)' },
+  'Emergency Care / ER': { bg: 'var(--color-error-light)', color: 'var(--color-error)' },
   Inpatient: { bg: 'rgba(139, 92, 246, 0.2)', color: '#8b5cf6' },
+  'In-patient Admission': { bg: 'rgba(139, 92, 246, 0.2)', color: '#8b5cf6' },
   Surgery: { bg: 'var(--color-warning-light)', color: 'var(--color-warning)' },
+  'Surgical Procedure': { bg: 'var(--color-warning-light)', color: 'var(--color-warning)' },
+  'Annual Physical Exam': { bg: 'var(--color-info-light)', color: 'var(--color-info)' },
+  'Physical Therapy': { bg: 'rgba(236, 72, 153, 0.15)', color: '#ec4899' },
 };
+const DEFAULT_TYPE_COLOR = { bg: 'var(--color-gray-100)', color: 'var(--color-gray-600)' };
 
 const STATUS_COLORS: Record<LOAStatus, { bg: string; color: string }> = {
   Pending: { bg: 'var(--color-warning-light)', color: 'var(--color-warning)' },
@@ -148,10 +138,10 @@ type TabId = 'pending' | 'all' | 'preauth' | 'guidelines';
 const HIGH_VALUE_THRESHOLD = 50000;
 
 export const LOAReview = () => {
-  const { currentStaff } = useProvider();
+  const { currentStaff, providerLoaRequests, updateProviderLoaStatus } = useProvider();
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabId>('pending');
-  const [loaRequests, setLoaRequests] = useState<LOARequest[]>(MOCK_LOA_REQUESTS);
+  const loaRequests: ProviderLOARequest[] = providerLoaRequests;
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [justifications, setJustifications] = useState<Record<string, string>>({});
   const [search, setSearch] = useState('');
@@ -179,20 +169,14 @@ export const LOAReview = () => {
   }, [loaRequests, search, statusFilter, typeFilter]);
 
   const handleApprove = (id: string) => {
-    setLoaRequests((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, status: 'Approved' as const, justification: justifications[id] ?? r.justification } : r
-      )
-    );
+    updateProviderLoaStatus(id, 'Approved', justifications[id] || '');
+    showToast('LOA approved', 'success');
     setExpandedId(null);
   };
 
   const handleDeny = (id: string) => {
-    setLoaRequests((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, status: 'Rejected' as const, justification: justifications[id] ?? r.justification } : r
-      )
-    );
+    updateProviderLoaStatus(id, 'Rejected', justifications[id] || '');
+    showToast('LOA denied', 'info');
     setExpandedId(null);
   };
 
@@ -264,7 +248,7 @@ export const LOAReview = () => {
           ) : (
             pendingList.map((r) => {
               const expanded = expandedId === r.id;
-              const tc = TYPE_COLORS[r.type];
+              const tc = TYPE_COLORS[r.type] || DEFAULT_TYPE_COLOR;
               return (
                 <div key={r.id} style={styles.loaCard}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
@@ -390,7 +374,7 @@ export const LOAReview = () => {
               <tbody>
                 {filteredAll.map((r) => {
                   const sc = STATUS_COLORS[r.status];
-                  const tc = TYPE_COLORS[r.type];
+                  const tc = TYPE_COLORS[r.type] || DEFAULT_TYPE_COLOR;
                   return (
                     <tr key={r.id}>
                       <td style={styles.td}>{r.patientName}</td>

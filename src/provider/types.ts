@@ -79,6 +79,7 @@ export type CDSSSeverity = 'contraindicated' | 'major' | 'moderate' | 'minor' | 
 
 export interface CDSSAlert {
     id: string;
+    patientId?: string;
     type: CDSSAlertType;
     severity: CDSSSeverity;
     title: string;
@@ -636,4 +637,24 @@ export interface HomeCareRequest {
     updatedAt: string;
     notes?: string;
     priority: 'Routine' | 'Urgent';
+}
+
+// =============================================
+// LOA (Letter of Authorization) — Provider-side
+// =============================================
+
+export type ProviderLOAStatus = 'Pending' | 'Approved' | 'Rejected';
+export type ProviderLOAType = 'Specialist' | 'Laboratory' | 'ER' | 'Inpatient' | 'Surgery' | 'In-patient Admission' | 'Annual Physical Exam' | string;
+
+export interface ProviderLOARequest {
+    id: string;
+    patientName: string;
+    patientId?: string;
+    type: ProviderLOAType;
+    provider: string;
+    requestDate: string;
+    amount: string;
+    status: ProviderLOAStatus;
+    diagnosis: string;
+    justification: string;
 }

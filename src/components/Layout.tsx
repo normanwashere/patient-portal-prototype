@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, User, Bell, WifiOff, Heart, X, TestTube, Pill, Syringe, Receipt, CalendarDays, LogOut, Video, ClipboardList, CreditCard, Stethoscope, Clock, Users, FlaskConical } from 'lucide-react';
+import { Home, User, Bell, WifiOff, Heart, X, TestTube, Pill, Syringe, Receipt, CalendarDays, LogOut, Video, ClipboardList, CreditCard, Stethoscope, Clock, Users, FlaskConical, HeartHandshake, ListOrdered, Shield, FileEdit, MapPin, UserPlus, Building2 } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import { useData } from '../context/DataContext';
 import { Sidebar } from './Sidebar';
@@ -10,7 +10,7 @@ import './Layout.css';
 
 export const Layout: React.FC = () => {
     const { tenant } = useTheme();
-    const { isQueueActive, unreadNotificationsCount } = useData();
+    const { isQueueActive, unreadNotificationsCount, markReadByRoute } = useData();
     const location = useLocation();
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,7 +19,7 @@ export const Layout: React.FC = () => {
     const { careBadge, financeBadge, communityBadge, recordsBadge, newMedsCount, newLabsCount, newImmunizationsCount } = useBadges();
 
     // Check if any visit type is available
-    const hasVisits = visits.teleconsultEnabled || visits.clinicVisitEnabled;
+    const hasVisits = visits.teleconsultEnabled || visits.clinicVisitEnabled || visits.homeCareEnabled;
 
     useEffect(() => {
         const handleOnline = () => setIsOffline(false);
@@ -32,10 +32,11 @@ export const Layout: React.FC = () => {
         };
     }, []);
 
-    // Close menu on route change
+    // Close menu on route change + auto-clear related notification badges
     useEffect(() => {
         setIsMenuOpen(false);
-    }, [location.pathname]);
+        markReadByRoute(location.pathname);
+    }, [location.pathname, markReadByRoute]);
 
     const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
@@ -179,28 +180,43 @@ export const Layout: React.FC = () => {
 
                         {visits.clinicVisitEnabled && (
                             <Link to="/appointments/book" state={{ type: 'in-person' }} className={clsx('drawer-item', isActive('/appointments/book') && location.state?.type === 'in-person' && 'active')}>
-                                <Home size={20} />
+                                <Building2 size={20} />
                                 <span>Book In-Person</span>
                             </Link>
                         )}
 
                         {visits.teleconsultEnabled && (
-                            <>
-                                <Link to="/appointments/book" state={{ type: 'teleconsult' }} className={clsx('drawer-item', isActive('/appointments/book') && location.state?.type === 'teleconsult' && 'active')}>
-                                    <Video size={20} />
-                                    <span>Book Teleconsult</span>
-                                </Link>
-                                <Link to="/visits/consult-now" className={clsx('drawer-item', isActive('/visits/consult-now') && 'active')}>
-                                    <Video size={20} />
-                                    <span>Teleconsult Now</span>
-                                </Link>
-                            </>
+                            <Link to="/appointments/book" state={{ type: 'teleconsult' }} className={clsx('drawer-item', isActive('/appointments/book') && location.state?.type === 'teleconsult' && 'active')}>
+                                <Video size={20} />
+                                <span>Book Teleconsult</span>
+                            </Link>
+                        )}
+
+                        {visits.teleconsultNowEnabled && (
+                            <Link to="/visits/teleconsult-intake" className={clsx('drawer-item', isActive('/visits/teleconsult-intake') && 'active')}>
+                                <Video size={20} />
+                                <span>Teleconsult Now</span>
+                            </Link>
                         )}
 
                         <Link to="/visits/book-procedure" className={clsx('drawer-item', isActive('/visits/book-procedure') && 'active')}>
                             <FlaskConical size={20} />
                             <span>Book Procedure</span>
                         </Link>
+
+                        {visits.homeCareEnabled && (
+                            <Link to="/visits/homecare" className={clsx('drawer-item', isActive('/visits/homecare') && 'active')}>
+                                <HeartHandshake size={20} />
+                                <span>HomeCare</span>
+                            </Link>
+                        )}
+
+                        {tenant.features.queue && (
+                            <Link to="/queue" className={clsx('drawer-item', isActive('/queue') && 'active')}>
+                                <ListOrdered size={20} />
+                                <span>Queue Tracker</span>
+                            </Link>
+                        )}
                     </div>
 
                     <div className="drawer-section">
@@ -241,6 +257,16 @@ export const Layout: React.FC = () => {
                             <span>Immunization</span>
                             {newImmunizationsCount > 0 && <span className="drawer-badge">{newImmunizationsCount}</span>}
                         </Link>
+                        {tenant.features.carePlans && (
+                            <Link to="/health/care-plans" className={clsx('drawer-item', isActive('/health/care-plans') && 'active')}>
+                                <ClipboardList size={20} />
+                                <span>Care Plans</span>
+                            </Link>
+                        )}
+                        <Link to="/forms" className={clsx('drawer-item', isActive('/forms') && 'active')}>
+                            <FileEdit size={20} />
+                            <span>Forms</span>
+                        </Link>
                     </div>
 
                     {(tenant.features.hmo || tenant.features.philHealth) && (
@@ -252,6 +278,12 @@ export const Layout: React.FC = () => {
                                     <span>LOA / Benefits</span>
                                 </Link>
                             )}
+                            {tenant.features.philHealth && (
+                                <Link to="/coverage/philhealth" className={clsx('drawer-item', isActive('/coverage/philhealth') && 'active')}>
+                                    <Shield size={20} />
+                                    <span>PhilHealth</span>
+                                </Link>
+                            )}
                             <Link to="/billing" className={clsx('drawer-item', isActive('/billing') && 'active')}>
                                 <Receipt size={20} />
                                 <span>Billing</span>
@@ -259,6 +291,27 @@ export const Layout: React.FC = () => {
                             </Link>
                         </div>
                     )}
+
+                    {tenant.features.multiLocation && (
+                        <div className="drawer-section">
+                            <Link to="/branches" className={clsx('drawer-item', isActive('/branches') && 'active')}>
+                                <MapPin size={20} />
+                                <span>Find Clinics</span>
+                            </Link>
+                        </div>
+                    )}
+
+                    <div className="drawer-section">
+                        <span className="drawer-section-title">Account</span>
+                        <Link to="/profile" className={clsx('drawer-item', isActive('/profile') && !isActive('/profile/dependents') && 'active')}>
+                            <User size={20} />
+                            <span>Profile</span>
+                        </Link>
+                        <Link to="/profile/dependents" className={clsx('drawer-item', isActive('/profile/dependents') && 'active')}>
+                            <UserPlus size={20} />
+                            <span>Dependents</span>
+                        </Link>
+                    </div>
                 </nav>
 
                 <div className="drawer-footer">
@@ -279,7 +332,7 @@ export const Layout: React.FC = () => {
 
                 {/* Pillar 2: Care */}
                 {hasVisits && (
-                    <Link to="/visits" className={clsx('nav-item', isActive('/visits') || isActive('/appointments') && 'active')}>
+                    <Link to="/visits" className={clsx('nav-item', (isActive('/visits') || isActive('/appointments') || isActive('/queue')) && 'active')}>
                         <div style={{ position: 'relative' }}>
                             <Stethoscope size={22} />
                             {careBadge > 0 && <span className="nav-badge-dot" />}
@@ -298,7 +351,7 @@ export const Layout: React.FC = () => {
                 </Link>
 
                 {/* Pillar 4: Records */}
-                <Link to="/health" className={clsx('nav-item', isActive('/health') && 'active')}>
+                <Link to="/health" className={clsx('nav-item', (isActive('/health') || isActive('/results') || isActive('/medications') || isActive('/immunization') || isActive('/medical-history') || isActive('/forms')) && 'active')}>
                     <div style={{ position: 'relative' }}>
                         <ClipboardList size={22} />
                         {(recordsBadge > 0) && <span className="nav-badge-dot" />}
@@ -308,7 +361,7 @@ export const Layout: React.FC = () => {
 
                 {/* Pillar 5: Coverage - only if HMO or PhilHealth */}
                 {(tenant.features.hmo || tenant.features.philHealth) && (
-                    <Link to="/coverage" className={clsx('nav-item', isActive('/coverage') && 'active')}>
+                    <Link to="/coverage" className={clsx('nav-item', (isActive('/coverage') || isActive('/benefits') || isActive('/billing')) && 'active')}>
                         <div style={{ position: 'relative' }}>
                             <CreditCard size={22} />
                             {financeBadge > 0 && <span className="nav-badge-dot" />}

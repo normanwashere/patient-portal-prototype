@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { FileText, Plus, X, CreditCard, Shield, QrCode, ClipboardList, Wallet, Receipt, ChevronRight, Info } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useProvider } from '../provider/context/ProviderContext';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../theme/ThemeContext';
 import { BackButton } from '../components/Common/BackButton';
@@ -37,6 +38,7 @@ const PHILHEALTH_SERVICES: ServiceType[] = [
 export const Benefits: React.FC = () => {
     const { tenant } = useTheme();
     const { loaRequests, requestLOA, userProfile, claims, fileClaim } = useData();
+    const { addProviderLoa } = useProvider();
     const { showToast } = useToast();
     const location = useLocation();
     const navigate = useNavigate();
@@ -122,12 +124,25 @@ export const Benefits: React.FC = () => {
     const handleRequestSubmit = () => {
         const providerName = activeProviderData.provider === 'PhilHealth' ? 'PhilHealth UHC' : activeProviderData.provider;
         const service = availableServices.find(s => s.id === selectedServiceId);
+        const now = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
         requestLOA({
             provider: providerName,
             type: service?.label || selectedServiceId,
-            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            date: now,
             amount: service?.estimatedAmount || '₱ 0.00'
+        });
+
+        addProviderLoa({
+            patientName: userProfile?.name || 'Patient',
+            patientId: userProfile?.id || 'p-self',
+            type: service?.label || selectedServiceId,
+            provider: providerName,
+            requestDate: now,
+            amount: service?.estimatedAmount || '₱ 0.00',
+            status: 'Pending',
+            diagnosis: '',
+            justification: '',
         });
 
         showToast(`LOA Request for ${providerName} submitted!`, 'success');

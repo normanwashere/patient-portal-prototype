@@ -70,7 +70,8 @@ export const DoctorQueue = () => {
     e?.stopPropagation();
     startPatient(pid);
     showToast('Consult started', 'success');
-    navigate('/doctor/encounter');
+    const patient = myQueue.find(p => p.patientId === pid);
+    navigate('/doctor/encounter', { state: { patientId: pid, patientName: patient?.patientName, chiefComplaint: patient?.chiefComplaint, ticketNumber: patient?.ticketNumber } });
   };
   const handleComplete = (pid: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -120,7 +121,7 @@ export const DoctorQueue = () => {
       <div
         key={p.id}
         className={`doc-patient-card ${isActive ? 'doc-patient-card--session' : isReady ? 'doc-patient-card--ready' : ''}`}
-        onClick={isActive ? () => navigate('/doctor/encounter') : undefined}
+        onClick={isActive ? () => navigate('/doctor/encounter', { state: { patientId: p.patientId, patientName: p.patientName, chiefComplaint: p.chiefComplaint, ticketNumber: p.ticketNumber } }) : undefined}
       >
         <div className="doc-row doc-row--between" style={{ marginBottom: 6 }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary)' }}>{p.ticketNumber}</span>
@@ -240,7 +241,7 @@ export const DoctorQueue = () => {
                 <CheckCircle2 size={14} /> Complete
               </button>
               <button className="doc-btn doc-btn--secondary" style={{ padding: '10px 14px', fontSize: 13 }}
-                onClick={e => { e.stopPropagation(); navigate('/doctor/encounter'); }}>
+                onClick={e => { e.stopPropagation(); navigate('/doctor/encounter', { state: { patientId: p.patientId, patientName: p.patientName, chiefComplaint: p.chiefComplaint, ticketNumber: p.ticketNumber } }); }}>
                 <ChevronRight size={14} /> Open Encounter
               </button>
             </>

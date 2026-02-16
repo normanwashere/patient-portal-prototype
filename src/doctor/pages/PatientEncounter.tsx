@@ -12,7 +12,6 @@ import {
   Activity,
   ShieldAlert,
   ShieldCheck,
-  Phone,
   ArrowLeft,
   CheckCircle2,
   Save,
@@ -29,7 +28,7 @@ import {
   RefreshCw,
   Heart,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
@@ -40,33 +39,151 @@ import { SoapNotePanel } from '../components/SoapNotePanel';
 type TabKey = 'soap' | 'transcriber' | 'cdss' | 'orders' | 'prescriptions' | 'chart' | 'careplan';
 type SoapSection = 'S' | 'O' | 'A' | 'P';
 
-const TRANSCRIPT_LINES = [
-  { speaker: 'doctor' as const, text: 'Good morning. What brings you in today?', ts: '00:05' },
-  { speaker: 'patient' as const, text: "I've been having chest pains for the past week, Doc.", ts: '00:12' },
-  { speaker: 'doctor' as const, text: 'Can you describe the pain for me? Is it sharp, dull, or more of a pressure?', ts: '00:22' },
-  { speaker: 'patient' as const, text: "It's more of a pressure or tightness, especially when I climb stairs or walk fast.", ts: '00:35' },
-  { speaker: 'doctor' as const, text: 'Does it radiate anywhere — to your arm, jaw, neck, or back?', ts: '00:48' },
-  { speaker: 'patient' as const, text: 'Sometimes I feel it in my left arm, but it goes away after I sit down and rest for a few minutes.', ts: '01:02' },
-  { speaker: 'doctor' as const, text: 'How long does each episode typically last?', ts: '01:18' },
-  { speaker: 'patient' as const, text: 'Maybe three to five minutes. It always stops once I stop what I\'m doing.', ts: '01:28' },
-  { speaker: 'doctor' as const, text: 'Any associated shortness of breath, nausea, dizziness, or sweating during these episodes?', ts: '01:40' },
-  { speaker: 'patient' as const, text: 'A little short of breath when climbing stairs. No nausea, no dizziness, no sweating.', ts: '01:55' },
-  { speaker: 'doctor' as const, text: 'Have you ever had a heart attack, cardiac catheterization, or a stress test before?', ts: '02:08' },
-  { speaker: 'patient' as const, text: 'No, never. This is the first time I\'ve had chest problems like this.', ts: '02:18' },
-  { speaker: 'doctor' as const, text: 'Any family history of heart disease — parents or siblings with heart attacks or strokes?', ts: '02:30' },
-  { speaker: 'patient' as const, text: 'My father had a heart attack at sixty-two. My mother has high blood pressure.', ts: '02:42' },
-  { speaker: 'doctor' as const, text: 'And are you taking your current medications regularly — the Aspirin, Atorvastatin, and Metoprolol?', ts: '02:55' },
-  { speaker: 'patient' as const, text: 'Yes, I take everything as prescribed. Every day, no missed doses.', ts: '03:08' },
-];
+// ── Patient profile lookup for dynamic encounter data ──
+type TranscriptLine = { speaker: 'doctor' | 'patient'; text: string; ts: string };
+interface PatientProfile {
+  dob: string; age: string; gender: string; bloodType: string; contact: string;
+  allergies: string[]; activeMeds: string[];
+  transcript: TranscriptLine[];
+  soap: { subjective: string; objective: string; assessment: string; plan: string };
+}
+
+const D = 'doctor' as const;
+const P = 'patient' as const;
+
+const PATIENT_PROFILES: Record<string, PatientProfile> = {
+  // Andrea Reyes — HTN follow-up & lab review
+  'p-mc1': {
+    dob: 'Mar 12, 1978', age: '47', gender: 'Female', bloodType: 'A+', contact: '0917-555-0101',
+    allergies: ['NSAIDs (GI upset)'],
+    activeMeds: ['Losartan 50mg daily', 'Amlodipine 5mg daily', 'Vitamin D3 1000IU daily'],
+    transcript: [
+      { speaker: D, text: 'Good morning, Andrea. How have you been since our last visit?', ts: '00:05' },
+      { speaker: P, text: 'Good morning, Doc. I\'ve been feeling better overall. The dizziness I had before is gone.', ts: '00:12' },
+      { speaker: D, text: 'That\'s good to hear. Have you been monitoring your blood pressure at home?', ts: '00:22' },
+      { speaker: P, text: 'Yes. It\'s mostly around 130 over 82, sometimes a bit lower in the morning.', ts: '00:35' },
+      { speaker: D, text: 'That\'s improved from where we started. Any side effects from the Amlodipine we added last month?', ts: '00:48' },
+      { speaker: P, text: 'A little ankle swelling in the evening, but it goes down by morning. Nothing too bad.', ts: '01:02' },
+      { speaker: D, text: 'Peripheral edema is a known side effect. We\'ll keep an eye on it. And the Losartan — no cough or dizziness?', ts: '01:15' },
+      { speaker: P, text: 'No cough at all. The Losartan has been fine since you switched me from the ACE inhibitor.', ts: '01:28' },
+      { speaker: D, text: 'Good. Your lab results came back. Your HbA1c is 7.2%, which is slightly above our target of 7%.', ts: '01:42' },
+      { speaker: P, text: 'Oh, is that concerning? I\'ve been trying to watch my diet.', ts: '01:55' },
+      { speaker: D, text: 'It\'s borderline. Your kidney function is normal and potassium is 4.8, which is upper normal for someone on Losartan.', ts: '02:08' },
+      { speaker: P, text: 'Should we change any of my medications?', ts: '02:22' },
+      { speaker: D, text: 'I\'d like to add Metformin 500mg to help with the glucose, and we should recheck your potassium in 2 weeks.', ts: '02:35' },
+      { speaker: P, text: 'Okay, Doc. I\'ll take the new medication. Anything else I should do?', ts: '02:48' },
+      { speaker: D, text: 'Continue the low-sodium diet, try to walk 30 minutes daily, and I\'ll see you back in 3 months for a repeat HbA1c.', ts: '03:02' },
+      { speaker: P, text: 'Thank you, Doc. I\'ll do my best.', ts: '03:12' },
+    ],
+    soap: {
+      subjective: 'Chief complaint: Hypertension follow-up & lab review.\nHPI: 47F with essential hypertension on Losartan 50mg and Amlodipine 5mg (added 1 month ago). Reports improved BP control — home readings ~130/82 mmHg. Mild bilateral ankle edema in evenings, resolves by morning. No cough, no dizziness, no headaches.\nMedications: Losartan 50mg daily, Amlodipine 5mg daily, Vitamin D3 1000IU daily — fully compliant.\nAllergies: NSAIDs (GI upset).',
+      objective: 'Vitals: BP 132/82 mmHg, HR 72 bpm (regular), RR 16/min, Temp 36.4°C, SpO2 99%, Weight 61 kg.\nGeneral: Alert, well-appearing, no acute distress.\nCardiac: Regular rate and rhythm, S1/S2 normal, no murmurs.\nLungs: Clear bilaterally.\nExtremities: Trace bilateral pedal edema, non-pitting. Pulses 2+ throughout.\nLabs: HbA1c 7.2% (target < 7.0%), FBS 118 mg/dL, Creatinine 0.8 mg/dL, K+ 4.8 mEq/L, Lipid panel: LDL 128, HDL 52, TG 145.',
+      assessment: '1. Essential hypertension (ICD-10: I10) — improving on dual therapy (ARB + CCB). BP approaching target < 130/80.\n2. Pre-diabetes / early Type 2 DM (ICD-10: R73.03) — HbA1c 7.2%, mildly elevated. Lifestyle + pharmacologic intervention indicated.\n3. Hyperkalemia risk — K+ 4.8 mEq/L on ARB. Requires monitoring.\n4. Mild peripheral edema — likely Amlodipine-related. Not clinically significant at present.',
+      plan: '1. Continue Losartan 50mg daily and Amlodipine 5mg daily — BP control improving\n2. Start Metformin 500mg BID with meals for glycemic control (GFR > 60, safe to initiate)\n3. Recheck serum potassium in 2 weeks (CDSS flag: K+ 4.8 on ARB)\n4. Repeat HbA1c in 3 months to assess Metformin effect\n5. Dietary counseling: low-sodium DASH diet, limit simple carbohydrates\n6. Exercise: 30 min brisk walking daily, 5 days/week\n7. Monitor ankle edema — if worsening, consider switching Amlodipine to Felodipine\n8. Follow-up in 3 months or sooner if edema worsens, hyperkalemia symptoms (weakness, palpitations), or BP > 140/90',
+    },
+  },
+  // Mark Anthony Lim — APE follow-up, lipid panel review
+  'p-mc2': {
+    dob: 'Aug 22, 1990', age: '35', gender: 'Male', bloodType: 'B+', contact: '0918-555-0202',
+    allergies: [],
+    activeMeds: ['Multivitamins daily', 'Cetirizine 10mg PRN', 'Omeprazole 20mg daily'],
+    transcript: [
+      { speaker: D, text: 'Good morning, Mark. Let\'s go over your annual physical exam results.', ts: '00:05' },
+      { speaker: P, text: 'Morning, Doc. I\'ve been a bit worried about my cholesterol. My dad has high cholesterol too.', ts: '00:14' },
+      { speaker: D, text: 'I understand. Let\'s review the numbers. Your total cholesterol is 242, and your LDL is 168 — both elevated.', ts: '00:25' },
+      { speaker: P, text: 'That sounds high. What should it be?', ts: '00:38' },
+      { speaker: D, text: 'Ideally, LDL should be below 130, and total cholesterol below 200. Your HDL is 45, which is a bit low. Triglycerides are 180.', ts: '00:50' },
+      { speaker: P, text: 'Is that dangerous? Do I need medication?', ts: '01:02' },
+      { speaker: D, text: 'Given your family history and these numbers, I\'d recommend starting a statin — Atorvastatin 20mg. But lifestyle changes are equally important.', ts: '01:15' },
+      { speaker: P, text: 'What kind of changes?', ts: '01:28' },
+      { speaker: D, text: 'Reduce fatty and fried foods, increase fiber, exercise at least 150 minutes per week, and limit alcohol intake.', ts: '01:40' },
+      { speaker: P, text: 'I can try that. I\'ve also been taking Omeprazole for my acid reflux. Should I keep taking it?', ts: '01:55' },
+      { speaker: D, text: 'You\'ve been on it for over 12 weeks now. Long-term PPI use can affect bone density and magnesium levels. Let\'s try stepping down to Famotidine.', ts: '02:08' },
+      { speaker: P, text: 'Alright, Doc. Anything else from my labs?', ts: '02:22' },
+      { speaker: D, text: 'Everything else is normal — CBC, liver, kidney function all fine. Your BMI is 26 so we should work on getting that below 25.', ts: '02:35' },
+      { speaker: P, text: 'I\'ll start going to the gym again. Thanks, Doc.', ts: '02:48' },
+    ],
+    soap: {
+      subjective: 'Chief complaint: APE follow-up — lipid panel review.\nHPI: 35M here for annual physical exam results review. Concerned about cholesterol — family history of dyslipidemia (father). On Omeprazole 20mg daily × 14 weeks for GERD — symptom-controlled. No chest pain, no exertional dyspnea, no palpitations.\nMedications: Multivitamins daily, Cetirizine 10mg PRN, Omeprazole 20mg daily.\nAllergies: NKDA.',
+      objective: 'Vitals: BP 126/80 mmHg, HR 78 bpm, RR 18/min, Temp 36.5°C, SpO2 99%, Weight 78 kg, Height 173 cm, BMI 26.1.\nGeneral: Well-nourished, no acute distress.\nCardiac: Regular, no murmurs.\nLungs: Clear bilaterally.\nAbdomen: Soft, non-tender, no organomegaly.\nLabs: TC 242 (H), LDL 168 (H), HDL 45 (L), TG 180 (H), FBS 94, HbA1c 5.4%, Cr 0.9, ALT 28, CBC normal.',
+      assessment: '1. Dyslipidemia (ICD-10: E78.5) — elevated LDL 168, low HDL 45, elevated TG 180. Family history positive. 10-year ASCVD risk moderate.\n2. Overweight (ICD-10: E66.3) — BMI 26.1, target < 25.\n3. GERD (ICD-10: K21.0) — controlled on Omeprazole, but prolonged PPI use > 12 weeks warrants step-down.\n4. Allergic rhinitis (ICD-10: J30.9) — managed PRN Cetirizine.',
+      plan: '1. Start Atorvastatin 20mg daily at bedtime for dyslipidemia\n2. Step down Omeprazole 20mg → Famotidine 20mg BID (PPI > 12 weeks — bone density & hypomagnesemia risk per CDSS alert)\n3. Check serum Magnesium at next visit to monitor post-PPI\n4. Lifestyle modifications: Mediterranean diet, limit saturated fat/alcohol, exercise 150 min/week\n5. Target: LDL < 130, BMI < 25 within 6 months\n6. Repeat lipid panel in 3 months to assess statin response\n7. Continue Cetirizine PRN for allergic rhinitis\n8. Follow-up in 3 months with fasting lipid panel',
+    },
+  },
+  // Grace Lim — 28-week prenatal check
+  'p-mc3': {
+    dob: 'Jun 5, 1994', age: '31', gender: 'Female', bloodType: 'O+', contact: '0919-555-0303',
+    allergies: ['Amoxicillin (hives)'],
+    activeMeds: ['Prenatal Vitamins daily', 'Ferrous Sulfate 325mg daily', 'Calcium + Vitamin D daily'],
+    transcript: [
+      { speaker: D, text: 'Good morning, Grace. You\'re now at 28 weeks. How are you feeling?', ts: '00:05' },
+      { speaker: P, text: 'Good morning, Doc. I feel okay mostly, but I\'ve had some back pain and trouble sleeping.', ts: '00:14' },
+      { speaker: D, text: 'Back pain is very common at this stage. Is it lower back, or does it go down your legs?', ts: '00:25' },
+      { speaker: P, text: 'Just lower back. It gets worse when I stand for a long time.', ts: '00:36' },
+      { speaker: D, text: 'Any contractions, bleeding, or fluid leaking?', ts: '00:45' },
+      { speaker: P, text: 'No, none of those. The baby is very active — kicking a lot, especially at night.', ts: '00:56' },
+      { speaker: D, text: 'Good fetal movement is reassuring. Have you been taking your prenatal vitamins and iron?', ts: '01:08' },
+      { speaker: P, text: 'Yes, every day. The iron makes me a bit constipated though.', ts: '01:18' },
+      { speaker: D, text: 'That\'s common. Increase your fiber and water intake. We can also try a stool softener if it gets worse.', ts: '01:30' },
+      { speaker: P, text: 'Okay. My last sugar test was normal, right?', ts: '01:42' },
+      { speaker: D, text: 'Actually, you haven\'t done the glucose tolerance test yet. At 28 weeks, we need to screen for gestational diabetes. I\'m ordering the 75g OGTT today.', ts: '01:55' },
+      { speaker: P, text: 'Oh, I thought I already did that. When should I take it?', ts: '02:08' },
+      { speaker: D, text: 'We should do it this week. You\'ll need to fast overnight — no food for 8 hours. The lab will draw blood three times over two hours.', ts: '02:20' },
+      { speaker: P, text: 'Alright, I\'ll schedule it. Anything else I should watch out for?', ts: '02:32' },
+      { speaker: D, text: 'Watch for headaches, blurry vision, sudden swelling, or decreased fetal movement. Come in immediately if any of those happen.', ts: '02:45' },
+      { speaker: P, text: 'Will do, Doc. Thank you.', ts: '02:55' },
+    ],
+    soap: {
+      subjective: 'Chief complaint: Prenatal check — 28 weeks G1P0.\nHPI: 31F, G1P0, 28 weeks AOG. Reports lower back pain worsened by prolonged standing. Difficulty sleeping. Active fetal movement, especially nocturnal. Constipation (iron-related). No vaginal bleeding, no fluid leak, no contractions, no headaches, no visual changes, no edema.\nMedications: Prenatal Vitamins daily, Ferrous Sulfate 325mg daily, Calcium + Vitamin D daily — compliant.\nAllergies: Amoxicillin (hives).',
+      objective: 'Vitals: BP 112/72 mmHg, HR 84 bpm, Temp 36.6°C, SpO2 98%, Weight 65 kg (pre-pregnancy 56 kg, +9 kg).\nOB: Fundal height 27 cm (appropriate for gestational age). FHT 148 bpm by Doppler. Cephalic presentation on palpation. No uterine tenderness. No vaginal discharge.\nExtremities: No edema.\nMSK: Mild lower lumbar tenderness, no radiculopathy.\nNote: OGTT NOT yet done — overdue per ACOG guidelines (24-28 weeks).',
+      assessment: '1. Intrauterine pregnancy 28 weeks, G1P0 (ICD-10: Z34.03) — normal growth, active fetal movement, cephalic presentation.\n2. Overdue gestational diabetes screening (ICD-10: O24.419) — 75g OGTT not yet performed. ACOG recommends 24-28 weeks.\n3. Low back pain of pregnancy (ICD-10: O26.89) — mechanical, no red flags.\n4. Iron-supplement constipation (ICD-10: K59.00) — dietary modification advised.',
+      plan: '1. Order 75g OGTT urgently — fasting, 3 blood draws over 2 hours. Schedule within this week.\n2. Continue Prenatal Vitamins, Ferrous Sulfate 325mg, Calcium + Vitamin D\n3. Add Docusate Sodium 100mg daily PRN for constipation\n4. Lower back: warm compress, prenatal stretching, avoid prolonged standing. Refer to PT if worsening.\n5. Fetal kick counts: monitor daily, report if < 10 movements in 2 hours\n6. Warning signs reviewed: headache, visual changes, edema, vaginal bleeding, fluid leakage, decreased fetal movement — present to ER immediately\n7. Next prenatal visit in 2 weeks (30 weeks)\n8. If GDM confirmed: initiate MNT, consider endocrinology referral',
+    },
+  },
+};
+
+// Default profile for unknown patients (generic / Metro General)
+const DEFAULT_PROFILE: PatientProfile = {
+  dob: 'Jan 15, 1980', age: '45', gender: 'Male', bloodType: 'O+', contact: '0917-123-4567',
+  allergies: ['Penicillin', 'Sulfa'],
+  activeMeds: ['Aspirin 81mg daily', 'Atorvastatin 40mg daily', 'Metoprolol Succinate ER 50mg daily'],
+  transcript: [
+    { speaker: D, text: 'Good morning. What brings you in today?', ts: '00:05' },
+    { speaker: P, text: "I've been having chest pains for the past week, Doc.", ts: '00:12' },
+    { speaker: D, text: 'Can you describe the pain for me? Is it sharp, dull, or more of a pressure?', ts: '00:22' },
+    { speaker: P, text: "It's more of a pressure or tightness, especially when I climb stairs or walk fast.", ts: '00:35' },
+    { speaker: D, text: 'Does it radiate anywhere — to your arm, jaw, neck, or back?', ts: '00:48' },
+    { speaker: P, text: 'Sometimes I feel it in my left arm, but it goes away after I sit down and rest for a few minutes.', ts: '01:02' },
+    { speaker: D, text: 'How long does each episode typically last?', ts: '01:18' },
+    { speaker: P, text: 'Maybe three to five minutes. It always stops once I stop what I\'m doing.', ts: '01:28' },
+    { speaker: D, text: 'Any associated shortness of breath, nausea, dizziness, or sweating during these episodes?', ts: '01:40' },
+    { speaker: P, text: 'A little short of breath when climbing stairs. No nausea, no dizziness, no sweating.', ts: '01:55' },
+    { speaker: D, text: 'Have you ever had a heart attack, cardiac catheterization, or a stress test before?', ts: '02:08' },
+    { speaker: P, text: 'No, never. This is the first time I\'ve had chest problems like this.', ts: '02:18' },
+    { speaker: D, text: 'Any family history of heart disease — parents or siblings with heart attacks or strokes?', ts: '02:30' },
+    { speaker: P, text: 'My father had a heart attack at sixty-two. My mother has high blood pressure.', ts: '02:42' },
+    { speaker: D, text: 'And are you taking your current medications regularly — the Aspirin, Atorvastatin, and Metoprolol?', ts: '02:55' },
+    { speaker: P, text: 'Yes, I take everything as prescribed. Every day, no missed doses.', ts: '03:08' },
+  ],
+  soap: {
+    subjective: 'Chief complaint: Chest pressure × 1 week.\nHPI: Exertional substernal pressure, precipitated by stair climbing, relieved by rest within 5 minutes. Occasional radiation to left arm. Associated mild exertional dyspnea. Denies diaphoresis, palpitations, syncope, orthopnea, or PND.\nPMH: Known hypertension, hyperlipidemia. No prior MI or cardiac catheterization.\nMedications: Aspirin 81 mg daily, Atorvastatin 40 mg daily, Metoprolol Succinate ER 50 mg daily — patient reports full compliance.\nAllergies: Penicillin (rash), Sulfa (GI upset).',
+    objective: 'Vitals: BP 132/82 mmHg, HR 78 bpm (regular), RR 16/min, Temp 36.6°C, SpO2 97% on RA, BMI 27.4.\nGeneral: Alert, oriented, no acute distress.\nCardiac: Regular rate and rhythm, normal S1/S2, no S3/S4 gallop, no murmurs or rubs.\nLungs: Clear to auscultation bilaterally, no wheezes, rhonchi, or crackles.\nAbdomen: Soft, non-tender, no organomegaly.\nExtremities: No peripheral edema, dorsalis pedis and posterior tibial pulses 2+ bilaterally, no cyanosis.',
+    assessment: '1. Stable angina pectoris (ICD-10: I20.8) — exertional substernal chest pressure with classic pattern (exertion-provoked, rest-relieved, < 20 min duration). Low probability of ACS given stable presentation and absence of rest pain, hemodynamic instability, or ECG changes.\n2. Essential hypertension (ICD-10: I10) — sub-optimally controlled at 132/82 mmHg, target < 130/80.\n3. Hyperlipidemia (ICD-10: E78.5) — on moderate-intensity statin; reassess lipid targets given new angina.',
+    plan: '1. Continue current medications: Aspirin 81 mg daily, Atorvastatin 40 mg daily, Metoprolol Succinate ER 50 mg daily\n2. Add: Nitroglycerin SL 0.4 mg PRN chest pain (up to 3 doses q5min; call 911 if no relief after first dose)\n3. Order resting 12-lead ECG today\n4. Order exercise stress test (treadmill EST) to evaluate ischemic threshold and exercise tolerance\n5. Labs: Troponin I (to rule out ACS), Lipid panel (reassess LDL target — consider high-intensity statin), BMP, CBC\n6. Consider uptitrating Metoprolol to 100 mg daily if resting HR allows and angina frequency does not improve\n7. Lifestyle: reinforce smoking cessation (if applicable), Mediterranean diet counseling, moderate aerobic exercise 150 min/week as tolerated\n8. Return to clinic in 2 weeks for stress test results review, or sooner if symptoms escalate (rest pain, prolonged episodes > 20 min, syncope)\n9. Patient educated on ACS warning signs: rest pain unrelieved by NTG, diaphoresis, nausea, jaw/back radiation — call 911 immediately',
+  },
+};
 
 // AI-generated content uses a special delimiter (⌁AI⌁) that we detect for subtle styling
 const AI_DELIMITER = '⌁AI⌁';
-const AI_SOAP_APPEND = {
-  subjective: `\n\n${AI_DELIMITER}\nChief complaint: Chest pressure × 1 week.\nHPI: Exertional substernal pressure, precipitated by stair climbing, relieved by rest within 5 minutes. Occasional radiation to left arm. Associated mild exertional dyspnea. Denies diaphoresis, palpitations, syncope, orthopnea, or PND.\nPMH: Known hypertension, hyperlipidemia. No prior MI or cardiac catheterization.\nMedications: Aspirin 81 mg daily, Atorvastatin 40 mg daily, Metoprolol Succinate ER 50 mg daily — patient reports full compliance.\nAllergies: Penicillin (rash), Sulfa (GI upset).`,
-  objective: `\n\n${AI_DELIMITER}\nVitals: BP 132/82 mmHg, HR 78 bpm (regular), RR 16/min, Temp 36.6°C, SpO2 97% on RA, BMI 27.4.\nGeneral: Alert, oriented, no acute distress.\nCardiac: Regular rate and rhythm, normal S1/S2, no S3/S4 gallop, no murmurs or rubs.\nLungs: Clear to auscultation bilaterally, no wheezes, rhonchi, or crackles.\nAbdomen: Soft, non-tender, no organomegaly.\nExtremities: No peripheral edema, dorsalis pedis and posterior tibial pulses 2+ bilaterally, no cyanosis.`,
-  assessment: `\n\n${AI_DELIMITER}\n1. Stable angina pectoris (ICD-10: I20.8) — exertional substernal chest pressure with classic pattern (exertion-provoked, rest-relieved, < 20 min duration). Low probability of ACS given stable presentation and absence of rest pain, hemodynamic instability, or ECG changes.\n2. Essential hypertension (ICD-10: I10) — sub-optimally controlled at 132/82 mmHg, target < 130/80.\n3. Hyperlipidemia (ICD-10: E78.5) — on moderate-intensity statin; reassess lipid targets given new angina.`,
-  plan: `\n\n${AI_DELIMITER}\n1. Continue current medications: Aspirin 81 mg daily, Atorvastatin 40 mg daily, Metoprolol Succinate ER 50 mg daily\n2. Add: Nitroglycerin SL 0.4 mg PRN chest pain (up to 3 doses q5min; call 911 if no relief after first dose)\n3. Order resting 12-lead ECG today\n4. Order exercise stress test (treadmill EST) to evaluate ischemic threshold and exercise tolerance\n5. Labs: Troponin I (to rule out ACS), Lipid panel (reassess LDL target — consider high-intensity statin), BMP, CBC\n6. Consider uptitrating Metoprolol to 100 mg daily if resting HR allows and angina frequency does not improve\n7. Lifestyle: reinforce smoking cessation (if applicable), Mediterranean diet counseling, moderate aerobic exercise 150 min/week as tolerated\n8. Return to clinic in 2 weeks for stress test results review, or sooner if symptoms escalate (rest pain, prolonged episodes > 20 min, syncope)\n9. Patient educated on ACS warning signs: rest pain unrelieved by NTG, diaphoresis, nausea, jaw/back radiation — call 911 immediately`,
-};
+
+function getAiSoapAppend(profile: PatientProfile) {
+  return {
+    subjective: `\n\n${AI_DELIMITER}\n${profile.soap.subjective}`,
+    objective: `\n\n${AI_DELIMITER}\n${profile.soap.objective}`,
+    assessment: `\n\n${AI_DELIMITER}\n${profile.soap.assessment}`,
+    plan: `\n\n${AI_DELIMITER}\n${profile.soap.plan}`,
+  };
+}
 
 const QUICK_ORDERS = ['CBC', 'FBS', 'Lipid Panel', 'Urinalysis', 'Chest X-Ray', 'ECG', 'Ultrasound'];
 const FREQUENCY_OPTIONS = ['Once daily', 'Twice daily', 'Three times daily', 'As needed', 'At bedtime', 'With meals'];
@@ -496,11 +613,15 @@ export const PatientEncounter = () => {
   } = useProvider();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { tenant } = useTheme();
   const hasCDSS = tenant.features.cdss ?? false;
   const hasAI = tenant.features.aiAssistant ?? false;
   const labsEnabled = tenant.features.visits.clinicLabFulfillmentEnabled;
   const loaEnabled = tenant.features.loa;
+
+  // Route state from DoctorQueue "Start Consult"
+  const routeState = (location.state ?? {}) as { patientId?: string; patientName?: string; chiefComplaint?: string; ticketNumber?: string };
 
   const [activeTab, setActiveTab] = useState<TabKey>('soap');
   const [isRecording, setIsRecording] = useState(false);
@@ -528,7 +649,7 @@ export const PatientEncounter = () => {
   const [cpNewIntervention, setCpNewIntervention] = useState('');
 
   // AI transcriber state
-  const [transcriptLines, setTranscriptLines] = useState<typeof TRANSCRIPT_LINES>([]);
+  const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [aiGenerated, setAiGenerated] = useState(false);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
@@ -552,11 +673,16 @@ export const PatientEncounter = () => {
   const [rxNotes, setRxNotes] = useState('');
   const rxSearchRef = useRef<HTMLDivElement>(null);
 
-  const currentPatient = queuePatients.find((p) => p.status === 'IN_SESSION') ?? queuePatients[0];
+  // Resolve patient: prefer route state patientId, then IN_SESSION, then first in queue
+  const currentPatient = (routeState.patientId
+    ? queuePatients.find((p) => p.patientId === routeState.patientId)
+    : undefined) ?? queuePatients.find((p) => p.status === 'IN_SESSION') ?? queuePatients[0];
   const patientId = currentPatient?.patientId ?? 'p1';
+  const profile = PATIENT_PROFILES[patientId] ?? DEFAULT_PROFILE;
+  const patientTranscriptLines = profile.transcript;
   const patientNotes = clinicalNotes.filter((n) => n.patientId === patientId);
   const firstNote = patientNotes[0];
-  const activeAlerts = cdssAlerts.filter((a) => !a.dismissed);
+  const activeAlerts = cdssAlerts.filter((a) => !a.dismissed && (!a.patientId || a.patientId === patientId));
   const patientLabOrders = labOrders.filter((o) => o.patientId === patientId);
   const patientPrescriptions = prescriptions.filter((p) => p.patientId === patientId).slice(0, 3);
   const pendingOrders = patientLabOrders.filter(
@@ -601,13 +727,13 @@ export const PatientEncounter = () => {
   useEffect(() => {
     if (!isRecording) return;
     const lineIndex = transcriptLines.length;
-    if (lineIndex >= TRANSCRIPT_LINES.length) return;
+    if (lineIndex >= patientTranscriptLines.length) return;
     const delay = lineIndex === 0 ? 1200 : 2000 + Math.random() * 2500;
     const timer = setTimeout(() => {
-      setTranscriptLines(prev => [...prev, TRANSCRIPT_LINES[lineIndex]]);
+      setTranscriptLines(prev => [...prev, patientTranscriptLines[lineIndex]]);
     }, delay);
     return () => clearTimeout(timer);
-  }, [isRecording, transcriptLines.length]);
+  }, [isRecording, transcriptLines.length, patientTranscriptLines]);
 
   // Auto-scroll transcript
   useEffect(() => {
@@ -1012,14 +1138,15 @@ export const PatientEncounter = () => {
       setIsRecording(false);
     }
     setAiProcessing(true);
-    // Simulate AI processing time
+    // Simulate AI processing time — contextual SOAP from patient profile
+    const aiSoap = getAiSoapAppend(profile);
     setTimeout(() => {
       setSoapForm((prev) => ({
         ...prev,
-        subjective: (prev.subjective || '') + AI_SOAP_APPEND.subjective,
-        objective: (prev.objective || '') + AI_SOAP_APPEND.objective,
-        assessment: (prev.assessment || '') + AI_SOAP_APPEND.assessment,
-        plan: (prev.plan || '') + AI_SOAP_APPEND.plan,
+        subjective: (prev.subjective || '') + aiSoap.subjective,
+        objective: (prev.objective || '') + aiSoap.objective,
+        assessment: (prev.assessment || '') + aiSoap.assessment,
+        plan: (prev.plan || '') + aiSoap.plan,
         aiGenerated: true,
       }));
       setAiProcessing(false);
@@ -1102,7 +1229,7 @@ export const PatientEncounter = () => {
             </div>
             {transcriptLines.length > 0 && (
               <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-                {transcriptLines.length} / {TRANSCRIPT_LINES.length} lines
+                {transcriptLines.length} / {patientTranscriptLines.length} lines
               </span>
             )}
           </div>
@@ -1152,7 +1279,7 @@ export const PatientEncounter = () => {
           )}
 
           {/* Typing indicator */}
-          {isRecording && transcriptLines.length < TRANSCRIPT_LINES.length && transcriptLines.length > 0 && (
+          {isRecording && transcriptLines.length < patientTranscriptLines.length && transcriptLines.length > 0 && (
             <div style={{ display: 'flex', gap: 4, padding: '8px', alignItems: 'center' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-text-muted)', animation: 'pulse 1s infinite', animationDelay: '0ms' }} />
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-text-muted)', animation: 'pulse 1s infinite', animationDelay: '200ms' }} />
@@ -1886,29 +2013,31 @@ export const PatientEncounter = () => {
             <span style={{ color: 'var(--color-text-muted)' }}>Name</span>
             <span style={{ fontWeight: 600 }}>{currentPatient.patientName}</span>
             <span style={{ color: 'var(--color-text-muted)' }}>DOB</span>
-            <span>Jan 15, 1980</span>
+            <span>{profile.dob}</span>
             <span style={{ color: 'var(--color-text-muted)' }}>Gender</span>
-            <span>Male</span>
+            <span>{profile.gender}</span>
             <span style={{ color: 'var(--color-text-muted)' }}>Blood Type</span>
-            <span>O+</span>
+            <span>{profile.bloodType}</span>
             <span style={{ color: 'var(--color-text-muted)' }}>Contact</span>
-            <span>0917-123-4567</span>
+            <span>{profile.contact}</span>
           </div>
         </div>
         <div>
           <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Allergies</h4>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {['Penicillin', 'Sulfa'].map((a) => (
+            {profile.allergies.length > 0 ? profile.allergies.map((a) => (
               <span key={a} style={styles.allergyBadge}>
                 {a}
               </span>
-            ))}
+            )) : (
+              <span style={{ ...styles.allergyBadge, background: 'rgba(34,197,94,0.10)', color: '#15803d' }}>No Known Drug Allergies</span>
+            )}
           </div>
         </div>
         <div>
           <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Active Medications</h4>
           <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.8 }}>
-            {['Rosuvastatin 20mg', 'Clopidogrel 75mg', 'Losartan 50mg'].map((m) => (
+            {profile.activeMeds.map((m) => (
               <li key={m} style={{ marginBottom: 4 }}>{m}</li>
             ))}
           </ul>
@@ -2455,7 +2584,7 @@ export const PatientEncounter = () => {
       {/* Secondary actions — 2-col auto-flow grid */}
       <div style={styles.actionRow}>
         <button style={styles.btnSecondary} onClick={handleReferPatient}>
-          <Phone size={16} /> Refer Patient
+          <Send size={16} /> Refer Patient
         </button>
         {labsEnabled && (
           <button style={styles.btnSecondary} onClick={() => setActiveTab('orders')}>
@@ -2496,7 +2625,7 @@ export const PatientEncounter = () => {
           <div>
             <div style={styles.patientName}>{currentPatient.patientName}</div>
             <div style={styles.patientMeta}>
-              ID: {currentPatient.patientId} · 45 yrs · Male · {patientPrescriptions.length} active meds
+              ID: {currentPatient.patientId} · {profile.age} · {profile.gender} · {patientPrescriptions.length} active meds
               {tenant.features.philHealth && ' · PhilHealth Active'}
             </div>
           </div>
@@ -2513,8 +2642,9 @@ export const PatientEncounter = () => {
           </div>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          <span style={styles.allergyBadge}>Penicillin</span>
-          <span style={styles.allergyBadge}>Sulfa</span>
+          {profile.allergies.length > 0
+            ? profile.allergies.map((a) => <span key={a} style={styles.allergyBadge}>{a}</span>)
+            : <span style={{ ...styles.allergyBadge, background: 'rgba(34,197,94,0.10)', color: '#15803d' }}>NKDA</span>}
           {tenant.features.philHealth && (
             <span
               style={{
@@ -2527,6 +2657,11 @@ export const PatientEncounter = () => {
             </span>
           )}
         </div>
+        {currentPatient?.chiefComplaint && (
+          <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
+            <strong style={{ color: 'var(--color-text)', fontWeight: 600 }}>CC:</strong> {currentPatient.chiefComplaint}
+          </div>
+        )}
       </div>
 
       {/* Layout: mobile = tabbed, desktop = multi-column */}
@@ -2592,7 +2727,7 @@ export const PatientEncounter = () => {
                   <Save size={16} /> Save Draft
                 </button>
                 <button style={styles.btnSecondary} onClick={handleReferPatient}>
-                  <Phone size={16} /> Refer Patient
+                  <Send size={16} /> Refer Patient
                 </button>
                 {labsEnabled && (
                   <button style={styles.btnSecondary} onClick={() => setActiveTab('orders')}>

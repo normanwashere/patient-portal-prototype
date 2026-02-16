@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
-import { Video, Building2, Calendar, Clock, ChevronRight } from 'lucide-react';
+import { Video, Building2, Calendar, Clock, ChevronRight, HeartHandshake } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { BackButton } from '../components/Common/BackButton';
 import { AddToCalendar } from '../components/AddToCalendar';
 import './AppointmentHistory.css';
 
-type AppointmentType = 'all' | 'teleconsult' | 'clinic';
-// Use context Appointment type compatibility or map it
-// Context has type: 'In-Person' | 'Teleconsult' usually.
-// We'll map context types to local expected types for icons.
+type AppointmentType = 'all' | 'teleconsult' | 'clinic' | 'homecare';
 
 
 
@@ -27,8 +24,11 @@ export const AppointmentHistory: React.FC = () => {
     // Assuming context status matches 'Upcoming' | 'Completed' | 'Cancelled'
     // Context type: 'In-Person' -> 'clinic', 'Teleconsult' -> 'teleconsult'
 
-    const getLocalType = (type: string): 'teleconsult' | 'clinic' => {
-        return type.toLowerCase().includes('tele') ? 'teleconsult' : 'clinic';
+    const getLocalType = (type: string): 'teleconsult' | 'clinic' | 'homecare' => {
+        const lower = type.toLowerCase();
+        if (lower.includes('tele')) return 'teleconsult';
+        if (lower.includes('home')) return 'homecare';
+        return 'clinic';
     };
 
     const displayAppointments = appointments.map(apt => ({
@@ -47,10 +47,10 @@ export const AppointmentHistory: React.FC = () => {
     const upcomingAppointments = filteredInternal.filter(apt => apt.status === 'Upcoming');
     const pastAppointments = filteredInternal.filter(apt => apt.status !== 'Upcoming');
 
-    const getTypeIcon = (type: 'teleconsult' | 'clinic') => {
-        return type === 'teleconsult'
-            ? <Video size={16} className="type-icon teleconsult" />
-            : <Building2 size={16} className="type-icon clinic" />;
+    const getTypeIcon = (type: 'teleconsult' | 'clinic' | 'homecare') => {
+        if (type === 'teleconsult') return <Video size={16} className="type-icon teleconsult" />;
+        if (type === 'homecare') return <HeartHandshake size={16} className="type-icon homecare" />;
+        return <Building2 size={16} className="type-icon clinic" />;
     };
 
     const getStatusBadge = (status: string) => {
@@ -74,7 +74,7 @@ export const AppointmentHistory: React.FC = () => {
                 <BackButton />
                 <div className="header-text">
                     <h2>{viewMode === 'upcoming' ? 'Upcoming Appointments' : viewMode === 'past' ? 'Past Appointments' : 'Appointment History'}</h2>
-                    <p className="page-subtitle">View your teleconsult and in-clinic appointments</p>
+                    <p className="page-subtitle">View your teleconsult, in-clinic, and homecare appointments</p>
                 </div>
             </header>
 
@@ -97,6 +97,12 @@ export const AppointmentHistory: React.FC = () => {
                     onClick={() => setFilter('clinic')}
                 >
                     <Building2 size={14} /> In-Clinic
+                </button>
+                <button
+                    className={`filter-tab ${filter === 'homecare' ? 'active' : ''}`}
+                    onClick={() => setFilter('homecare')}
+                >
+                    <HeartHandshake size={14} /> HomeCare
                 </button>
             </div>
 

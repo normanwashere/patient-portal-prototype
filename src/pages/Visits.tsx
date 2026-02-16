@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Video, CalendarDays, Building2, Home } from 'lucide-react';
+import { Video, CalendarDays, Building2, HeartHandshake } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import { ServiceCard } from '../components/ServiceCard/ServiceCard';
 import { useBadges } from '../hooks/useBadges';
@@ -33,7 +33,7 @@ export const Visits: React.FC = () => {
     }, [location.state]);
 
     // Check if any visit type is available
-    const hasAnyVisit = visits.teleconsultEnabled || visits.clinicVisitEnabled;
+    const hasAnyVisit = visits.teleconsultEnabled || visits.clinicVisitEnabled || visits.homeCareEnabled;
 
     return (
         <div className="visits-container">
@@ -82,9 +82,9 @@ export const Visits: React.FC = () => {
                     <ServiceCard
                         title="HomeCare"
                         description="We send a medical professional to your home or office for specimen collection."
-                        icon={<Home size={24} />}
+                        icon={<HeartHandshake size={24} />}
                         onClick={() => navigate('/visits/homecare')}
-                        colorTheme="green"
+                        colorTheme="orange"
                         actionLabel="Book HomeCare"
                         backgroundImage="https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?w=600"
                     />
@@ -117,7 +117,7 @@ export const Visits: React.FC = () => {
                 )}
 
                 {/* 5. Teleconsult Now */}
-                {visits.teleconsultEnabled && (
+                {visits.teleconsultNowEnabled && (
                     <div ref={teleconsultNowRef} className={highlightTeleconsult ? 'teleconsult-highlight' : ''}>
                         <ServiceCard
                             title="Teleconsult Now"

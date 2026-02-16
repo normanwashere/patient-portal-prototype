@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     CalendarDays, ChevronRight, TestTube, Pill, CreditCard, Heart,
     Syringe, ClipboardList, Video, FileText, Building2, Users,
-    Settings2, X, Check,
+    Settings2, X, Check, HeartHandshake,
 } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import { useData } from '../context/DataContext';
@@ -41,6 +41,7 @@ const ALL_QUICK_ACTIONS: QuickActionDef[] = [
     { id: 'hmo-benefits', label: 'HMO Benefits', icon: Heart, to: '/benefits', visible: (f) => !!f.hmo },
     { id: 'vaccines', label: 'Vaccines', icon: Syringe, to: '/immunization' },
     { id: 'teleconsult', label: 'Teleconsult', icon: Video, to: '/visits/teleconsult-intake', visible: (f) => !!f.visits?.teleconsultEnabled },
+    { id: 'homecare', label: 'HomeCare', icon: HeartHandshake, to: '/visits/homecare', visible: (f) => !!f.visits?.homeCareEnabled },
     { id: 'medical-history', label: 'Medical History', icon: FileText, to: '/medical-history' },
     { id: 'branches', label: 'Find Clinics', icon: Building2, to: '/branches' },
     { id: 'community', label: 'Community', icon: Users, to: '/community' },

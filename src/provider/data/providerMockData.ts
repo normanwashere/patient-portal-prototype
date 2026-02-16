@@ -52,6 +52,12 @@ const BRANCH_MC_BGC_NAME = 'Maxicare PCC - BGC';
 const BRANCH_MC_BRIDGE = 'mc-pcc-bridgetowne';
 const BRANCH_MC_BRIDGE_NAME = 'Maxicare PCC - Bridgetowne';
 
+// Date helpers (must be above all data arrays that reference them)
+const todayFormatted = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const _pad = (n: number) => String(n).padStart(2, '0');
+const _d = new Date();
+const todayISO = `${_d.getFullYear()}-${_pad(_d.getMonth() + 1)}-${_pad(_d.getDate())}`;
+
 // =============================================
 // PATIENT → TENANT MAPPING
 // Maps patient IDs to their tenant so Records and other modules
@@ -564,6 +570,57 @@ export const MOCK_CLINICAL_NOTES: ClinicalNote[] = [
     status: 'Signed',
     aiGenerated: false,
   },
+
+  // ── Grace Lim (p-mc3) — Prenatal visit note ──
+  {
+    id: 'note-mc05',
+    patientId: 'p-mc3',
+    patientName: 'Grace Lim',
+    appointmentId: 'apt-mc05',
+    doctorId: 'staff-mc03',
+    date: '2026-02-12',
+    subjective: '28-week prenatal visit. Patient reports mild ankle swelling in the evenings, resolved with elevation. No headaches, no visual changes, no epigastric pain. Fetal movements active — reports > 10 kicks per day. Appetite good, taking prescribed prenatal vitamins and iron. Mild heartburn after meals.',
+    objective: 'BP 112/74, HR 78, Weight 64kg (pre-pregnancy 57kg, +7kg). Fundal height 28cm (appropriate for gestational age). FHR 148 bpm by Doppler, regular. Urine dipstick: Protein trace, Glucose negative. Edema +1 bilateral ankle, non-pitting. Hgb 10.8 g/dL (mild anemia, on iron).',
+    assessment: 'G1P0, 28 weeks AOG. Normal prenatal course. Mild physiologic edema. Mild iron-deficiency anemia improving on supplementation. OGTT not yet done — overdue per ACOG guidelines.',
+    plan: '1. Order 75g OGTT for GDM screening — urgent\n2. Continue Ferrous Sulfate 325mg daily, Folic Acid 5mg, Calcium + Vit D\n3. Dietary counseling: increase protein, reduce sodium for edema\n4. Return in 2 weeks for OGTT results review\n5. Kick count monitoring: report if < 10 movements in 2 hours',
+    icdCodes: ['Z34.28', 'D50.9', 'O12.03'],
+    status: 'Signed',
+    aiGenerated: false,
+  },
+
+  // ── Carlo Mendoza (p-mc7) — Dyslipidemia consult ──
+  {
+    id: 'note-mc06',
+    patientId: 'p-mc7',
+    patientName: 'Carlo Mendoza',
+    appointmentId: 'apt-mc06',
+    doctorId: 'staff-mc01',
+    date: todayFormatted,
+    subjective: 'Follow-up for lab results. Patient reports no chest pain, no palpitations, no exertional dyspnea. Works as a marketing executive, admits to high stress and poor eating habits. No regular exercise. Father had MI at age 55. Currently on no medications.',
+    objective: 'BP 132/84, HR 76, BMI 27.3. Labs: Total Cholesterol 248, LDL 162, HDL 42, Triglycerides 188, FBS 118, HbA1c 6.8%. Liver Function: ALT 28, AST 24 (normal). Waist circumference 94cm.',
+    assessment: '1. Mixed dyslipidemia with elevated LDL and triglycerides\n2. Pre-diabetes (HbA1c 6.8%, FBS 118)\n3. Metabolic syndrome (elevated waist, TG, FBS, low HDL, borderline BP)\n4. Family history of premature CAD — elevated cardiovascular risk',
+    plan: '1. Start Atorvastatin 20mg HS for LDL\n2. Start Metformin 500mg BID for pre-diabetes (pending approval)\n3. Lifestyle prescription: 150 min/week moderate exercise, DASH diet\n4. Repeat lipid panel and FBS in 3 months\n5. Consider cardiology referral if risk factors worsen',
+    icdCodes: ['E78.2', 'R73.03', 'E66.01', 'Z82.49'],
+    status: 'Draft',
+    aiGenerated: true,
+  },
+
+  // ── Elena Cruz (p-mc8) — Thyroid follow-up ──
+  {
+    id: 'note-mc07',
+    patientId: 'p-mc8',
+    patientName: 'Elena Cruz',
+    appointmentId: 'apt-mc07',
+    doctorId: 'staff-mc01',
+    date: todayFormatted,
+    subjective: 'Follow-up for hypothyroidism management. On Levothyroxine 75mcg daily for 6 months. Reports improved energy, less hair loss. Weight stable. No palpitations or tremors. Takes medication on empty stomach, 30 minutes before breakfast.',
+    objective: 'BP 118/72, HR 70, Weight 58kg (stable). TSH 3.2 mIU/L (was 8.4 — now in range). FT4 1.1 ng/dL (normal). Thyroid: No palpable nodules, non-tender. Skin: Improved turgor. Hair: Less thinning.',
+    assessment: 'Hypothyroidism, well-controlled on Levothyroxine 75mcg. TSH now within reference range. No dose adjustment needed.',
+    plan: '1. Continue Levothyroxine 75mcg daily — same dose\n2. Repeat TSH + FT4 in 6 months\n3. CBC ordered to rule out concurrent anemia\n4. Reinforce: take on empty stomach, avoid calcium/iron within 4 hours',
+    icdCodes: ['E03.9'],
+    status: 'Draft',
+    aiGenerated: false,
+  },
 ];
 
 // =============================================
@@ -826,6 +883,90 @@ export const MOCK_PRESCRIPTIONS: Prescription[] = [
     status: 'Active',
     prescribedDate: '2026-02-03',
     notes: 'GERD symptoms — epigastric discomfort. Short-course PPI.',
+  },
+
+  // ── Grace Lim (p-mc3) — Prenatal ──
+  {
+    id: 'rx-mc07',
+    patientId: 'p-mc3',
+    patientName: 'Grace Lim',
+    doctorId: 'staff-mc03',
+    doctorName: 'Dr. Patricia Santos',
+    medication: 'Ferrous Sulfate',
+    dosage: '325mg',
+    frequency: 'Once daily with orange juice',
+    duration: '90 days',
+    quantity: 90,
+    refillsRemaining: 1,
+    status: 'Active',
+    prescribedDate: '2026-01-15',
+    notes: 'Iron supplementation for mild anemia (Hgb 10.8). Take with Vitamin C for absorption.',
+  },
+  {
+    id: 'rx-mc08',
+    patientId: 'p-mc3',
+    patientName: 'Grace Lim',
+    doctorId: 'staff-mc03',
+    doctorName: 'Dr. Patricia Santos',
+    medication: 'Folic Acid',
+    dosage: '5mg',
+    frequency: 'Once daily',
+    duration: '90 days',
+    quantity: 90,
+    refillsRemaining: 1,
+    status: 'Active',
+    prescribedDate: '2026-01-15',
+    notes: 'Prenatal folic acid supplementation — 28 weeks.',
+  },
+  {
+    id: 'rx-mc09',
+    patientId: 'p-mc3',
+    patientName: 'Grace Lim',
+    doctorId: 'staff-mc03',
+    doctorName: 'Dr. Patricia Santos',
+    medication: 'Calcium Carbonate + Vitamin D3',
+    dosage: '600mg / 400IU',
+    frequency: 'Twice daily with meals',
+    duration: '90 days',
+    quantity: 180,
+    refillsRemaining: 1,
+    status: 'Active',
+    prescribedDate: '2026-01-15',
+    notes: 'Prenatal calcium for bone health.',
+  },
+
+  // ── Carlo Mendoza (p-mc7) — Dyslipidemia ──
+  {
+    id: 'rx-mc10',
+    patientId: 'p-mc7',
+    patientName: 'Carlo Mendoza',
+    doctorId: 'staff-mc01',
+    doctorName: 'Dr. Carmela Ong',
+    medication: 'Atorvastatin',
+    dosage: '20mg',
+    frequency: 'Once daily at bedtime',
+    duration: '90 days',
+    quantity: 90,
+    refillsRemaining: 2,
+    status: 'Active',
+    prescribedDate: '2026-02-01',
+    notes: 'Elevated LDL 162 mg/dL. 10-year ASCVD risk moderate. Lifestyle counseling reinforced.',
+  },
+  {
+    id: 'rx-mc11',
+    patientId: 'p-mc7',
+    patientName: 'Carlo Mendoza',
+    doctorId: 'staff-mc01',
+    doctorName: 'Dr. Carmela Ong',
+    medication: 'Metformin',
+    dosage: '500mg',
+    frequency: 'Twice daily with meals',
+    duration: '90 days',
+    quantity: 180,
+    refillsRemaining: 2,
+    status: 'Pending Approval',
+    prescribedDate: todayFormatted,
+    notes: 'New Rx — FBS 118, HbA1c 6.8%. Pre-diabetes. Starting low-dose Metformin with lifestyle modification.',
   },
 ];
 
@@ -1764,12 +1905,6 @@ export const MOCK_NURSING_TASKS: NursingTask[] = [
 // 14. MOCK FORM TEMPLATES
 // =============================================
 
-const todayFormatted = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-// ISO date for timestamp strings (e.g. "2026-02-12")
-const _pad = (n: number) => String(n).padStart(2, '0');
-const _d = new Date();
-const todayISO = `${_d.getFullYear()}-${_pad(_d.getMonth() + 1)}-${_pad(_d.getDate())}`;
-
 export const MOCK_FORM_TEMPLATES: FormTemplate[] = [
   { id: 'form-001', name: 'Adult Intake Form', type: 'intake', fields: [{ id: 'f1', label: 'Chief Complaint', type: 'textarea', required: true }, { id: 'f2', label: 'Allergies', type: 'text', required: false }, { id: 'f3', label: 'Current Medications', type: 'textarea', required: false }], status: 'Active', createdDate: '2024-01-15', usageCount: 1250 },
   { id: 'form-002', name: 'Consent for Treatment', type: 'consent', fields: [{ id: 'f1', label: 'Patient Name', type: 'text', required: true }, { id: 'f2', label: 'I consent to treatment', type: 'checkbox', required: true }, { id: 'f3', label: 'Date', type: 'date', required: true }], status: 'Active', createdDate: '2023-06-01', usageCount: 2100 },
@@ -2029,14 +2164,31 @@ export const MOCK_INTERNAL_MESSAGES: InternalMessage[] = [
 export const MOCK_CDSS_ALERTS: CDSSAlert[] = [
   // ── Lourdes Bautista (p6) — Penicillin + Sulfa allergies ──
   // rx-009 is Amoxicillin 500mg (Pending Approval) for Lourdes — cross-reactive with Penicillin
-  { id: 'cdss-001', type: 'drug_allergy', severity: 'contraindicated', title: 'Drug-Allergy Conflict', message: 'Lourdes Bautista has a documented Penicillin allergy. Amoxicillin (rx-009) is a penicillin-class antibiotic and is contraindicated.', recommendation: 'Discontinue Amoxicillin. Consider Azithromycin 500mg TID × 7 days as alternative for UTI.', prescriptionId: 'rx-009', dismissed: false, actioned: false, createdAt: todayFormatted },
+  { id: 'cdss-001', patientId: 'p6', type: 'drug_allergy', severity: 'contraindicated', title: 'Drug-Allergy Conflict', message: 'Lourdes Bautista has a documented Penicillin allergy. Amoxicillin (rx-009) is a penicillin-class antibiotic and is contraindicated.', recommendation: 'Discontinue Amoxicillin. Consider Azithromycin 500mg TID × 7 days as alternative for UTI.', prescriptionId: 'rx-009', dismissed: false, actioned: false, createdAt: todayFormatted },
   // rx-007 is Amlodipine 10mg (Pending Approval) for Lourdes — high dose for elderly
-  { id: 'cdss-003', type: 'dosage_range', severity: 'moderate', title: 'Dosage Review — Elderly Patient', message: 'Amlodipine 10mg may cause symptomatic hypotension in patients over 65. Lourdes Bautista is a senior citizen.', recommendation: 'Consider starting with Amlodipine 5mg and titrating up based on BP response.', prescriptionId: 'rx-007', dismissed: false, actioned: false, createdAt: todayFormatted },
+  { id: 'cdss-003', patientId: 'p6', type: 'dosage_range', severity: 'moderate', title: 'Dosage Review — Elderly Patient', message: 'Amlodipine 10mg may cause symptomatic hypotension in patients over 65. Lourdes Bautista is a senior citizen.', recommendation: 'Consider starting with Amlodipine 5mg and titrating up based on BP response.', prescriptionId: 'rx-007', dismissed: false, actioned: false, createdAt: todayFormatted },
   // ── Roberto Villanueva (p4b) — Metformin drug interaction ──
   // rx-005 is Metformin 850mg (Active) for Roberto
-  { id: 'cdss-002', type: 'drug_interaction', severity: 'major', title: 'Drug-Drug Interaction', message: 'Roberto Villanueva is on Metformin 850mg. If contrast imaging is ordered, Metformin must be held to prevent lactic acidosis.', recommendation: 'Hold Metformin 48 hours before and after any contrast imaging procedure.', prescriptionId: 'rx-005', dismissed: true, actioned: false, createdAt: todayFormatted },
+  { id: 'cdss-002', patientId: 'p4b', type: 'drug_interaction', severity: 'major', title: 'Drug-Drug Interaction', message: 'Roberto Villanueva is on Metformin 850mg. If contrast imaging is ordered, Metformin must be held to prevent lactic acidosis.', recommendation: 'Hold Metformin 48 hours before and after any contrast imaging procedure.', prescriptionId: 'rx-005', dismissed: true, actioned: false, createdAt: todayFormatted },
   // ── General preventive care ──
-  { id: 'cdss-004', type: 'preventive_care', severity: 'info', title: 'Preventive Care Reminder', message: 'Patient is due for annual flu vaccination (last: Feb 2025). COVID-19 booster eligible.', recommendation: 'Offer flu shot and COVID booster at this visit if no contraindications.', dismissed: false, actioned: false, createdAt: todayFormatted },
+  { id: 'cdss-004', patientId: 'p1', type: 'preventive_care', severity: 'info', title: 'Preventive Care Reminder', message: 'Patient is due for annual flu vaccination (last: Feb 2025). COVID-19 booster eligible.', recommendation: 'Offer flu shot and COVID booster at this visit if no contraindications.', dismissed: false, actioned: false, createdAt: todayFormatted },
+
+  // ── Maxicare CDSS Alerts ──
+
+  // Andrea Reyes (p-mc1) — Losartan 50mg + Amlodipine 5mg: potassium monitoring
+  { id: 'cdss-mc01', patientId: 'p-mc1', type: 'drug_interaction', severity: 'moderate', title: 'Potassium Monitoring Required', message: 'Andrea Reyes is on Losartan 50mg (ARB) and Amlodipine 5mg (CCB). ARBs can increase serum potassium levels. Last potassium level: 4.8 mEq/L (upper normal).', recommendation: 'Recheck serum potassium within 2 weeks. If K+ > 5.0 mEq/L, consider reducing Losartan or adding a thiazide diuretic.', prescriptionId: 'rx-mc01', dismissed: false, actioned: false, createdAt: todayFormatted },
+
+  // Andrea Reyes (p-mc1) — HbA1c 7.2% above target
+  { id: 'cdss-mc02', patientId: 'p-mc1', type: 'critical_value', severity: 'major', title: 'HbA1c Above Target — 7.2%', message: 'Andrea Reyes latest HbA1c result is 7.2% (target < 7.0%). This indicates sub-optimal glycemic control over the past 3 months.', recommendation: 'Consider intensifying therapy: add Metformin 500mg BID if not contraindicated, reinforce dietary counseling, and schedule 3-month follow-up with repeat HbA1c.', orderId: 'lab-mc04', dismissed: false, actioned: false, createdAt: todayFormatted },
+
+  // Mark Anthony Lim (p-mc2) — Omeprazole long-term use
+  { id: 'cdss-mc03', patientId: 'p-mc2', type: 'dosage_range', severity: 'moderate', title: 'Long-Term PPI Use Warning', message: 'Mark Anthony Lim has been on Omeprazole 20mg for > 12 weeks. Prolonged PPI use is associated with increased risk of bone fractures, hypomagnesemia, and C. difficile infection.', recommendation: 'Reassess indication for PPI. If GERD is controlled, consider step-down to H2 blocker (Famotidine 20mg) or on-demand PPI use. Check serum magnesium.', prescriptionId: 'rx-mc06', dismissed: false, actioned: false, createdAt: todayFormatted },
+
+  // Andrea Reyes (p-mc1) — Duplicate CBC order within 24h
+  { id: 'cdss-mc04', patientId: 'p-mc1', type: 'duplicate_order', severity: 'minor', title: 'Duplicate Lab Order — CBC', message: 'A Complete Blood Count (CBC) was already ordered for Andrea Reyes today (lab-mc01, status: Resulted). Another CBC order may be unnecessary.', recommendation: 'Review existing CBC results before ordering again. Cancel duplicate if no clinical change warrants re-testing.', orderId: 'lab-mc01', dismissed: false, actioned: false, createdAt: todayFormatted },
+
+  // Grace Lim (p-mc3) — 28-week prenatal glucose tolerance test overdue
+  { id: 'cdss-mc05', patientId: 'p-mc3', type: 'preventive_care', severity: 'major', title: 'Overdue: Glucose Tolerance Test (OGTT)', message: 'Grace Lim is 28 weeks pregnant and has not yet completed the 75g Oral Glucose Tolerance Test (OGTT). ACOG guidelines recommend screening at 24–28 weeks for gestational diabetes.', recommendation: 'Order 75g OGTT urgently. If GDM is confirmed, initiate medical nutrition therapy and consider referral to endocrinology.', dismissed: false, actioned: false, createdAt: todayFormatted },
 ];
 
 // =============================================
@@ -2957,5 +3109,103 @@ export const MOCK_HOMECARE_REQUESTS: HomeCareRequest[] = [
     updatedAt: hcSubDays(3),
     priority: 'Urgent',
     notes: 'Senior citizen. Fasting required.',
+  },
+  {
+    id: 'hcr-mc04',
+    patientName: 'Grace Lim',
+    patientId: 'p-mc3',
+    mobile: '0919-333-4455',
+    address: '7F Uptown Ritz, BGC, Taguig',
+    addressType: 'home',
+    branchId: BRANCH_MC_BGC,
+    branchName: BRANCH_MC_BGC_NAME,
+    referralSource: 'upload',
+    requestTitles: ['Per uploaded referral — Prenatal labs'],
+    specimenTypes: ['Blood', 'Urine'],
+    referralFile: 'Lim_Prenatal_Labs_2026.pdf',
+    orderingDoctor: 'Dr. Patricia Santos',
+    preferredDate1: hcAddDays(1),
+    preferredTime1: '07:00 AM',
+    preferredDate2: hcAddDays(3),
+    preferredTime2: '07:30 AM',
+    status: 'Pending Review',
+    submittedAt: hcSubDays(0),
+    updatedAt: hcSubDays(0),
+    priority: 'Urgent',
+    notes: 'Pregnant patient (28 wks). OB-GYN referral attached. Glucose tolerance test included — fasting required.',
+  },
+  {
+    id: 'hcr-mc05',
+    patientName: 'Carlo Mendoza',
+    patientId: 'p-mc7',
+    mobile: '0917-444-7788',
+    address: 'Unit 18B, The Lerato, Makati',
+    addressType: 'home',
+    branchId: BRANCH_MC_AYALA,
+    branchName: BRANCH_MC_AYALA_NAME,
+    referralSource: 'network',
+    requestTitles: ['Lipid Profile Panel', 'Liver Function Test (ALT, AST)'],
+    specimenTypes: ['Blood'],
+    orderingDoctor: 'Dr. Carmela Ong',
+    preferredDate1: hcAddDays(2),
+    preferredTime1: '08:30 AM',
+    preferredDate2: hcAddDays(4),
+    preferredTime2: '09:00 AM',
+    status: 'Scheduled',
+    confirmedDate: hcAddDays(2),
+    confirmedTime: '08:30 AM',
+    assignedCollector: 'Med Tech Liza Reyes',
+    submittedAt: hcSubDays(3),
+    updatedAt: hcSubDays(1),
+    priority: 'Routine',
+  },
+  {
+    id: 'hcr-mc06',
+    patientName: 'Elena Cruz',
+    patientId: 'p-mc8',
+    mobile: '0918-555-9900',
+    address: '23 Mahogany Drive, Filinvest, Alabang',
+    addressType: 'home',
+    branchId: BRANCH_MC_AYALA,
+    branchName: BRANCH_MC_AYALA_NAME,
+    referralSource: 'network',
+    requestTitles: ['Thyroid Panel (TSH, FT4)', 'Complete Blood Count (CBC)'],
+    specimenTypes: ['Blood'],
+    orderingDoctor: 'Dr. Carmela Ong',
+    preferredDate1: hcAddDays(5),
+    preferredTime1: '07:00 AM',
+    preferredDate2: hcAddDays(7),
+    preferredTime2: '08:00 AM',
+    status: 'Pending Review',
+    submittedAt: hcSubDays(0),
+    updatedAt: hcSubDays(0),
+    priority: 'Routine',
+    notes: 'Patient on levothyroxine. Needs morning fasting draw before daily dose.',
+  },
+  {
+    id: 'hcr-mc07',
+    patientName: 'Paolo Reyes',
+    patientId: 'p-dep-1',
+    mobile: '0917-555-1234',
+    address: '12F Two Serendra, BGC, Taguig',
+    addressType: 'home',
+    branchId: BRANCH_MC_BGC,
+    branchName: BRANCH_MC_BGC_NAME,
+    referralSource: 'network',
+    requestTitles: ['Prostate Specific Antigen (PSA)', 'Complete Blood Count (CBC)'],
+    specimenTypes: ['Blood'],
+    orderingDoctor: 'Dr. Miguel Torres',
+    preferredDate1: hcSubDays(5),
+    preferredTime1: '08:00 AM',
+    preferredDate2: hcSubDays(3),
+    preferredTime2: '09:00 AM',
+    confirmedDate: hcSubDays(5),
+    confirmedTime: '08:00 AM',
+    status: 'In Progress',
+    assignedCollector: 'Med Tech Carlo Santos',
+    submittedAt: hcSubDays(7),
+    updatedAt: hcSubDays(0),
+    priority: 'Routine',
+    notes: 'Husband of Andrea Reyes. Annual screening.',
   },
 ];

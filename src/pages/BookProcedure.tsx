@@ -15,6 +15,7 @@ import {
 import { BackButton } from '../components/Common/BackButton';
 import { useToast } from '../context/ToastContext';
 import { useData } from '../context/DataContext';
+import { useProvider } from '../provider/context/ProviderContext';
 import { useTheme } from '../theme/ThemeContext';
 import { getTenantBranches } from '../data/mockBranches';
 import type { Branch } from '../data/mockBranches';
@@ -62,7 +63,8 @@ const CATEGORIES: ProcedureCategory[] = [
 export const BookProcedure: React.FC = () => {
     const navigate = useNavigate();
     const { showToast } = useToast();
-    const { bookProcedure } = useData();
+    const { bookProcedure, addAppointment, userProfile } = useData();
+    const { addAppointment: addProviderAppointment } = useProvider();
     const { tenant } = useTheme();
     const tenantBranches = getTenantBranches(tenant.id, tenant.name);
 
@@ -85,6 +87,33 @@ export const BookProcedure: React.FC = () => {
                 time: selectedTime,
                 location: selectedBranch.name
             });
+
+            // Patient-side appointment — shows in Upcoming Appointments
+            addAppointment({
+                doctor: 'Procedure Team',
+                specialty: selectedCategory?.title || 'Procedure',
+                date: selectedDate,
+                time: selectedTime,
+                type: 'In-Person',
+                location: selectedBranch.name,
+                notes: `Procedure: ${selectedProcedure}`,
+            });
+
+            // Provider-side appointment — shows in provider scheduling
+            addProviderAppointment({
+                doctor: 'Procedure Team',
+                specialty: selectedCategory?.title || 'Procedure',
+                date: selectedDate,
+                time: selectedTime,
+                status: 'Upcoming',
+                type: 'In-Person',
+                location: selectedBranch.name,
+                patientName: userProfile?.name || 'Patient',
+                patientId: userProfile?.id || 'p-self',
+                chiefComplaint: selectedProcedure,
+                notes: `Procedure booking: ${selectedProcedure} (${selectedCategory?.title || 'General'})`,
+            });
+
             showToast('Procedure scheduled successfully!', 'success');
             setStep(6);
         }

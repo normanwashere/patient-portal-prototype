@@ -69,6 +69,7 @@ export const DoctorDashboard = () => {
     currentStaff, queuePatients, queueStats, todayAppointments,
     labOrders, prescriptions, clinicalNotes, criticalAlerts,
     callNextPatient, startPatient, doctorMode, activeTeleconsultCall,
+    providerLoaRequests,
   } = useProvider();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -128,6 +129,7 @@ export const DoctorDashboard = () => {
   const noteCount = clinicalNotes.filter(n => n.status === 'Draft' && n.doctorId === currentStaff?.id).length;
   const alertCount = hasCDSS ? criticalAlerts.filter(a => !a.dismissed).length : 0;
   const queueCount = queueEnabled ? myQueue.filter(p => p.status === 'QUEUED' || p.status === 'READY').length : 0;
+  const loaPendingCount = providerLoaRequests.filter(r => r.status === 'Pending').length;
 
   const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
@@ -145,17 +147,65 @@ export const DoctorDashboard = () => {
     navigate('/doctor/encounter');
   };
 
-  // AI command responses (simulated)
+  // AI command responses — context-aware using live dashboard data
+  const inSessionName = inSession ? inSession.patientName : null;
+  const inSessionCC = inSession ? inSession.chiefComplaint : null;
+  const draftNotes = clinicalNotes.filter(n => n.status === 'Draft' && n.doctorId === currentStaff?.id);
+  const pendingRxList = prescriptions.filter(p => p.status === 'Pending Approval' && p.doctorName === currentStaff?.name);
+
   const aiResponses: Record<string, { response: string; action?: () => void; status: 'success' | 'info' }> = {
-    'start encounter': { response: 'Opening patient encounter. SOAP note template ready. AI transcriber standing by.', action: () => navigate('/doctor/encounter'), status: 'success' },
+    'start encounter': {
+      response: inSession
+        ? `Resuming encounter with ${inSessionName}. Chief complaint: ${inSessionCC ?? 'N/A'}. SOAP note template and AI transcriber ready.`
+        : firstReady
+          ? `Starting encounter with ${firstReady.patientName} (${firstReady.ticketNumber}). Chief complaint: ${firstReady.chiefComplaint ?? 'N/A'}. Navigating to encounter page...`
+          : 'No patient ready for encounter. Call the next patient from the queue first.',
+      action: inSession || firstReady ? () => navigate('/doctor/encounter', { state: inSession ? { patientId: inSession.patientId, patientName: inSession.patientName, chiefComplaint: inSession.chiefComplaint, ticketNumber: inSession.ticketNumber } : { patientId: firstReady!.patientId, patientName: firstReady!.patientName, chiefComplaint: firstReady!.chiefComplaint, ticketNumber: firstReady!.ticketNumber } }) : undefined,
+      status: 'success',
+    },
     'order cbc': { response: 'Lab order created: Complete Blood Count (CBC) + Basic Metabolic Panel (BMP). Sent to Lab queue. Estimated turnaround: 2 hours.', status: 'success' },
     'prescribe metformin': { response: 'Prescription drafted: Metformin 500mg BID with meals. CDSS check passed — no drug interactions detected. Awaiting your signature.', status: 'success' },
-    'show allergies': { response: 'Patient allergies: Penicillin (Anaphylaxis — SEVERE), Sulfa drugs (Rash — Moderate), Ibuprofen (GI upset — Mild). Last updated: Jan 15, 2026.', status: 'info' },
+    'show allergies': {
+      response: inSession
+        ? `Retrieving allergies for ${inSessionName}... Loaded from patient chart. Navigate to encounter for full details.`
+        : 'No patient currently in session. Start an encounter first to view patient allergies.',
+      status: 'info',
+    },
     'generate soap': { response: 'SOAP note generated from today\'s encounter transcript.\n\nS: Patient reports persistent fatigue and increased thirst for 2 weeks.\nO: BP 130/85, HR 78, Temp 36.8°C. BMI 28.4.\nA: Type 2 Diabetes Mellitus — suboptimal glycemic control.\nP: Increase Metformin to 1000mg BID. Repeat HbA1c in 3 months. Refer to dietitian.', action: () => setSoapCount(c => c + 1), status: 'success' },
     'check vitals': { response: 'Latest vitals for current patient:\n• BP: 130/85 mmHg\n• HR: 78 bpm\n• Temp: 36.8°C\n• SpO2: 98%\n• RR: 16/min\n• Weight: 82 kg\nAll within acceptable range.', status: 'info' },
-    'next patient': { response: `Calling next patient from queue. ${firstQueued ? firstQueued.patientName + ' (Ticket ' + firstQueued.ticketNumber + ')' : 'No patients in queue.'} `, action: firstQueued ? handleCallPatient : undefined, status: 'success' },
+    'next patient': { response: `Calling next patient from queue. ${firstQueued ? firstQueued.patientName + ' (Ticket ' + firstQueued.ticketNumber + ') — ' + (firstQueued.chiefComplaint ?? 'General consultation') : 'No patients waiting in queue.'} `, action: firstQueued ? handleCallPatient : undefined, status: 'success' },
     'show schedule': { response: `Today's remaining appointments: ${myAppts.length} scheduled.\n${myAppts.slice(0, 3).map(a => `• ${a.time} — ${a.specialty} (${a.type})`).join('\n') || 'No appointments remaining.'}`, action: () => navigate('/doctor/schedule'), status: 'info' },
     'lab results': { response: `Pending lab reviews: ${labCount} results awaiting sign-off. ${labCount > 0 ? 'Highest priority: CBC with critical low hemoglobin flagged.' : 'All results reviewed.'}`, action: () => navigate('/doctor/results'), status: labCount > 0 ? 'success' : 'info' },
+    'summarize today': {
+      response: `Today's summary (${todayStr}):\n• Queue: ${queueCount} patients waiting, ${inSession ? '1 in session (' + inSessionName + ')' : 'none in session'}\n• Appointments: ${myAppts.length} scheduled\n• Pending labs: ${labCount} results to review\n• Pending Rx: ${pendingRxList.length} prescriptions awaiting approval\n• Draft notes: ${draftNotes.length} unsigned\n• CDSS alerts: ${alertCount} active${alertCount > 0 ? ' — review recommended' : ''}`,
+      status: 'info',
+    },
+    'cdss alert': {
+      response: alertCount > 0
+        ? `${alertCount} active CDSS alert${alertCount > 1 ? 's' : ''} requiring review:\n${criticalAlerts.filter(a => !a.dismissed).slice(0, 3).map(a => `• [${a.severity.toUpperCase()}] ${a.title}: ${a.message.substring(0, 80)}...`).join('\n')}\nOpening CDSS overview for full details.`
+        : 'No active CDSS alerts. All clinical decision support checks have been reviewed.',
+      action: alertCount > 0 ? () => navigate('/doctor/cdss') : undefined,
+      status: alertCount > 0 ? 'success' : 'info',
+    },
+    'check loa': {
+      response: loaEnabled
+        ? 'Opening LOA review dashboard. You can review, approve, or deny pending Letter of Authorization requests.'
+        : 'LOA feature is not enabled for the current tenant.',
+      action: loaEnabled ? () => navigate('/doctor/loa') : undefined,
+      status: 'info',
+    },
+    'draft note': {
+      response: draftNotes.length > 0
+        ? `You have ${draftNotes.length} unsigned draft note${draftNotes.length > 1 ? 's' : ''}:\n${draftNotes.slice(0, 3).map(n => `• ${n.patientName} — ${n.date}`).join('\n')}\nNavigate to encounter to review and sign.`
+        : 'No unsigned draft notes. All clinical notes are signed and finalized.',
+      status: draftNotes.length > 0 ? 'success' : 'info',
+    },
+    'pending prescription': {
+      response: pendingRxList.length > 0
+        ? `${pendingRxList.length} prescription${pendingRxList.length > 1 ? 's' : ''} awaiting approval:\n${pendingRxList.slice(0, 3).map(p => `• ${p.patientName}: ${p.medication} ${p.dosage}`).join('\n')}`
+        : 'No pending prescriptions. All prescriptions are approved.',
+      status: pendingRxList.length > 0 ? 'success' : 'info',
+    },
   };
 
   const processCommand = useCallback((input: string) => {
@@ -188,7 +238,8 @@ export const DoctorDashboard = () => {
       setAiInput('');
       setTimeout(() => aiScrollRef.current?.scrollTo({ top: aiScrollRef.current.scrollHeight, behavior: 'smooth' }), 100);
     }, 800 + Math.random() * 600); // Simulate processing time
-  }, [labCount, myAppts, firstQueued]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [labCount, myAppts, firstQueued, inSession, alertCount, queueCount]);
 
   const handleAiSubmit = () => {
     if (!aiInput.trim() || aiProcessing) return;
@@ -204,7 +255,7 @@ export const DoctorDashboard = () => {
       showToast('Listening... speak your command', 'info');
       // Simulate voice input after a delay
       setTimeout(() => {
-        const voiceCommands = ['Generate SOAP note from encounter', 'Check vitals for current patient', 'Order CBC and BMP', 'Show allergies for current patient'];
+        const voiceCommands = ['Summarize today', 'Start encounter', 'Next patient', 'Check CDSS alerts', 'Lab results', 'Pending prescriptions'];
         const randomCmd = voiceCommands[Math.floor(Math.random() * voiceCommands.length)];
         setAiInput(randomCmd);
         setTimeout(() => {
@@ -300,7 +351,7 @@ export const DoctorDashboard = () => {
       icon: ShieldAlert,
       color: 'rgba(239, 68, 68, 0.08)',
       iconColor: 'var(--color-error)',
-      route: '/doctor/encounter',
+      route: '/doctor/cdss',
       badge: alertCount,
       visible: hasCDSS,
       description: alertCount > 0 ? `${alertCount} active` : 'All clear',
@@ -314,7 +365,7 @@ export const DoctorDashboard = () => {
       route: '/doctor/encounter',
       badge: noteCount,
       visible: true,
-      description: noteCount > 0 ? `${noteCount} drafts` : 'All signed',
+      description: noteCount > 0 ? `${noteCount} draft${noteCount > 1 ? 's' : ''} to sign` : 'All signed',
     },
     {
       id: 'tasks',
@@ -325,7 +376,11 @@ export const DoctorDashboard = () => {
       route: '/doctor/tasks',
       badge: labCount + rxCount + noteCount,
       visible: true,
-      description: 'All pending',
+      description: [
+        labCount > 0 ? `${labCount} lab${labCount > 1 ? 's' : ''}` : '',
+        rxCount > 0 ? `${rxCount} Rx` : '',
+        noteCount > 0 ? `${noteCount} note${noteCount > 1 ? 's' : ''}` : '',
+      ].filter(Boolean).join(' · ') || 'All clear',
     },
     {
       id: 'immunizations',
@@ -345,9 +400,9 @@ export const DoctorDashboard = () => {
       color: 'rgba(245, 158, 11, 0.08)',
       iconColor: 'var(--color-warning-dark)',
       route: '/doctor/loa',
-      badge: 0,
+      badge: loaPendingCount,
       visible: loaEnabled,
-      description: 'Insurance auth',
+      description: loaPendingCount > 0 ? `${loaPendingCount} pending review` : 'No pending',
     },
   ];
 
@@ -358,7 +413,7 @@ export const DoctorDashboard = () => {
     encounter: 'encounter',
     results: 'results',
     prescriptions: 'prescriptions',
-    cdss: 'encounter',      // CDSS is part of the encounter module
+    cdss: 'cdss',
     notes: 'encounter',     // Clinical notes are part of encounter
     teleconsult: 'teleconsult',
     tasks: 'tasks',
@@ -632,13 +687,15 @@ export const DoctorDashboard = () => {
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
               {[
                 { cmd: 'Start encounter', icon: Stethoscope },
-                { cmd: 'Order CBC and BMP', icon: FlaskConical },
-                { cmd: 'Prescribe Metformin 500mg', icon: Pill },
-                { cmd: 'Show allergies', icon: ShieldAlert },
+                { cmd: 'Summarize today', icon: Zap },
+                { cmd: 'Next patient', icon: Users },
+                { cmd: 'Show schedule', icon: Calendar },
+                { cmd: 'Check CDSS alerts', icon: ShieldAlert },
+                { cmd: 'Lab results', icon: FlaskConical },
+                { cmd: 'Draft notes', icon: FileCheck },
+                { cmd: 'Pending prescriptions', icon: Pill },
                 { cmd: 'Generate SOAP note', icon: FileText },
                 { cmd: 'Check vitals', icon: Activity },
-                { cmd: 'Show schedule', icon: Calendar },
-                { cmd: 'Next patient', icon: Users },
               ].map(({ cmd, icon: CmdIcon }) => (
                 <button key={cmd} onClick={() => processCommand(cmd)} disabled={aiProcessing} style={{
                   display: 'flex', alignItems: 'center', gap: 6,
@@ -834,11 +891,19 @@ export const DoctorDashboard = () => {
           {visibleTiles.map((tile) => {
             const Icon = tile.icon;
             const dimmed = !!tile.inactive;
+            const handleTileClick = () => {
+              if (tile.id === 'notes' && draftNotes.length > 0) {
+                const dn = draftNotes[0];
+                navigate('/doctor/encounter', { state: { patientId: dn.patientId, patientName: dn.patientName } });
+              } else {
+                navigate(tile.route);
+              }
+            };
             return (
               <button
                 key={tile.id}
                 className={`doc-tile ${(tile.badge ?? 0) > 0 ? 'doc-tile--has-badge' : ''} ${dimmed ? 'doc-tile--inactive' : ''}`}
-                onClick={() => navigate(tile.route)}
+                onClick={handleTileClick}
               >
                 <div className="doc-tile-icon" style={{ background: tile.color }}>
                   <span style={{ color: tile.iconColor }}><Icon size={22} /></span>

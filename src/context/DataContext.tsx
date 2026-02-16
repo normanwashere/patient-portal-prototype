@@ -227,6 +227,7 @@ interface DataContextType {
     notifications: Notification[];
     unreadNotificationsCount: number;
     markAsRead: (id: string) => void;
+    markReadByRoute: (pathname: string) => void;
     // Simulation
     isSimulating: boolean;
     toggleSimulation: () => void;
@@ -448,6 +449,65 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const markAsRead = React.useCallback((id: string) => {
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    }, []);
+
+    /**
+     * Auto-mark notifications as read when the user visits the source page.
+     * Uses the same link-prefix + keyword logic as useBadges so badges clear correctly.
+     */
+    const ROUTE_MATCHERS: Record<string, { prefixes: string[]; keywords: string[] }> = {
+        '/appointments': { prefixes: ['/appointments', '/visits'], keywords: ['appointment', 'consult', 'procedure', 'homecare'] },
+        '/visits': { prefixes: ['/visits', '/appointments'], keywords: ['appointment', 'consult', 'procedure', 'homecare'] },
+        '/results': { prefixes: ['/results'], keywords: ['result', 'lab', 'report'] },
+        '/medications': { prefixes: ['/medications'], keywords: ['prescription', 'refill', 'medication'] },
+        '/immunization': { prefixes: ['/immunization'], keywords: ['immunization', 'vaccine', 'shot'] },
+        '/medical-history': { prefixes: ['/medical-history', '/health'], keywords: ['history', 'record'] },
+        '/health': { prefixes: ['/results', '/medications', '/immunization', '/medical-history', '/health'], keywords: ['result', 'lab', 'prescription', 'refill', 'immunization', 'vaccine'] },
+        '/community': { prefixes: ['/community', '/events'], keywords: ['event', 'webinar', 'community'] },
+        '/events': { prefixes: ['/events', '/community'], keywords: ['event', 'webinar'] },
+        '/billing': { prefixes: ['/billing', '/financial', '/benefits'], keywords: ['bill', 'invoice', 'payment'] },
+        '/benefits': { prefixes: ['/benefits', '/billing'], keywords: ['bill', 'invoice', 'payment', 'loa', 'benefit'] },
+        '/coverage': { prefixes: ['/coverage', '/billing', '/benefits'], keywords: ['bill', 'invoice', 'payment', 'loa', 'benefit', 'philhealth'] },
+        '/notifications': { prefixes: [], keywords: [] }, // handled separately (all)
+    };
+
+    const markReadByRoute = React.useCallback((pathname: string) => {
+        // Find the best matching route key
+        const routeKey = Object.keys(ROUTE_MATCHERS)
+            .filter(k => pathname === k || pathname.startsWith(k + '/'))
+            .sort((a, b) => b.length - a.length)[0]; // most specific match
+
+        if (!routeKey) return;
+
+        // Special case: /notifications marks ALL unread
+        if (routeKey === '/notifications') {
+            setNotifications(prev => {
+                const hasUnread = prev.some(n => !n.read);
+                if (!hasUnread) return prev;
+                return prev.map(n => n.read ? n : { ...n, read: true });
+            });
+            return;
+        }
+
+        const matcher = ROUTE_MATCHERS[routeKey];
+        if (!matcher) return;
+
+        setNotifications(prev => {
+            let changed = false;
+            const updated = prev.map(n => {
+                if (n.read) return n;
+                const linkMatch = n.link && matcher.prefixes.some(p => n.link!.startsWith(p));
+                const keywordMatch = matcher.keywords.some(k =>
+                    n.title.toLowerCase().includes(k) || n.message.toLowerCase().includes(k)
+                );
+                if (linkMatch || keywordMatch) {
+                    changed = true;
+                    return { ...n, read: true };
+                }
+                return n;
+            });
+            return changed ? updated : prev;
+        });
     }, []);
 
     const addAppointment = React.useCallback((appt: Omit<Appointment, 'id' | 'status'>) => {
@@ -727,7 +787,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             activeSteps, pendingSteps, completedSteps, currentStepIndex, visitProgress,
             queueForStep, startStep, checkIn, completeStep, queueAllAvailable, canQueueStep, isVisitComplete,
             queueInfo, isSimulating, toggleSimulation: () => setIsSimulating(prev => !prev),
-            notifications, unreadNotificationsCount, markAsRead,
+            notifications, unreadNotificationsCount, markAsRead, markReadByRoute,
             currentPatientId, switchPatient, addDependent, availablePatients
         }}>
             {children}

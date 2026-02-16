@@ -26,6 +26,7 @@ import { BackButton } from '../components/Common/BackButton';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../theme/ThemeContext';
 import { useData } from '../context/DataContext';
+import { useProvider } from '../provider/context/ProviderContext';
 import { getTenantBranches } from '../data/mockBranches';
 import type { Branch } from '../data/mockBranches';
 import type { DoctorRequest } from '../context/DataContext';
@@ -70,7 +71,8 @@ export const HomeCareBooking: React.FC = () => {
     const location = useLocation();
     const { showToast } = useToast();
     const { tenant } = useTheme();
-    const { doctorRequests } = useData();
+    const { doctorRequests, userProfile, addAppointment } = useData();
+    const { addHomeCareRequest, addAppointment: addProviderAppointment } = useProvider();
     const tenantBranches = getTenantBranches(tenant.id, tenant.name);
 
     /* ── State ── */
@@ -168,6 +170,57 @@ export const HomeCareBooking: React.FC = () => {
         if (step < TOTAL_STEPS) {
             setStep(step + 1);
         } else if (step === TOTAL_STEPS) {
+            // Push HomeCare request to provider context
+            const now = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            addHomeCareRequest({
+                patientName: patientInfo.name || userProfile?.name || 'Patient',
+                patientId: userProfile?.id || 'p-self',
+                mobile: patientInfo.mobile,
+                address: patientInfo.address,
+                addressType: patientInfo.addressType,
+                branchId: selectedFacility?.id || '',
+                branchName: selectedFacility?.name || '',
+                referralSource: referralSource === 'network' ? 'network' : 'upload',
+                requestTitles: selectedRequests.map(r => r.title),
+                specimenTypes: [...new Set(selectedRequests.map(r => r.specimenType || 'Other'))],
+                referralFile: referralFile || undefined,
+                orderingDoctor: selectedRequests[0]?.doctor || undefined,
+                preferredDate1: dateSlot1.date,
+                preferredTime1: dateSlot1.time,
+                preferredDate2: dateSlot2.date,
+                preferredTime2: dateSlot2.time,
+                status: 'Pending Review',
+                submittedAt: now,
+                updatedAt: now,
+                priority: 'Routine',
+            });
+
+            // Patient-side appointment — shows in Upcoming Appointments
+            addAppointment({
+                doctor: selectedRequests[0]?.doctor || 'HomeCare Team',
+                specialty: 'Laboratory',
+                date: dateSlot1.date,
+                time: dateSlot1.time,
+                type: 'HomeCare',
+                location: selectedFacility?.name || 'HomeCare',
+                notes: `HomeCare: ${serviceName}`,
+            });
+
+            // Provider-side appointment for visibility
+            addProviderAppointment({
+                doctor: selectedRequests[0]?.doctor || 'HomeCare Team',
+                specialty: 'Laboratory',
+                date: dateSlot1.date,
+                time: dateSlot1.time,
+                status: 'Upcoming',
+                type: 'HomeCare',
+                location: selectedFacility?.name || 'HomeCare',
+                patientName: patientInfo.name || userProfile?.name || 'Patient',
+                patientId: userProfile?.id || 'p-self',
+                chiefComplaint: `HomeCare: ${serviceName}`,
+                notes: `HomeCare lab collection — ${selectedRequests.map(r => r.title).join(', ') || 'External referral'}`,
+            });
+
             setStep(TOTAL_STEPS + 1);
             showToast('HomeCare request submitted!', 'success');
         }

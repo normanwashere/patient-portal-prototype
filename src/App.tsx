@@ -80,6 +80,7 @@ import { DoctorMessages } from './doctor/pages/DoctorMessages';
 import { ImmunizationManagement } from './doctor/pages/ImmunizationManagement';
 import { LOAReview } from './doctor/pages/LOAReview';
 import { DoctorCarePlans } from './doctor/pages/DoctorCarePlans';
+import { DoctorCdssOverview } from './doctor/pages/DoctorCdssOverview';
 import { DoctorProfile } from './doctor/pages/DoctorProfile';
 
 // App Selector
@@ -176,6 +177,7 @@ function App() {
                                         <Route path="/doctor" element={<DoctorDashboard />} />
                                         <Route path="/doctor/queue" element={<DoctorQueue />} />
                                         <Route path="/doctor/encounter" element={<PatientEncounter />} />
+                                        <Route path="/doctor/cdss" element={<DoctorCdssOverview />} />
                                         <Route path="/doctor/teleconsult" element={<DoctorTeleconsult />} />
                                         <Route path="/doctor/results" element={<DoctorResults />} />
                                         <Route path="/doctor/schedule" element={<DoctorSchedule />} />

@@ -575,3 +575,60 @@
     border-color: var(--color-primary, #0046BE);
     box-shadow: 0 2px 8px var(--color-primary-transparent);
 }
+
+/* ─── Confirm Appointment Card ─── */
+.confirm-card {
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+    border-radius: 1rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.confirm-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.06));
+}
+
+.confirm-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.confirm-row:first-child {
+    padding-top: 0;
+}
+
+.confirm-row > svg {
+    flex-shrink: 0;
+    color: var(--color-primary, #0046BE);
+    margin-top: 2px;
+}
+
+.confirm-row > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.confirm-row .label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted, #64748b);
+}
+
+.confirm-row .value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-text, #1a1a2e);
+    word-break: break-word;
+}

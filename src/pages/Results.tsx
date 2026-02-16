@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, Search, Activity, Calendar, ClipboardList, Home, Clock, AlertCircle, CheckCircle, Droplet, FlaskConical, TestTube } from 'lucide-react';
+import { FileText, Download, Search, Activity, Calendar, ClipboardList, Home, Clock, AlertCircle, CheckCircle, Droplet, FlaskConical, TestTube, HeartHandshake } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
@@ -163,14 +163,24 @@ export const Results: React.FC = () => {
                                             {req.facility && (
                                                 <p className="request-facility">{req.facility}</p>
                                             )}
-                                            {/* HomeCare action — only for pending, lab-type, eligible requests */}
-                                            {req.status === 'Pending' && req.homeCareEligible && req.type === 'Laboratory' && homeCareEnabled && (
-                                                <button
-                                                    className="btn-homecare-action"
-                                                    onClick={(e) => { e.stopPropagation(); handleBookHomeCare(req); }}
-                                                >
-                                                    <Home size={14} /> Book HomeCare
-                                                </button>
+                                            {/* Action buttons for pending requests */}
+                                            {req.status === 'Pending' && (
+                                                <div className="request-actions-row">
+                                                    {req.homeCareEligible && req.type === 'Laboratory' && homeCareEnabled && (
+                                                        <button
+                                                            className="btn-homecare-action"
+                                                            onClick={(e) => { e.stopPropagation(); handleBookHomeCare(req); }}
+                                                        >
+                                                            <HeartHandshake size={14} /> HomeCare
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        className="btn-procedure-action"
+                                                        onClick={(e) => { e.stopPropagation(); navigate('/visits/book-procedure'); }}
+                                                    >
+                                                        <FlaskConical size={14} /> Book Procedure
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     </div>

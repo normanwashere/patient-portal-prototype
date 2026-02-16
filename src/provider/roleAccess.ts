@@ -54,7 +54,7 @@ export const DOCTOR_MODULE_KEYS = [
     'dashboard', 'schedule',
     'queue', 'teleconsult',
     'encounter', 'results', 'prescriptions',
-    'care-plans', 'messages', 'tasks', 'immunizations', 'loa',
+    'care-plans', 'messages', 'tasks', 'immunizations', 'loa', 'cdss',
 ] as const;
 
 export type DoctorModuleKey = typeof DOCTOR_MODULE_KEYS[number];

@@ -5,6 +5,7 @@ import { BackButton } from '../components/Common/BackButton';
 import { useToast } from '../context/ToastContext';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../theme/ThemeContext';
+import { useProvider } from '../provider/context/ProviderContext';
 import { DOCTORS, SPECIALTIES } from '../data/mockAppointmentData';
 import { getTenantBranches } from '../data/mockBranches';
 import type { Doctor, Specialty } from '../data/mockAppointmentData';
@@ -30,7 +31,8 @@ export const AppointmentBooking: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { showToast } = useToast();
-    const { addAppointment } = useData();
+    const { addAppointment, userProfile } = useData();
+    const { addAppointment: addProviderAppointment } = useProvider();
     const { tenant } = useTheme();
     const visits = tenant.features.visits;
 
@@ -554,12 +556,20 @@ export const AppointmentBooking: React.FC = () => {
                 )}
             </div>
             <button className="btn-confirm" onClick={() => {
-                addAppointment({
+                const apptPayload = {
                     doctor: selectedDoctor?.name || '',
-                    specialty: selectedSpecialty?.name || '',
+                    specialty: selectedSpecialty?.name || selectedDoctor?.specialtyName || '',
                     date: selectedDate,
-                    time: selectedTime
-                });
+                    time: selectedTime,
+                    type: bookingType === 'teleconsult' ? 'Teleconsult' : 'In-Person',
+                    location: selectedBranch?.name || undefined,
+                    patientName: userProfile?.name || 'Patient',
+                    patientId: userProfile?.id || 'p-self',
+                    chiefComplaint: '',
+                    notes: `Booked via patient portal`,
+                };
+                addAppointment(apptPayload);
+                addProviderAppointment({ ...apptPayload, status: 'Upcoming' });
                 setStep('success');
                 showToast('Appointment booked!', 'success');
             }}>Confirm Booking</button>
