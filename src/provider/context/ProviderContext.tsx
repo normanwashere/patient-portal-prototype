@@ -41,6 +41,7 @@ import {
   MOCK_CONSULT_ROOMS,
   PROVIDER_BRANCHES,
   FACILITY_SCHEDULES,
+  MOCK_REFERRALS,
 } from '../data/providerMockData';
 import type { ProviderBranch } from '../data/providerMockData';
 import { useTheme } from '../../theme/ThemeContext';
@@ -89,6 +90,8 @@ import type {
   PauseReason,
   PauseInfo,
   FacilitySchedule,
+  PatientReferral,
+  ReferralStatus,
 } from '../types';
 
 type CurrentApp = 'provider' | 'doctor';
@@ -316,6 +319,11 @@ interface ProviderContextType {
   bookFacilitySlot: (scheduleId: string, dateStr: string) => void;
   updateFacilitySchedule: (scheduleId: string, updates: Partial<Pick<FacilitySchedule, 'dailyCap' | 'startTime' | 'endTime' | 'daysOfWeek' | 'slotDurationMin'>>) => void;
 
+  // ── Referrals ──
+  referrals: PatientReferral[];
+  addReferral: (ref: Omit<PatientReferral, 'id'>) => void;
+  updateReferralStatus: (id: string, status: ReferralStatus, updates?: Partial<PatientReferral>) => void;
+
   // Computed values
   pendingLabOrders: LabOrder[];
   criticalAlerts: CDSSAlert[];
@@ -401,6 +409,7 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
   // HomeCare requests
   const [homeCareRequests, setHomeCareRequests] = useState<HomeCareRequest[]>(MOCK_HOMECARE_REQUESTS);
   const [facilitySchedules, setFacilitySchedules] = useState<FacilitySchedule[]>(FACILITY_SCHEDULES);
+  const [referrals, setReferrals] = useState<PatientReferral[]>(MOCK_REFERRALS);
 
   // ── Wait-time ticker — increments waitMinutes every 30s for active patients & TC sessions ──
   const waitTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1213,6 +1222,26 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
     _audit('loa_status', 'LOA', `LOA ${id} → ${status}`);
   }, [_audit]);
 
+  // ═══════ Referrals ═══════
+  const addReferral = useCallback((ref: Omit<PatientReferral, 'id'>) => {
+    const newRef: PatientReferral = { ...ref, id: genId('ref') } as PatientReferral;
+    setReferrals((prev) => [newRef, ...prev]);
+    _audit('add_referral', 'Referral', `New referral for ${ref.patientName} → ${ref.referredToSpecialty}`);
+  }, [_audit]);
+
+  const updateReferralStatus = useCallback((id: string, status: ReferralStatus, updates?: Partial<PatientReferral>) => {
+    setReferrals((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r;
+        const merged: PatientReferral = { ...r, ...updates, status };
+        if (status === 'Accepted' && !merged.acceptedAt) merged.acceptedAt = now();
+        if (status === 'Completed' && !merged.completedAt) merged.completedAt = now();
+        return merged;
+      })
+    );
+    _audit('referral_status', 'Referral', `Referral ${id} → ${status}`);
+  }, [_audit]);
+
   // ═══════ Computed ═══════
   const pendingLabOrders = useMemo(() => labOrders.filter((o) => o.status === 'Ordered' || o.status === 'In Progress'), [labOrders]);
   const criticalAlerts = useMemo(() => cdssAlerts.filter((a) => !a.dismissed), [cdssAlerts]);
@@ -1285,6 +1314,8 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
       providerLoaRequests, addProviderLoa, updateProviderLoaStatus,
       // Facility Schedules
       facilitySchedules, bookFacilitySlot, updateFacilitySchedule,
+      // Referrals
+      referrals, addReferral, updateReferralStatus,
       // Computed
       pendingLabOrders, criticalAlerts, todayAppointments, queueStats,
     }),

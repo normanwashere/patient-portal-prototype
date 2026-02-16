@@ -78,6 +78,9 @@ export const METRO_DATA: any = {
                 { id: 'm1', name: 'Rosuvastatin', dosage: '20mg', instruction: 'Once daily at bedtime', remaining: 28, refillDate: addDays(25), status: 'Active' },
                 { id: 'm2', name: 'Clopidogrel', dosage: '75mg', instruction: 'Once daily after breakfast', remaining: 5, refillDate: addDays(3), status: 'Low Stock' },
                 { id: 'm3', name: 'Metformin', dosage: '500mg', instruction: 'Twice a day with meals', remaining: 60, refillDate: addDays(58), status: 'Active' },
+                { id: 'm3b', name: 'Losartan', dosage: '100mg', instruction: 'Once daily in the morning', remaining: 30, refillDate: addDays(28), status: 'Active' },
+                { id: 'm3c', name: 'Omeprazole', dosage: '20mg', instruction: 'Once daily before breakfast', remaining: 14, refillDate: addDays(12), status: 'Active' },
+                { id: 'm3d', name: 'Amlodipine', dosage: '5mg', instruction: 'Once daily in the evening', remaining: 3, refillDate: addDays(2), status: 'Low Stock' },
             ],
             results: [
                 { id: 'r1', title: '2D Echo with Doppler', type: 'Imaging', date: subDays(4), doctor: 'Dr. Ricardo Santos', status: 'Final', isCritical: false },
@@ -147,6 +150,9 @@ export const METRO_DATA: any = {
             ],
             medications: [
                 { id: 'm4', name: 'Prenatal Vitamins', dosage: '1 tab', instruction: 'Once daily', remaining: 90, refillDate: addDays(85), status: 'Active' },
+                { id: 'm4b', name: 'Ferrous Sulfate', dosage: '325mg', instruction: 'Once daily with Vitamin C', remaining: 60, refillDate: addDays(55), status: 'Active' },
+                { id: 'm4c', name: 'Ascorbic Acid', dosage: '500mg', instruction: 'Once daily after meals', remaining: 60, refillDate: addDays(55), status: 'Active' },
+                { id: 'm4d', name: 'Calcium', dosage: '500mg + Vitamin D3 400IU', instruction: 'Once daily after lunch', remaining: 45, refillDate: addDays(40), status: 'Active' },
             ],
             results: [
                 { id: 'r4', title: 'Maternal Serum Screening', type: 'Laboratory', date: subDays(10), doctor: 'Dr. Santos', status: 'Final' },
@@ -213,6 +219,7 @@ export const MERALCO_DATA: any = {
             ],
             medications: [
                 { id: 'm5', name: 'Multivitamins', dosage: '1 tab', instruction: 'Daily with breakfast', remaining: 15, refillDate: addDays(12), status: 'Active' },
+                { id: 'm5b', name: 'Cetirizine', dosage: '10mg', instruction: 'Once daily at bedtime for allergies', remaining: 10, refillDate: addDays(8), status: 'Active' },
             ],
             results: [
                 { id: 'r5', title: 'Annual Physical Exam Report', type: 'Laboratory', date: subDays(180), doctor: 'Dr. Lee', status: 'Final' },
@@ -257,7 +264,10 @@ export const MERALCO_DATA: any = {
             },
             dependents: [],
             appointments: [],
-            medications: [],
+            medications: [
+                { id: 'm-ms4a', name: 'Ibuprofen', dosage: '400mg', instruction: 'Every 6 hours as needed for pain', remaining: 10, refillDate: addDays(7), status: 'Active' },
+                { id: 'm-ms4b', name: 'Loperamide', dosage: '2mg', instruction: 'After first loose stool, then 1 after each subsequent', remaining: 8, refillDate: addDays(30), status: 'Active' },
+            ],
             results: [],
             notifications: [],
             invoices: [],
@@ -302,7 +312,11 @@ export const HEALTHFIRST_DATA: any = {
             appointments: [
                 { id: '301', doctor: 'Dr. Michael Tan', specialty: 'Pediatrics', date: addDays(1), time: '03:00 PM', status: 'Upcoming', type: 'In-Person', location: 'Clinic 1' },
             ],
-            medications: [],
+            medications: [
+                { id: 'm-hf1', name: 'Paracetamol', dosage: '250mg', instruction: 'Every 4-6 hours as needed for fever', remaining: 20, refillDate: addDays(15), status: 'Active' },
+                { id: 'm-hf2', name: 'Amoxicillin', dosage: '250mg', instruction: 'Every 8 hours for 7 days', remaining: 18, refillDate: addDays(5), status: 'Active' },
+                { id: 'm-hf3', name: 'Ascorbic Acid', dosage: '100mg', instruction: 'Once daily after meals', remaining: 30, refillDate: addDays(28), status: 'Active' },
+            ],
             results: [],
             notifications: [
                 { id: 'n6', title: 'Vaccine Schedule', message: 'Measles vaccine due next week.', date: '1 day ago', read: false, type: 'warning', link: '/immunization' },
@@ -350,18 +364,35 @@ export const MAXICARE_DATA: any = {
                         id: 'hmo-mc1',
                         provider: 'Maxicare',
                         memberNo: 'MC-PRIMA-88001',
-                        planType: 'PRIMA Elite',
-                        validity: '2025-12-31',
-                        coverageAmount: '₱ 100,000.00',
-                        usedAmount: '₱ 8,500.00',
-                        mbl: '₱ 100,000.00',
-                        mblUsed: '₱ 8,500.00',
+                        planType: 'PRIMA Elite by MaxiHealth',
+                        validity: '2026-01-15 to 2027-01-14',
+                        coverageAmount: '₱ 19,999.00',
+                        usedAmount: '₱ 0.00',
+                        mbl: '₱ 19,999.00',
+                        mblUsed: '₱ 0.00',
                         status: 'Active',
-                        benefitCategories: [
-                            { id: 'b-mc1', name: 'Dental', limit: '₱ 5,000.00', used: '₱ 0.00', icon: '🦷' },
-                            { id: 'b-mc2', name: 'Optical', limit: '₱ 3,000.00', used: '₱ 0.00', icon: '👓' },
-                            { id: 'b-mc3', name: 'Mental Health', limit: '₱ 10,000.00', used: '₱ 2,500.00', icon: '🧠' },
-                            { id: 'b-mc4', name: 'ER Coverage', limit: '₱ 50,000.00', used: '₱ 0.00', icon: '🚑' }
+                        packageType: 'consumer',
+                        benefitCategories: [],
+                        packageItems: [
+                            // ── Annual Physical Exam (Basic 5) — one-time per year ──
+                            { id: 'pkg-ape1', name: 'Physical Exam', category: 'Annual Physical Exam (Basic 5)', status: 'Availed', limit: 1, used: 1, completedDate: subDays(21), facility: 'Maxicare PCC - Ayala North Exchange' },
+                            { id: 'pkg-ape2', name: 'Complete Blood Count (CBC)', category: 'Annual Physical Exam (Basic 5)', status: 'Availed', limit: 1, used: 1, completedDate: subDays(21), facility: 'Maxicare PCC - Ayala North Exchange' },
+                            { id: 'pkg-ape3', name: 'Routine Urinalysis', category: 'Annual Physical Exam (Basic 5)', status: 'Availed', limit: 1, used: 1, completedDate: subDays(22), facility: 'Maxicare PCC - Ayala North Exchange' },
+                            { id: 'pkg-ape4', name: 'Routine Fecalysis', category: 'Annual Physical Exam (Basic 5)', status: 'Availed', limit: 1, used: 1, completedDate: subDays(22), facility: 'Maxicare PCC - Ayala North Exchange' },
+                            { id: 'pkg-ape5', name: 'Chest X-ray (PA)', category: 'Annual Physical Exam (Basic 5)', status: 'Available', limit: 1, used: 0 },
+                            // ── Consultations — single unlimited benefit ──
+                            { id: 'pkg-con1', name: 'PCC Doctor Consultations (20+ specialties)', category: 'Consultations (Unlimited at any PCC)', status: 'Availed', limit: 0, used: 5, completedDate: subDays(5), facility: 'Maxicare PCC - Ayala North Exchange', notes: 'GP ×3, Cardiology ×1, Internal Medicine ×1. Specialist availability varies by PCC location.' },
+                            // ── Routine Diagnostics — unlimited ──
+                            { id: 'pkg-lab1', name: 'Set A Laboratory Tests', category: 'Routine Diagnostics (Unlimited)', status: 'Availed', limit: 0, used: 2, completedDate: subDays(19), facility: 'Maxicare PCC - Ayala North Exchange', notes: 'FBS, Lipid Profile, HbA1c, Creatinine, SGPT' },
+                            { id: 'pkg-lab2', name: 'X-rays', category: 'Routine Diagnostics (Unlimited)', status: 'Availed', limit: 0, used: 1, completedDate: subDays(21), facility: 'Maxicare PCC - Ayala North Exchange' },
+                            { id: 'pkg-lab3', name: 'ECG', category: 'Routine Diagnostics (Unlimited)', status: 'Available', limit: 0, used: 0 },
+                            // ── Advanced Diagnostics — pick 3 of 4 ──
+                            { id: 'pkg-adv1', name: 'Ultrasound (Pelvic)', category: 'Advanced Diagnostics (3 tests — pick from 4)', status: 'Availed', limit: 3, used: 1, completedDate: subDays(8), facility: 'Maxicare PCC - BGC', notes: '1 of 3 tests consumed' },
+                            { id: 'pkg-adv2', name: '2D Echo', category: 'Advanced Diagnostics (3 tests — pick from 4)', status: 'Available', limit: 3, used: 0, notes: '2 of 3 remaining' },
+                            { id: 'pkg-adv3', name: 'Treadmill Stress Test', category: 'Advanced Diagnostics (3 tests — pick from 4)', status: 'Deferred', limit: 3, used: 0, notes: 'Requires 12-hour fasting — rescheduled' },
+                            { id: 'pkg-adv4', name: 'CT Scan (Plain)', category: 'Advanced Diagnostics (3 tests — pick from 4)', status: 'Available', limit: 3, used: 0 },
+                            // ── Insurance — auto-enrolled ──
+                            { id: 'pkg-ins1', name: 'Personal Accident Insurance (₱10,000)', category: 'Insurance Coverage', status: 'Active', limit: 1, used: 0, notes: 'Auto-enrolled upon activation. Covers accidental death & permanent disability.' },
                         ]
                     }
                 ],
@@ -385,7 +416,11 @@ export const MAXICARE_DATA: any = {
             medications: [
                 { id: 'm-mc1', name: 'Losartan', dosage: '50mg', instruction: 'Once daily in the morning', remaining: 60, refillDate: addDays(55), status: 'Active' },
                 { id: 'm-mc2', name: 'Vitamin D3', dosage: '1000IU', instruction: 'Once daily after breakfast', remaining: 75, refillDate: addDays(70), status: 'Active' },
-                { id: 'm-mc3', name: 'Amlodipine', dosage: '5mg', instruction: 'Once daily in the evening', remaining: 28, refillDate: addDays(26), status: 'Active' }
+                { id: 'm-mc3', name: 'Amlodipine', dosage: '5mg', instruction: 'Once daily in the evening', remaining: 28, refillDate: addDays(26), status: 'Active' },
+                { id: 'm-mc3b', name: 'Metformin', dosage: '500mg', instruction: 'Twice a day with meals', remaining: 56, refillDate: addDays(26), status: 'Active' },
+                { id: 'm-mc3c', name: 'Rosuvastatin', dosage: '10mg', instruction: 'Once daily at bedtime', remaining: 30, refillDate: addDays(28), status: 'Active' },
+                { id: 'm-mc3d', name: 'Omeprazole', dosage: '20mg', instruction: 'Once daily before breakfast', remaining: 7, refillDate: addDays(5), status: 'Low Stock' },
+                { id: 'm-mc3e', name: 'Salbutamol', dosage: '2mg', instruction: 'As needed for wheezing', remaining: 20, refillDate: addDays(30), status: 'Active' }
             ],
             results: [
                 { id: 'r-mc1', title: 'CBC', type: 'Laboratory', date: subDays(21), doctor: 'Dr. Carmela Ong', status: 'Final', isCritical: false },
@@ -417,10 +452,8 @@ export const MAXICARE_DATA: any = {
                 { id: 'proc-mc6', category: 'Laboratory', name: 'Kidney Function Panel (Home Collection)', date: addDays(5), time: '7:30 AM', location: 'HomeCare', status: 'Scheduled' }
             ],
             loaRequests: [
-                { id: 'loa-mc1', type: 'Annual Physical Exam', provider: 'Maxicare PCC - BGC', date: subDays(30), status: 'Approved', amount: '₱ 0.00' },
-                { id: 'loa-mc3', type: 'Cardiac Stress Test', provider: 'Maxicare PCC - Ayala North Exchange', date: subDays(2), status: 'Approved', amount: '₱ 3,500.00' },
-                { id: 'loa-mc4', type: 'Imaging - Pelvic Ultrasound', provider: 'Maxicare PCC - BGC', date: subDays(1), status: 'Pending', amount: '₱ 2,800.00' },
-                { id: 'loa-mc5', type: 'Laboratory - Kidney Function Panel', provider: 'Maxicare PCC - BGC (HomeCare)', date: subDays(3), status: 'Approved', amount: '₱ 1,200.00' }
+                { id: 'loa-mc1', type: 'Specialist Referral — Psychiatry', provider: 'Maxicare', date: subDays(5), status: 'Approved', amount: '₱ 1,500.00', notes: 'Outside PCC — preferential rate applied' },
+                { id: 'loa-mc3', type: 'Set C Lab Tests (Thyroid Panel)', provider: 'Maxicare', date: subDays(2), status: 'Pending', amount: '₱ 2,200.00', notes: 'Not covered by PRIMA Elite — out-of-pocket at preferential rate' },
             ],
             claims: [
                 { id: 'clm-mc1', type: 'Dental Reimbursement', provider: 'Smile Dental Clinic', date: subDays(60), amount: '₱ 3,500.00', status: 'Processed', reimbursementMethod: 'Bank Transfer' }
@@ -468,18 +501,23 @@ export const MAXICARE_DATA: any = {
                         id: 'hmo-mc2',
                         provider: 'Maxicare',
                         memberNo: 'MC-CORP-44002',
-                        planType: 'Corporate Gold',
+                        accountName: 'Accenture Philippines Inc.',
+                        accountNumber: 'ACCT-MXC-2024-0817',
+                        planType: 'Maxicare Gold',
                         validity: '2026-03-31',
                         coverageAmount: '₱ 200,000.00',
-                        usedAmount: '₱ 4,500.00',
+                        usedAmount: '₱ 18,750.00',
                         mbl: '₱ 200,000.00',
-                        mblUsed: '₱ 4,500.00',
+                        mblUsed: '₱ 18,750.00',
                         status: 'Active',
+                        packageType: 'corporate',
                         benefitCategories: [
-                            { id: 'b-mc5', name: 'Dental', limit: '₱ 8,000.00', used: '₱ 0.00', icon: '🦷' },
-                            { id: 'b-mc6', name: 'Optical', limit: '₱ 5,000.00', used: '₱ 0.00', icon: '👓' },
-                            { id: 'b-mc7', name: 'Mental Health', limit: '₱ 15,000.00', used: '₱ 0.00', icon: '🧠' },
-                            { id: 'b-mc8', name: 'ER Coverage', limit: '₱ 100,000.00', used: '₱ 0.00', icon: '🚑' }
+                            { id: 'b-mc5', name: 'Inpatient', limit: '₱ 200,000.00', used: '₱ 0.00', icon: '🏥' },
+                            { id: 'b-mc6', name: 'Outpatient', limit: '₱ 50,000.00', used: '₱ 14,250.00', icon: '🩺' },
+                            { id: 'b-mc7', name: 'Emergency Care', limit: '₱ 30,000.00', used: '₱ 0.00', icon: '🚑' },
+                            { id: 'b-mc8', name: 'Annual Check-Up', limit: '₱ 5,000.00', used: '₱ 4,500.00', icon: '📋' },
+                            { id: 'b-mc9', name: 'Dental', limit: '₱ 10,000.00', used: '₱ 0.00', icon: '🦷' },
+                            { id: 'b-mc10', name: 'Life + AD&D', limit: '₱ 100,000.00', used: '₱ 0.00', icon: '🛡️' },
                         ]
                     }
                 ],
@@ -502,6 +540,9 @@ export const MAXICARE_DATA: any = {
                 { id: 'm-mc4', name: 'Multivitamins', dosage: '1 tab', instruction: 'Once daily after breakfast', remaining: 45, refillDate: addDays(40), status: 'Active' },
                 { id: 'm-mc5', name: 'Cetirizine', dosage: '10mg', instruction: 'Once daily at bedtime for allergies', remaining: 20, refillDate: addDays(18), status: 'Active' },
                 { id: 'm-mc6', name: 'Omeprazole', dosage: '20mg', instruction: 'Once daily before breakfast', remaining: 8, refillDate: addDays(6), status: 'Low Stock' },
+                { id: 'm-mc7', name: 'Mefenamic Acid', dosage: '500mg', instruction: 'Every 8 hours as needed for pain', remaining: 12, refillDate: addDays(10), status: 'Active' },
+                { id: 'm-mc8', name: 'Amoxicillin', dosage: '500mg', instruction: 'Every 8 hours for 7 days', remaining: 15, refillDate: addDays(5), status: 'Active' },
+                { id: 'm-mc9', name: 'Montelukast', dosage: '10mg', instruction: 'Once daily at bedtime', remaining: 28, refillDate: addDays(25), status: 'Active' },
             ],
             results: [
                 { id: 'r-mc6', title: 'CBC', type: 'Laboratory', date: subDays(14), doctor: 'Dr. Jen Diaz', status: 'Final', isCritical: false },

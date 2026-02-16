@@ -35,6 +35,7 @@ import { Checkout } from './pages/Checkout';
 import { PaymentSuccess } from './pages/PaymentSuccess';
 import { Dependents } from './pages/Dependents';
 import { PhilHealthDetail } from './pages/PhilHealthDetail';
+import Referrals from './pages/Referrals';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DemoControls } from './components/DemoControls';
 import { ScrollToTop } from './components/ScrollToTop';
@@ -65,6 +66,7 @@ import { ProviderNotifications } from './provider/pages/ProviderNotifications';
 import { ProviderProfile } from './provider/pages/ProviderProfile';
 import { ProviderSettings } from './provider/pages/ProviderSettings';
 import { QueueMonitor } from './provider/pages/QueueMonitor';
+import { DrugMaster } from './provider/pages/DrugMaster';
 
 // Doctor App imports
 import { DoctorLayout } from './doctor/components/DoctorLayout';
@@ -82,6 +84,7 @@ import { LOAReview } from './doctor/pages/LOAReview';
 import { DoctorCarePlans } from './doctor/pages/DoctorCarePlans';
 import { DoctorCdssOverview } from './doctor/pages/DoctorCdssOverview';
 import { DoctorProfile } from './doctor/pages/DoctorProfile';
+import DoctorReferrals from './doctor/pages/DoctorReferrals';
 
 // App Selector
 import { AppSelector } from './pages/AppSelector';
@@ -115,6 +118,7 @@ function App() {
                                         <Route path="/results" element={<Results />} />
                                         <Route path="/results/:id" element={<ResultDetail />} />
                                         <Route path="/medications" element={<Medications />} />
+                                        <Route path="/referrals" element={<Referrals />} />
                                         <Route path="/immunization" element={<Immunization />} />
                                         <Route path="/coverage" element={<Financial />} />
                                         <Route path="/benefits" element={<Benefits />} />
@@ -165,6 +169,7 @@ function App() {
                                         <Route path="/provider/integrations" element={<Integrations />} />
                                         <Route path="/provider/homecare" element={<HomeCareManagement />} />
                                         <Route path="/provider/records" element={<Records />} />
+                                        <Route path="/provider/drug-master" element={<DrugMaster />} />
                                         <Route path="/provider/architecture" element={<Architecture />} />
                     <Route path="/provider/forms" element={<FormsManagement />} />
                     <Route path="/provider/notifications" element={<ProviderNotifications />} />
@@ -187,6 +192,7 @@ function App() {
                                         <Route path="/doctor/immunizations" element={<ImmunizationManagement />} />
                                         <Route path="/doctor/loa" element={<LOAReview />} />
                                         <Route path="/doctor/care-plans" element={<DoctorCarePlans />} />
+                                        <Route path="/doctor/referrals" element={<DoctorReferrals />} />
                                         <Route path="/doctor/profile" element={<DoctorProfile />} />
                                     </Route>
 

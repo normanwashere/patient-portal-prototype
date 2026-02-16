@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import {
     CalendarDays, ChevronRight, TestTube, Pill, CreditCard, Heart,
     Syringe, ClipboardList, Video, FileText, Building2, Users,
-    Settings2, X, Check, HeartHandshake,
+    Settings2, X, Check, HeartHandshake, Send,
 } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import { useData } from '../context/DataContext';
 import { useBadges } from '../hooks/useBadges';
 import { BannerCarousel } from '../components/BannerCarousel';
 import { CheckInCard } from '../components/CheckInCard';
+import { GeofenceCheckIn } from '../components/GeofenceCheckIn';
 import { HospitalWidget } from '../components/HospitalWidget/HospitalWidget';
 import {
     getTenantBranches,
@@ -42,6 +43,7 @@ const ALL_QUICK_ACTIONS: QuickActionDef[] = [
     { id: 'vaccines', label: 'Vaccines', icon: Syringe, to: '/immunization' },
     { id: 'teleconsult', label: 'Teleconsult', icon: Video, to: '/visits/teleconsult-intake', visible: (f) => !!f.visits?.teleconsultEnabled },
     { id: 'homecare', label: 'HomeCare', icon: HeartHandshake, to: '/visits/homecare', visible: (f) => !!f.visits?.homeCareEnabled },
+    { id: 'referrals', label: 'My Referrals', icon: Send, to: '/referrals' },
     { id: 'medical-history', label: 'Medical History', icon: FileText, to: '/medical-history' },
     { id: 'branches', label: 'Find Clinics', icon: Building2, to: '/branches' },
     { id: 'community', label: 'Community', icon: Users, to: '/community' },
@@ -49,7 +51,7 @@ const ALL_QUICK_ACTIONS: QuickActionDef[] = [
 
 /** Default visible actions (order matters) */
 const DEFAULT_ACTION_IDS = [
-    'appointments', 'lab-results', 'medications', 'care-plans', 'hmo-benefits', 'vaccines',
+    'appointments', 'lab-results', 'medications', 'care-plans', 'referrals', 'hmo-benefits', 'vaccines',
 ];
 
 const STORAGE_KEY = 'patient-quick-actions';
@@ -179,6 +181,7 @@ export const Dashboard: React.FC = () => {
     const { newLabsCount, newMedsCount } = useBadges();
     const [showCustomizer, setShowCustomizer] = useState(false);
     const [showConfirmPrompt, setShowConfirmPrompt] = useState(false);
+    const [showGeofence, setShowGeofence] = useState(false);
 
     // Long-press detection
     const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -267,7 +270,7 @@ export const Dashboard: React.FC = () => {
             {/* Visit Context Widget */}
             <section className="queue-section">
                 <CheckInCard
-                    onCheckIn={() => joinQueue()}
+                    onCheckIn={() => setShowGeofence(true)}
                     onLeaveQueue={() => leaveQueue()}
                 />
             </section>
@@ -339,6 +342,15 @@ export const Dashboard: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Geofence Check-In Modal */}
+            {showGeofence && (
+                <GeofenceCheckIn
+                    clinicName={tenant.name}
+                    onVerified={() => { setShowGeofence(false); joinQueue(); }}
+                    onCancel={() => setShowGeofence(false)}
+                />
             )}
 
             {/* Customizer Modal */}

@@ -82,6 +82,26 @@ export interface DoctorRequest {
     specimenType?: 'Blood' | 'Urine' | 'Stool' | 'Swab' | 'Other';
 }
 
+export interface PatientReferralView {
+    id: string;
+    referringDoctorName: string;
+    referringSpecialty: string;
+    referredToSpecialty: string;
+    referredToDoctorName?: string;
+    referredToFacility?: string;
+    type: 'Internal' | 'External';
+    urgency: 'Routine' | 'Urgent' | 'Emergent';
+    status: 'Pending' | 'Accepted' | 'Scheduled' | 'Completed' | 'Declined' | 'Cancelled';
+    reason: string;
+    clinicalSummary: string;
+    diagnosis?: string;
+    icdCode?: string;
+    createdAt: string;
+    scheduledDate?: string;
+    completedAt?: string;
+    responseNotes?: string;
+}
+
 // Unified Step Status
 export type StepStatus = 'PENDING' | 'QUEUED' | 'READY' | 'IN_SESSION' | 'COMPLETED' | 'PAUSED';
 export type StepType = 'TRIAGE' | 'CONSULT' | 'LAB' | 'IMAGING' | 'PHARMACY' | 'BILLING';
@@ -129,6 +149,18 @@ export interface PhilHealth {
     benefitCategories: BenefitCategory[];
 }
 
+export interface PackageItem {
+    id: string;
+    name: string;
+    category: string;
+    status: 'Available' | 'Availed' | 'Deferred' | 'Active';
+    limit: number;       // 0 = unlimited, >0 = finite
+    used: number;
+    completedDate?: string;
+    facility?: string;
+    notes?: string;
+}
+
 export interface HMOCard {
     id: string;
     provider: string;
@@ -143,6 +175,8 @@ export interface HMOCard {
     mblUsed: string;
     benefitCategories: BenefitCategory[];
     status: 'Active' | 'Pending';
+    packageType?: 'corporate' | 'consumer';
+    packageItems?: PackageItem[];
 }
 
 export interface WellnessBenefit {
@@ -188,6 +222,7 @@ interface DataContextType {
     procedures: Procedure[];
     loaRequests: LOARequest[];
     claims: Claim[];
+    referrals: PatientReferralView[];
     userProfile: UserProfile | null;
     dependents: Dependent[];
     addAppointment: (appt: Omit<Appointment, 'id' | 'status'>) => void;
@@ -356,8 +391,107 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [dependents, setDependents] = useState<Dependent[]>([]);
 
+    const [referrals, setReferrals] = useState<PatientReferralView[]>([]);
+
     const [currentPatientId, setCurrentPatientId] = useState<string>('p1');
     const [availablePatients, setAvailablePatients] = useState<UserProfile[]>([]);
+
+    // Patient referral mock data
+    const REFERRALS_JUAN: PatientReferralView[] = [
+        {
+            id: 'ref-p-001',
+            referringDoctorName: 'Dr. Ricardo Santos',
+            referringSpecialty: 'Internal Medicine',
+            referredToSpecialty: 'Cardiology',
+            referredToDoctorName: 'Dr. Ricardo Santos',
+            referredToFacility: 'Metro General Hospital - Main',
+            type: 'Internal',
+            urgency: 'Routine',
+            status: 'Completed',
+            reason: 'Cardiac risk assessment — elevated BP readings with family history of premature CAD',
+            clinicalSummary: '45-year-old male with Stage 1 HTN on Losartan 50mg. Family history of MI. Lipid panel shows borderline LDL 142 mg/dL.',
+            diagnosis: 'Essential Hypertension',
+            icdCode: 'I10',
+            createdAt: '2026-01-20',
+            scheduledDate: '2026-01-28',
+            completedAt: '2026-01-28',
+            responseNotes: 'Cardiac workup completed. Treadmill stress test negative. Continue Losartan, add Aspirin 80mg.',
+        },
+        {
+            id: 'ref-p-002',
+            referringDoctorName: 'Dr. Ricardo Santos',
+            referringSpecialty: 'Internal Medicine',
+            referredToSpecialty: 'Ophthalmology',
+            referredToFacility: 'Metro General Hospital - Main',
+            type: 'Internal',
+            urgency: 'Routine',
+            status: 'Scheduled',
+            reason: 'Annual diabetic eye screening — last eye exam >1 year ago',
+            clinicalSummary: 'T2DM with recent HbA1c 7.2%. Requesting dilated fundoscopy for diabetic retinopathy screening.',
+            diagnosis: 'Type 2 Diabetes Mellitus',
+            icdCode: 'E11.9',
+            createdAt: '2026-02-10',
+            scheduledDate: '2026-02-25',
+        },
+    ];
+
+    const REFERRALS_ANDREA: PatientReferralView[] = [
+        {
+            id: 'ref-p-mc01',
+            referringDoctorName: 'Dr. Carmela Ong',
+            referringSpecialty: 'Internal Medicine',
+            referredToSpecialty: 'Cardiology',
+            referredToDoctorName: 'Dr. Ramon Bautista',
+            referredToFacility: 'Maxicare PCC - Bridgetowne',
+            type: 'Internal',
+            urgency: 'Routine',
+            status: 'Completed',
+            reason: 'Baseline cardiac risk assessment — family history of premature CAD, borderline lipids',
+            clinicalSummary: '32-year-old female, mild HTN on Losartan 50mg. Father had MI at 55. LDL 138 mg/dL.',
+            diagnosis: 'Essential Hypertension',
+            icdCode: 'I10',
+            createdAt: '2026-01-15',
+            scheduledDate: '2026-01-22',
+            completedAt: '2026-01-22',
+            responseNotes: '2D echo normal. EF 65%. Low-moderate ASCVD risk. Continue current medications.',
+        },
+        {
+            id: 'ref-p-mc02',
+            referringDoctorName: 'Dr. Carmela Ong',
+            referringSpecialty: 'Internal Medicine',
+            referredToSpecialty: 'Psychiatry',
+            referredToDoctorName: 'Dr. Isabella Navarro',
+            referredToFacility: 'Maxicare PCC - BGC',
+            type: 'Internal',
+            urgency: 'Routine',
+            status: 'Scheduled',
+            reason: 'Anxiety symptoms impacting sleep quality — trial of CBT before pharmacologic therapy',
+            clinicalSummary: 'Persistent work-related anxiety with insomnia for 3 months. GAD-7 score 12 (moderate).',
+            diagnosis: 'Generalized Anxiety Disorder',
+            icdCode: 'F41.1',
+            createdAt: '2026-02-05',
+            scheduledDate: '2026-02-20',
+        },
+    ];
+
+    const REFERRALS_MARK: PatientReferralView[] = [
+        {
+            id: 'ref-p-mc03',
+            referringDoctorName: 'Dr. Jen Diaz',
+            referringSpecialty: 'Family Medicine',
+            referredToSpecialty: 'Orthopedics',
+            referredToDoctorName: 'Dr. Antonio Reyes',
+            referredToFacility: 'Maxicare PCC - Ayala North Exchange',
+            type: 'Internal',
+            urgency: 'Urgent',
+            status: 'Pending',
+            reason: 'Chronic low back pain — failed conservative management, MRI shows L4-L5 disc protrusion',
+            clinicalSummary: '40-year-old male with 6-month progressive lower back pain radiating to left leg. Failed NSAIDs and PT.',
+            diagnosis: 'Lumbar Disc Degeneration',
+            icdCode: 'M51.16',
+            createdAt: '2026-02-12',
+        },
+    ];
 
     // Initialize data based on tenant
     React.useEffect(() => {
@@ -428,6 +562,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setClaims(currentPatient.claims || []);
         setUserProfile(currentPatient.userProfile || null);
         setDependents(currentPatient.dependents || []);
+
+        // Set referrals based on current patient
+        if (currentPatientId === 'p-self') setReferrals(REFERRALS_JUAN);
+        else if (currentPatientId === 'p-mc1') setReferrals(REFERRALS_ANDREA);
+        else if (currentPatientId === 'p-mc2') setReferrals(REFERRALS_MARK);
+        else setReferrals([]);
     }, [tenant.id, currentPatientId]);
 
     const switchPatient = React.useCallback((patientId: string) => {
@@ -828,6 +968,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return (
         <DataContext.Provider value={{
             appointments, medications, results, doctorRequests, invoices, procedures, loaRequests,
+            referrals,
             userProfile, dependents,
             addAppointment, cancelAppointment, requestRefill, payInvoice, bookFollowUp,
             bookProcedure, requestLOA, fileClaim,

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { DrugLookupModal } from '../../provider/pages/DrugMaster';
 import {
   RefreshCw,
   FileText,
@@ -261,6 +262,7 @@ export const PrescriptionManagement = () => {
   const [activeTab, setActiveTab] = useState<Tab>('active');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [lookupDrug, setLookupDrug] = useState<string | null>(null);
 
   const activeCount = prescriptions.filter((p) => p.status === 'Active').length;
   const pendingCount = prescriptions.filter((p) => p.status === 'Pending Approval').length;
@@ -348,7 +350,7 @@ export const PrescriptionManagement = () => {
               </button>
             ))}
           </div>
-          <ActivePrescriptionsTable prescriptions={filteredActive} styles={styles} />
+          <ActivePrescriptionsTable prescriptions={filteredActive} styles={styles} onDrugClick={setLookupDrug} />
         </>
       )}
 
@@ -364,7 +366,9 @@ export const PrescriptionManagement = () => {
 
       {activeTab === 'new' && <NewPrescriptionForm showToast={showToast} styles={styles} />}
 
-      {activeTab === 'formulary' && <FormularyTab drugs={MOCK_DRUGS} styles={styles} />}
+      {activeTab === 'formulary' && <FormularyTab drugs={MOCK_DRUGS} styles={styles} onDrugClick={setLookupDrug} />}
+
+      {lookupDrug && <DrugLookupModal drugName={lookupDrug} onClose={() => setLookupDrug(null)} />}
     </div>
   );
 };
@@ -372,9 +376,11 @@ export const PrescriptionManagement = () => {
 function ActivePrescriptionsTable({
   prescriptions,
   styles: s,
+  onDrugClick,
 }: {
   prescriptions: Prescription[];
   styles: Record<string, React.CSSProperties>;
+  onDrugClick: (name: string) => void;
 }) {
   const byPatient = useMemo(() => {
     const map = new Map<string, Prescription[]>();
@@ -406,7 +412,15 @@ function ActivePrescriptionsTable({
               list.map((rx) => (
                 <tr key={rx.id}>
                   <td style={s.td}>{rx.patientName}</td>
-                  <td style={s.td}>{rx.medication}</td>
+                  <td style={s.td}>
+                    <span
+                      style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted' }}
+                      onClick={() => onDrugClick(rx.medication)}
+                      title="View drug information"
+                    >
+                      {rx.medication}
+                    </span>
+                  </td>
                   <td style={s.td}>{rx.dosage}</td>
                   <td style={s.td}>{rx.frequency}</td>
                   <td style={s.td}>{rx.duration}</td>
@@ -615,9 +629,11 @@ function NewPrescriptionForm({
 function FormularyTab({
   drugs,
   styles: s,
+  onDrugClick,
 }: {
   drugs: FormularyDrug[];
   styles: Record<string, React.CSSProperties>;
+  onDrugClick: (name: string) => void;
 }) {
   const { tenant } = useTheme();
   const hasHmo = tenant.features.hmo ?? false;
@@ -768,7 +784,7 @@ function FormularyTab({
                     )}
                   </div>
                   {/* Coverage Row */}
-                  <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap', alignItems: 'center' }}>
                     {hasHmo && (
                       <span style={{
                         fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6,
@@ -787,6 +803,17 @@ function FormularyTab({
                         PhilHealth: {d.philhealth ? 'Covered ✓' : 'Not covered'}
                       </span>
                     )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDrugClick(d.name); }}
+                      style={{
+                        marginLeft: 'auto', padding: '5px 14px', borderRadius: 6,
+                        border: '1px solid var(--color-primary)', background: 'transparent',
+                        color: 'var(--color-primary)', fontSize: 12, fontWeight: 600,
+                        cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}
+                    >
+                      View Full Details
+                    </button>
                   </div>
                 </div>
               )}

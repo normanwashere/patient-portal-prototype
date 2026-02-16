@@ -21,6 +21,9 @@ import {
   PhoneCall,
   MessageSquare,
   User,
+  MoreHorizontal,
+  Send,
+  X,
 } from 'lucide-react';
 import { useProvider } from '../../provider/context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
@@ -74,6 +77,7 @@ const SIDEBAR_SECTIONS: NavSection[] = [
     label: 'Management',
     items: [
       { to: `${PREFIX}/care-plans`, icon: ClipboardPlus, label: 'Care Plans' },
+      { to: `${PREFIX}/referrals`, icon: ArrowLeftRight, label: 'Referrals' },
       { to: `${PREFIX}/messages`, icon: MessageSquare, label: 'Messages', hasBadge: 'messages' },
       { to: `${PREFIX}/tasks`, icon: ClipboardList, label: 'Tasks', hasBadge: 'tasks' },
       { to: `${PREFIX}/immunizations`, icon: Syringe, label: 'Immunizations' },
@@ -87,7 +91,6 @@ const ALL_BOTTOM_NAV_ITEMS: NavItem[] = [
   { to: `${PREFIX}/queue`, icon: Users, label: 'Queue', badgeKey: 'queue', visible: (f) => f.queue },
   { to: `${PREFIX}/encounter`, icon: Stethoscope, label: 'Encounter', badgeKey: '' },
   { to: `${PREFIX}/results`, icon: FlaskConical, label: 'Results', badgeKey: 'results', visible: (f) => f.visits.clinicLabFulfillmentEnabled },
-  { to: `${PREFIX}/tasks`, icon: ClipboardList, label: 'Tasks', badgeKey: 'tasks' },
 ];
 
 export const DoctorLayout = () => {
@@ -128,6 +131,19 @@ export const DoctorLayout = () => {
   }, [location.pathname, currentStaff.role]);
 
   const [showSimulation, setShowSimulation] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  const MORE_MENU_ITEMS = [
+    { to: `${PREFIX}/referrals`, icon: Send, label: 'Referrals' },
+    { to: `${PREFIX}/tasks`, icon: ClipboardList, label: 'Tasks' },
+    { to: `${PREFIX}/care-plans`, icon: ClipboardPlus, label: 'Care Plans' },
+    { to: `${PREFIX}/prescriptions`, icon: Pill, label: 'Prescriptions' },
+    { to: `${PREFIX}/messages`, icon: MessageSquare, label: 'Messages' },
+    { to: `${PREFIX}/immunizations`, icon: Syringe, label: 'Immunizations' },
+    { to: `${PREFIX}/schedule`, icon: Calendar, label: 'My Schedule' },
+    { to: `${PREFIX}/loa`, icon: FileCheck, label: 'LOA Review' },
+    { to: `${PREFIX}/profile`, icon: User, label: 'My Profile' },
+  ];
 
   // Expose simulation state globally for DemoControls
   useEffect(() => {
@@ -426,11 +442,76 @@ export const DoctorLayout = () => {
               </NavLink>
             );
           })}
+        {/* More button */}
+        <button
+          onClick={() => setShowMoreMenu(true)}
+          className={`doctor-nav-item ${showMoreMenu ? 'active' : ''}`}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+        >
+          <MoreHorizontal size={22} className="doctor-nav-icon" />
+          <span className="doctor-nav-label">More</span>
+          {(taskBadgeCount + messageCount) > 0 && (
+            <span className="doctor-nav-badge">{taskBadgeCount + messageCount}</span>
+          )}
+        </button>
       </nav>
 
       {/* Doctor Simulation Overlay */}
       {showSimulation && (
         <DoctorSimulation onClose={() => setShowSimulation(false)} />
+      )}
+
+      {/* More Menu overlay (mobile) */}
+      {showMoreMenu && (
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={() => setShowMoreMenu(false)}
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+              zIndex: 9998, display: 'block',
+            }}
+          />
+          {/* Slide-up panel */}
+          <div style={{
+            position: 'fixed', bottom: 56, left: 0, right: 0,
+            background: 'var(--color-surface, #fff)',
+            borderTopLeftRadius: 16, borderTopRightRadius: 16,
+            boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
+            zIndex: 9999, padding: '12px 0 8px',
+            maxHeight: '60vh', overflowY: 'auto',
+            animation: 'slideUpMore 0.2s ease-out',
+          }}>
+            {/* Handle bar */}
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--color-border)', margin: '0 auto 12px' }} />
+            <div style={{ padding: '0 16px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>More</span>
+              <button onClick={() => setShowMoreMenu(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-text-muted)' }}>
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, padding: '0 12px' }}>
+              {MORE_MENU_ITEMS.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setShowMoreMenu(false)}
+                  className={({ isActive }) => ''}
+                  style={({ isActive }) => ({
+                    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 6,
+                    padding: '14px 8px', borderRadius: 12, textDecoration: 'none',
+                    background: isActive ? 'var(--color-primary-transparent, rgba(59,130,246,0.08))' : 'transparent',
+                    color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                    fontSize: 11, fontWeight: 600, transition: 'all 0.15s',
+                  })}
+                >
+                  <item.icon size={22} />
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

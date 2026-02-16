@@ -108,6 +108,24 @@ const stationIcon = (st: StationType | string) => {
   }
 };
 
+/* ═══ Emergency glow keyframes (injected once) ═══ */
+const EMERGENCY_STYLE_ID = 'emergency-glow-style';
+if (typeof document !== 'undefined' && !document.getElementById(EMERGENCY_STYLE_ID)) {
+  const style = document.createElement('style');
+  style.id = EMERGENCY_STYLE_ID;
+  style.textContent = `
+    @keyframes emergencyGlow {
+      0%, 100% { box-shadow: 0 0 4px rgba(239,68,68,0.2); }
+      50% { box-shadow: 0 0 14px rgba(239,68,68,0.45); }
+    }
+    @keyframes emergencyFlash {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 /* ═══════════════════════════════════════════════════
    INLINE STYLES
    ═══════════════════════════════════════════════════ */
@@ -299,6 +317,14 @@ export const QueueManagement = () => {
       const list = m.get(p.stationType);
       if (list) list.push(p);
     }
+    // Sort each lane: Emergency patients first
+    for (const [, patients] of m) {
+      patients.sort((a, b) => {
+        const pa = a.priority === 'Emergency' ? 0 : 1;
+        const pb = b.priority === 'Emergency' ? 0 : 1;
+        return pa - pb;
+      });
+    }
     return m;
   }, [filtered, visibleStations]);
 
@@ -461,7 +487,7 @@ export const QueueManagement = () => {
       : { bg: 'var(--color-gray-100, #f3f4f6)', fg: 'var(--color-text-muted)' };
 
     return (
-      <div style={{ ...S.card, borderLeft }}>
+      <div style={{ ...S.card, borderLeft, ...(p.priority === 'Emergency' ? { border: '2px solid #ef4444', animation: 'emergencyGlow 2s ease-in-out infinite' } : {}) }}>
         <div style={S.cardInner}>
           {/* Row 1: Ticket + Name */}
           <div style={S.cardRow}>
@@ -474,6 +500,11 @@ export const QueueManagement = () => {
             )}
             {p.priority !== 'Normal' && (
               <span style={{ ...S.priBadge, ...priorityColor(p.priority) }}>{p.priority}</span>
+            )}
+            {p.locationVerified && (
+              <span style={{ fontSize: 8, fontWeight: 700, padding: '2px 6px', borderRadius: 5, background: 'color-mix(in srgb, var(--color-success) 12%, transparent)', color: 'var(--color-success-dark, #15803d)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                Location ✓
+              </span>
             )}
           </div>
 
@@ -995,8 +1026,17 @@ export const QueueManagement = () => {
     );
   };
 
+  const emergencyPatients = tenantQueuePatients.filter(p => p.priority === 'Emergency' && p.status !== 'COMPLETED' && p.status !== 'NO_SHOW');
+
   const renderLinear = () => (
     <>
+    {emergencyPatients.length > 0 && (
+      <div style={{ background: '#fef2f2', border: '2px solid #fca5a5', borderRadius: 'var(--radius)', padding: '8px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, animation: 'emergencyFlash 1s ease-in-out infinite' }}>
+        <span style={{ fontSize: 16 }}>🚨</span>
+        <span style={{ fontWeight: 700, fontSize: 12, color: '#dc2626' }}>EMERGENCY — {emergencyPatients.length} patient{emergencyPatients.length > 1 ? 's' : ''}</span>
+        <span style={{ fontSize: 11, color: '#b91c1c' }}>{emergencyPatients.map(p => `${p.patientName} (${p.stationType})`).join(' · ')}</span>
+      </div>
+    )}
     <div style={S.kanban}>
       {visibleStations.map((station, i) => {
         const patients = byStation.get(station) ?? [];

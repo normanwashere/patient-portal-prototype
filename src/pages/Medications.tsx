@@ -1,9 +1,10 @@
 import React from 'react';
-import { Pill, AlertCircle, RefreshCw, Calendar, Check, FileText, Printer, X, ClipboardList, Activity, Heart, Stethoscope, AlertTriangle } from 'lucide-react';
+import { Pill, AlertCircle, RefreshCw, Calendar, Check, FileText, Printer, X, ClipboardList, Activity, Heart, Stethoscope, AlertTriangle, Info } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../theme/ThemeContext';
 import { BackButton } from '../components/Common/BackButton';
+import { DrugInfoModal } from '../provider/pages/DrugMaster';
 import './Results.css';
 import './Medications.css';
 
@@ -84,6 +85,7 @@ export const Medications: React.FC = () => {
     const { tenant } = useTheme();
     const [selectedMed, setSelectedMed] = React.useState<any | null>(null);
     const [rxModalMed, setRxModalMed] = React.useState<any | null>(null);
+    const [lookupDrug, setLookupDrug] = React.useState<string | null>(null);
 
     // Auto-mark notifications as read
     React.useEffect(() => {
@@ -139,7 +141,21 @@ export const Medications: React.FC = () => {
                         </div>
                         <div className="result-info">
                             <div className="result-title-row">
-                                <h4>{med.name} {med.dosage}</h4>
+                                <h4>
+                                    <span
+                                        style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '2px' }}
+                                        onClick={(e) => { e.stopPropagation(); setLookupDrug(med.name); }}
+                                        title="View drug information"
+                                    >
+                                        {med.name}
+                                    </span>
+                                    <Info
+                                        size={14}
+                                        style={{ verticalAlign: 'middle', marginLeft: 4, color: 'var(--color-primary)', cursor: 'pointer', opacity: 0.7 }}
+                                        onClick={(e) => { e.stopPropagation(); setLookupDrug(med.name); }}
+                                    />{' '}
+                                    {med.dosage}
+                                </h4>
                                 {med.status === 'Low Stock' && (
                                     <span className="badge-critical" style={{ background: '#fee2e2', color: '#ef4444' }}>Low Stock</span>
                                 )}
@@ -387,6 +403,9 @@ export const Medications: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* ── Drug Lookup Modal (from formulary) ── */}
+            {lookupDrug && <DrugInfoModal drugName={lookupDrug} onClose={() => setLookupDrug(null)} />}
         </div>
     );
 };

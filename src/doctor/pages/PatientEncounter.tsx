@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Mic,
   MicOff,
@@ -27,6 +27,7 @@ import {
   Bot,
   RefreshCw,
   Heart,
+  Info,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useProvider } from '../../provider/context/ProviderContext';
@@ -35,6 +36,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import type { ClinicalNote, CDSSAlert } from '../../provider/types';
 import type { ReactNode } from 'react';
 import { SoapNotePanel } from '../components/SoapNotePanel';
+import { DrugInfoModal } from '../../provider/pages/DrugMaster';
 
 type TabKey = 'soap' | 'transcriber' | 'cdss' | 'orders' | 'prescriptions' | 'chart' | 'careplan';
 type SoapSection = 'S' | 'O' | 'A' | 'P';
@@ -704,6 +706,8 @@ export const PatientEncounter = () => {
     currentStaff,
     addCdssAlert,
     addLabOrder,
+    addReferral,
+    staff,
   } = useProvider();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -766,6 +770,21 @@ export const PatientEncounter = () => {
   const [rxQuantity, setRxQuantity] = useState('');
   const [rxNotes, setRxNotes] = useState('');
   const rxSearchRef = useRef<HTMLDivElement>(null);
+  const [lookupDrug, setLookupDrug] = useState<string | null>(null);
+
+  // Referral modal state
+  const [showReferralModal, setShowReferralModal] = useState(false);
+  const [referralForm, setReferralForm] = useState({
+    specialty: '',
+    doctorId: '',
+    facility: '',
+    type: 'Internal' as 'Internal' | 'External',
+    urgency: 'Routine' as 'Routine' | 'Urgent' | 'Emergent',
+    reason: '',
+    clinicalSummary: '',
+    diagnosis: '',
+    icdCode: '',
+  });
 
   // Resolve patient: prefer route state patientId, then IN_SESSION, then first in queue
   const currentPatient = (routeState.patientId
@@ -785,6 +804,24 @@ export const PatientEncounter = () => {
   const completedOrders = patientLabOrders.filter(
     (o) => o.status === 'Resulted' || o.status === 'Reviewed'
   );
+
+  const REFERRAL_SPECIALTIES = [
+    'Cardiology', 'Dermatology', 'Endocrinology', 'ENT', 'Gastroenterology',
+    'Nephrology', 'Neurology', 'Obstetrics & Gynecology', 'Oncology', 'Ophthalmology',
+    'Orthopedics', 'Pediatrics', 'Psychiatry', 'Pulmonology', 'Rheumatology',
+    'Surgery - General', 'Urology', 'Physical Medicine & Rehabilitation',
+    'Maternal-Fetal Medicine', 'Infectious Disease',
+  ];
+
+  const availableDoctors = useMemo(() => {
+    if (!referralForm.specialty) return [];
+    return staff.filter(s =>
+      s.role === 'doctor' &&
+      s.id !== currentStaff.id &&
+      (s.specialty?.toLowerCase().includes(referralForm.specialty.toLowerCase()) ||
+       s.specializations?.some(sp => sp.toLowerCase().includes(referralForm.specialty.toLowerCase())))
+    );
+  }, [referralForm.specialty, staff, currentStaff.id]);
 
   useEffect(() => {
     const note = firstNote ?? clinicalNotes[0];
@@ -1052,7 +1089,48 @@ export const PatientEncounter = () => {
   };
 
   const handleReferPatient = () => {
-    showToast(`Referral initiated for ${currentPatient?.patientName ?? 'patient'}`, 'success');
+    setReferralForm({
+      specialty: '',
+      doctorId: '',
+      facility: '',
+      type: 'Internal',
+      urgency: 'Routine',
+      reason: '',
+      clinicalSummary: soapForm?.assessment ? `${soapForm.subjective}\n\nAssessment: ${soapForm.assessment}` : '',
+      diagnosis: '',
+      icdCode: '',
+    });
+    setShowReferralModal(true);
+  };
+
+  const submitReferral = () => {
+    if (!currentPatient || !referralForm.specialty || !referralForm.reason) {
+      showToast('Please fill in specialty and reason', 'error');
+      return;
+    }
+    const selectedDoc = staff.find(s => s.id === referralForm.doctorId);
+    addReferral({
+      patientId: currentPatient.patientId,
+      patientName: currentPatient.patientName,
+      referringDoctorId: currentStaff.id,
+      referringDoctorName: currentStaff.name,
+      referringSpecialty: currentStaff.specialty ?? currentStaff.department,
+      referredToSpecialty: referralForm.specialty,
+      referredToDoctorId: selectedDoc?.id,
+      referredToDoctorName: selectedDoc?.name,
+      referredToFacility: referralForm.facility || undefined,
+      type: referralForm.type,
+      urgency: referralForm.urgency,
+      status: 'Pending',
+      reason: referralForm.reason,
+      clinicalSummary: referralForm.clinicalSummary,
+      diagnosis: referralForm.diagnosis || undefined,
+      icdCode: referralForm.icdCode || undefined,
+      createdAt: new Date().toISOString(),
+      tenantId: undefined,
+    });
+    setShowReferralModal(false);
+    showToast(`Referral to ${referralForm.specialty} created for ${currentPatient.patientName}`, 'success');
   };
 
   if (!currentPatient) {
@@ -1838,7 +1916,15 @@ export const PatientEncounter = () => {
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: 15 }}>{rx.medication} {rx.dosage}</div>
+                <div style={{ fontWeight: 600, fontSize: 15 }}>
+                  <span
+                    style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted' }}
+                    onClick={() => setLookupDrug(rx.medication)}
+                    title="View drug information"
+                  >
+                    {rx.medication}
+                  </span> {rx.dosage}
+                </div>
                 <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 3 }}>
                   {rx.frequency} · {rx.duration} · Qty: {rx.quantity}
                 </div>
@@ -1987,7 +2073,15 @@ export const PatientEncounter = () => {
                       onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontWeight: 600, fontSize: 13 }}>{item.name}</span>
+                        <span style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          {item.name}
+                          <Info
+                            size={14}
+                            style={{ color: 'var(--color-primary)', opacity: 0.7, cursor: 'pointer', flexShrink: 0 }}
+                            onClick={(e) => { e.stopPropagation(); setLookupDrug(item.name.split(' ')[0]); }}
+                            title="View drug information"
+                          />
+                        </span>
                         <span
                           style={{
                             fontSize: 10,
@@ -2132,7 +2226,15 @@ export const PatientEncounter = () => {
           <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Active Medications</h4>
           <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.8 }}>
             {profile.activeMeds.map((m) => (
-              <li key={m} style={{ marginBottom: 4 }}>{m}</li>
+              <li key={m} style={{ marginBottom: 4 }}>
+                <span
+                  style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted' }}
+                  onClick={() => setLookupDrug(m.split(' ')[0])}
+                  title="View drug information"
+                >
+                  {m}
+                </span>
+              </li>
             ))}
           </ul>
         </div>
@@ -3089,6 +3191,261 @@ export const PatientEncounter = () => {
                   <ArrowLeft size={16} /> Return to Dashboard
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {lookupDrug && <DrugInfoModal drugName={lookupDrug} onClose={() => setLookupDrug(null)} />}
+
+      {/* ─── Referral Modal ─── */}
+      {showReferralModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(0,0,0,0.45)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', padding: 16,
+          }}
+          onClick={() => setShowReferralModal(false)}
+        >
+          <div
+            style={{
+              background: '#fff', borderRadius: 'var(--radius, 12px)',
+              width: '100%', maxWidth: 600, maxHeight: '85vh',
+              overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+              display: 'flex', flexDirection: 'column',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{
+              padding: '20px 24px 16px', borderBottom: '1px solid var(--color-border, #e5e7eb)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+            }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>Refer Patient</h3>
+                <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                  {currentPatient?.patientName}
+                </div>
+              </div>
+              <button
+                onClick={() => setShowReferralModal(false)}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+                  color: 'var(--color-text-muted)', fontSize: 20, lineHeight: 1,
+                }}
+              >✕</button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '16px 24px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Referral Type */}
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Referral Type</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {(['Internal', 'External'] as const).map(t => (
+                    <button
+                      key={t}
+                      onClick={() => {
+                        setReferralForm(f => ({
+                          ...f, type: t,
+                          facility: t === 'Internal' ? (tenant.name ?? '') : '',
+                        }));
+                      }}
+                      style={{
+                        flex: 1, padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
+                        fontSize: 13, fontWeight: 600, border: '1.5px solid',
+                        borderColor: referralForm.type === t ? 'var(--color-primary, #2563eb)' : 'var(--color-border, #e5e7eb)',
+                        background: referralForm.type === t ? 'var(--color-primary, #2563eb)' : '#fff',
+                        color: referralForm.type === t ? '#fff' : 'var(--color-text)',
+                        transition: 'all 0.15s',
+                      }}
+                    >{t}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Urgency */}
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Urgency</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {([
+                    { value: 'Routine' as const, color: '#6b7280', bg: '#f3f4f6' },
+                    { value: 'Urgent' as const, color: '#d97706', bg: '#fffbeb' },
+                    { value: 'Emergent' as const, color: '#dc2626', bg: '#fef2f2' },
+                  ]).map(u => (
+                    <button
+                      key={u.value}
+                      onClick={() => setReferralForm(f => ({ ...f, urgency: u.value }))}
+                      style={{
+                        flex: 1, padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
+                        fontSize: 13, fontWeight: 600, border: '1.5px solid',
+                        borderColor: referralForm.urgency === u.value ? u.color : 'var(--color-border, #e5e7eb)',
+                        background: referralForm.urgency === u.value ? u.bg : '#fff',
+                        color: referralForm.urgency === u.value ? u.color : 'var(--color-text-muted)',
+                        transition: 'all 0.15s',
+                      }}
+                    >{u.value}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Specialty */}
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Specialty *</label>
+                <select
+                  value={referralForm.specialty}
+                  onChange={e => setReferralForm(f => ({ ...f, specialty: e.target.value, doctorId: '' }))}
+                  style={{
+                    width: '100%', padding: '10px 12px', borderRadius: 8, fontSize: 13,
+                    border: '1.5px solid var(--color-border, #e5e7eb)', background: '#fff',
+                    color: referralForm.specialty ? 'var(--color-text)' : 'var(--color-text-muted)',
+                    outline: 'none', cursor: 'pointer',
+                  }}
+                >
+                  <option value="">Select specialty...</option>
+                  {REFERRAL_SPECIALTIES.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Referred To Doctor */}
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Referred To Doctor</label>
+                <select
+                  value={referralForm.doctorId}
+                  onChange={e => setReferralForm(f => ({ ...f, doctorId: e.target.value }))}
+                  disabled={!referralForm.specialty}
+                  style={{
+                    width: '100%', padding: '10px 12px', borderRadius: 8, fontSize: 13,
+                    border: '1.5px solid var(--color-border, #e5e7eb)', background: !referralForm.specialty ? '#f9fafb' : '#fff',
+                    color: referralForm.doctorId ? 'var(--color-text)' : 'var(--color-text-muted)',
+                    outline: 'none', cursor: referralForm.specialty ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  {!referralForm.specialty ? (
+                    <option value="">Select specialty first</option>
+                  ) : availableDoctors.length === 0 ? (
+                    <option value="">No doctors found for this specialty</option>
+                  ) : (
+                    <>
+                      <option value="">Select doctor (optional)...</option>
+                      {availableDoctors.map(d => (
+                        <option key={d.id} value={d.id}>{d.name}{d.specialty ? ` — ${d.specialty}` : ''}</option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </div>
+
+              {/* Facility */}
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Facility</label>
+                <input
+                  type="text"
+                  value={referralForm.facility}
+                  onChange={e => setReferralForm(f => ({ ...f, facility: e.target.value }))}
+                  placeholder="Facility name (optional)"
+                  style={{
+                    width: '100%', padding: '10px 12px', borderRadius: 8, fontSize: 13,
+                    border: '1.5px solid var(--color-border, #e5e7eb)', background: '#fff',
+                    color: 'var(--color-text)', outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              {/* Reason */}
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Reason for Referral *</label>
+                <textarea
+                  value={referralForm.reason}
+                  onChange={e => setReferralForm(f => ({ ...f, reason: e.target.value }))}
+                  rows={3}
+                  placeholder="Describe the reason for referral..."
+                  style={{
+                    width: '100%', padding: '10px 12px', borderRadius: 8, fontSize: 13,
+                    border: '1.5px solid var(--color-border, #e5e7eb)', background: '#fff',
+                    color: 'var(--color-text)', outline: 'none', resize: 'vertical',
+                    fontFamily: 'inherit', boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              {/* Clinical Summary */}
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Clinical Summary</label>
+                <textarea
+                  value={referralForm.clinicalSummary}
+                  onChange={e => setReferralForm(f => ({ ...f, clinicalSummary: e.target.value }))}
+                  rows={4}
+                  placeholder="Clinical context, relevant history, findings..."
+                  style={{
+                    width: '100%', padding: '10px 12px', borderRadius: 8, fontSize: 13,
+                    border: '1.5px solid var(--color-border, #e5e7eb)', background: '#fff',
+                    color: 'var(--color-text)', outline: 'none', resize: 'vertical',
+                    fontFamily: 'inherit', boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              {/* Diagnosis + ICD row */}
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 2 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Diagnosis</label>
+                  <input
+                    type="text"
+                    value={referralForm.diagnosis}
+                    onChange={e => setReferralForm(f => ({ ...f, diagnosis: e.target.value }))}
+                    placeholder="e.g. Essential Hypertension"
+                    style={{
+                      width: '100%', padding: '10px 12px', borderRadius: 8, fontSize: 13,
+                      border: '1.5px solid var(--color-border, #e5e7eb)', background: '#fff',
+                      color: 'var(--color-text)', outline: 'none', boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>ICD Code</label>
+                  <input
+                    type="text"
+                    value={referralForm.icdCode}
+                    onChange={e => setReferralForm(f => ({ ...f, icdCode: e.target.value }))}
+                    placeholder="e.g. I10"
+                    style={{
+                      width: '100%', padding: '10px 12px', borderRadius: 8, fontSize: 13,
+                      border: '1.5px solid var(--color-border, #e5e7eb)', background: '#fff',
+                      color: 'var(--color-text)', outline: 'none', boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              padding: '16px 24px', borderTop: '1px solid var(--color-border, #e5e7eb)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <button
+                onClick={() => setShowReferralModal(false)}
+                style={{
+                  padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  border: '1.5px solid var(--color-border, #e5e7eb)', background: '#fff',
+                  color: 'var(--color-text)', cursor: 'pointer',
+                }}
+              >Cancel</button>
+              <button
+                onClick={submitReferral}
+                disabled={!referralForm.specialty || !referralForm.reason}
+                style={{
+                  padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  border: 'none', cursor: (!referralForm.specialty || !referralForm.reason) ? 'not-allowed' : 'pointer',
+                  background: (!referralForm.specialty || !referralForm.reason) ? '#d1d5db' : 'var(--color-primary, #2563eb)',
+                  color: '#fff', transition: 'all 0.15s',
+                  opacity: (!referralForm.specialty || !referralForm.reason) ? 0.6 : 1,
+                }}
+              >Submit Referral</button>
             </div>
           </div>
         </div>

@@ -12,7 +12,7 @@ import type { StaffRole } from './types';
 
 export const PROVIDER_MODULE_KEYS = [
     'dashboard', 'queue', 'teleconsult-queue', 'scheduling',
-    'nursing', 'lab-imaging', 'pharmacy',
+    'nursing', 'lab-imaging', 'pharmacy', 'drug-master',
     'records',
     'billing', 'hr', 'facility',
     'users', 'communications', 'events', 'analytics', 'forms', 'integrations', 'architecture',
@@ -24,10 +24,10 @@ export type ProviderModuleKey = typeof PROVIDER_MODULE_KEYS[number];
 export const PROVIDER_ROLE_ACCESS: Record<StaffRole, ProviderModuleKey[]> = {
     super_admin:   [...PROVIDER_MODULE_KEYS],  // Full access + can switch branches
     admin:         [...PROVIDER_MODULE_KEYS],  // Full access
-    doctor:        ['dashboard', 'queue', 'teleconsult-queue', 'scheduling', 'nursing', 'lab-imaging', 'records', 'homecare', 'communications'],
+    doctor:        ['dashboard', 'queue', 'teleconsult-queue', 'scheduling', 'nursing', 'lab-imaging', 'drug-master', 'records', 'homecare', 'communications'],
     nurse:         ['dashboard', 'queue', 'scheduling', 'nursing', 'lab-imaging', 'records', 'homecare', 'communications'],
     lab_tech:      ['dashboard', 'lab-imaging', 'records', 'communications'],
-    pharmacist:    ['dashboard', 'pharmacy', 'records', 'communications'],
+    pharmacist:    ['dashboard', 'pharmacy', 'drug-master', 'records', 'communications'],
     billing_staff: ['dashboard', 'billing', 'records', 'communications', 'forms'],
     front_desk:    ['dashboard', 'queue', 'teleconsult-queue', 'scheduling', 'records', 'homecare', 'communications', 'forms'],
     hr:            ['dashboard', 'hr', 'scheduling', 'communications', 'forms'],
@@ -54,7 +54,7 @@ export const DOCTOR_MODULE_KEYS = [
     'dashboard', 'schedule',
     'queue', 'teleconsult',
     'encounter', 'results', 'prescriptions',
-    'care-plans', 'messages', 'tasks', 'immunizations', 'loa', 'cdss',
+    'care-plans', 'referrals', 'messages', 'tasks', 'immunizations', 'loa', 'cdss',
 ] as const;
 
 export type DoctorModuleKey = typeof DOCTOR_MODULE_KEYS[number];
@@ -63,7 +63,7 @@ export const DOCTOR_ROLE_ACCESS: Record<string, DoctorModuleKey[]> = {
     // Doctor — full clinical access
     doctor:     [...DOCTOR_MODULE_KEYS],
     // Staff Nurse — clinical assist, triage, vitals, immunizations, care plans, encounters
-    nurse:      ['dashboard', 'schedule', 'queue', 'encounter', 'results', 'prescriptions', 'care-plans', 'tasks', 'immunizations', 'messages'],
+    nurse:      ['dashboard', 'schedule', 'queue', 'encounter', 'results', 'prescriptions', 'care-plans', 'referrals', 'tasks', 'immunizations', 'messages'],
     // Receptionist — queue, schedule, messages
     front_desk: ['dashboard', 'schedule', 'queue', 'messages', 'tasks'],
 };

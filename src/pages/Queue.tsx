@@ -20,6 +20,7 @@ import {
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
 import { Link } from 'react-router-dom';
+import { GeofenceCheckIn } from '../components/GeofenceCheckIn';
 import './Queue.css';
 
 const PAUSE_REASONS = [
@@ -35,6 +36,7 @@ export const Queue: React.FC = () => {
     const [selectedPauseReason, setSelectedPauseReason] = React.useState<string | null>(null);
     const [pauseNotesInput, setPauseNotesInput] = React.useState('');
     const [pauseResumeDateInput, setPauseResumeDateInput] = React.useState('');
+    const [showGeofence, setShowGeofence] = React.useState(false);
     const {
         steps,
         queueInfo,
@@ -329,7 +331,7 @@ export const Queue: React.FC = () => {
                     </div>
                     <button
                         className="checkin-single-btn priority"
-                        onClick={() => joinQueue()}
+                        onClick={() => setShowGeofence(true)}
                         style={{ width: '100%', maxWidth: '280px', height: '3.5rem', fontSize: '1.1rem' }}
                     >
                         Check In Now
@@ -537,6 +539,19 @@ export const Queue: React.FC = () => {
                         <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Our floor managers are wearing blue vests. Please approach them if you need help navigating.</p>
                     </div>
                 </div>
+            )}
+
+            {/* ── Geofence Check-In Modal ── */}
+            {showGeofence && (
+                <GeofenceCheckIn
+                    clinicName="Metro General Hospital"
+                    onVerified={() => {
+                        setShowGeofence(false);
+                        joinQueue();
+                        showToast('Location verified — checking you in!', 'success');
+                    }}
+                    onCancel={() => setShowGeofence(false)}
+                />
             )}
 
             {/* ── Pause Modal ── */}

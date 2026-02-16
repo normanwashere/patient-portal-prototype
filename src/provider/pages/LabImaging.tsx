@@ -12,6 +12,13 @@ import {
   BarChart3,
   X,
   Beaker,
+  Building2,
+  ExternalLink,
+  Upload,
+  Wifi,
+  WifiOff,
+  Loader2,
+  Link,
 } from 'lucide-react';
 import { useProvider } from '../context/ProviderContext';
 import { useTheme } from '../../theme/ThemeContext';
@@ -141,24 +148,53 @@ export function LabImaging() {
   const [newPriority, setNewPriority] = useState<LabOrder['priority']>('Routine');
   const [newNotes, setNewNotes] = useState('');
 
+  // External filter
+  const [showExternalOnly, setShowExternalOnly] = useState(false);
+
+  // External order modal state
+  const [showExtOrderModal, setShowExtOrderModal] = useState(false);
+  const [extPatientName, setExtPatientName] = useState('');
+  const [extTestName, setExtTestName] = useState('');
+  const [extTestType, setExtTestType] = useState<LabOrder['testType']>('Laboratory');
+  const [extFacility, setExtFacility] = useState('Hi-Precision Diagnostics');
+  const [extPartnerFee, setExtPartnerFee] = useState('');
+  const [extOrderRef, setExtOrderRef] = useState('');
+  const [extStatus, setExtStatus] = useState<'Ordered' | 'In Progress' | 'Resulted'>('Ordered');
+
+  // OCR upload state (inside external order modal)
+  const [ocrFileName, setOcrFileName] = useState<string | null>(null);
+  const [ocrProcessing, setOcrProcessing] = useState(false);
+  const [ocrComplete, setOcrComplete] = useState(false);
+
+  // Connect API modal state
+  const [showConnectApiModal, setShowConnectApiModal] = useState(false);
+  const [apiProvider, setApiProvider] = useState('hi-precision');
+  const [apiEndpoint, setApiEndpoint] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [autoSyncResults, setAutoSyncResults] = useState(false);
+  const [syncInterval, setSyncInterval] = useState('realtime');
+  const [connectionStatus, setConnectionStatus] = useState<'not_connected' | 'testing' | 'connected'>('not_connected');
+
   /* ───────── computed ───────── */
   const orderedCount = labOrders.filter(o => o.status === 'Ordered').length;
   const collectedCount = labOrders.filter(o => o.status === 'Specimen Collected').length;
   const processingCount = labOrders.filter(o => o.status === 'In Progress').length;
   const resultedCount = labOrders.filter(o => o.status === 'Resulted').length;
   const reviewedCount = labOrders.filter(o => o.status === 'Reviewed').length;
+  const externalCount = labOrders.filter(o => o.isExternal).length;
 
   const filtered = useMemo(() => {
-    if (!search) return labOrders.filter(o => o.status !== 'Cancelled');
+    let list = labOrders.filter(o => o.status !== 'Cancelled');
+    if (showExternalOnly) list = list.filter(o => o.isExternal);
+    if (!search) return list;
     const q = search.toLowerCase();
-    return labOrders.filter(o =>
-      o.status !== 'Cancelled' &&
-      (o.patientName.toLowerCase().includes(q) ||
-        o.testName.toLowerCase().includes(q) ||
-        o.id.toLowerCase().includes(q) ||
-        o.doctorName.toLowerCase().includes(q))
+    return list.filter(o =>
+      o.patientName.toLowerCase().includes(q) ||
+      o.testName.toLowerCase().includes(q) ||
+      o.id.toLowerCase().includes(q) ||
+      o.doctorName.toLowerCase().includes(q)
     );
-  }, [labOrders, search]);
+  }, [labOrders, search, showExternalOnly]);
 
   const byStatus = useMemo(() => {
     const map: Record<string, LabOrder[]> = {};
@@ -224,6 +260,37 @@ export function LabImaging() {
     setNewNotes('');
   };
 
+  const submitExtOrder = () => {
+    if (!extPatientName.trim() || !extTestName.trim()) {
+      showToast('Patient name and test name are required', 'error');
+      return;
+    }
+    addLabOrder({
+      patientId: `p-ext-${Date.now()}`,
+      patientName: extPatientName.trim(),
+      doctorId: currentStaff.id,
+      doctorName: currentStaff.name,
+      testName: extTestName.trim(),
+      testType: extTestType,
+      priority: 'Routine',
+      status: extStatus,
+      orderedDate: new Date().toISOString().slice(0, 10),
+      isExternal: true,
+      externalFacility: extFacility,
+      externalPartnerFee: extPartnerFee ? parseFloat(extPartnerFee) : undefined,
+      externalOrderRef: extOrderRef || undefined,
+    });
+    showToast(`External order recorded: ${extTestName}`, 'success');
+    setShowExtOrderModal(false);
+    setExtPatientName('');
+    setExtTestName('');
+    setExtTestType('Laboratory');
+    setExtFacility('Hi-Precision Diagnostics');
+    setExtPartnerFee('');
+    setExtOrderRef('');
+    setExtStatus('Ordered');
+  };
+
   /* ───────── gate on feature flag ───────── */
   if (!labEnabled) {
     return (
@@ -246,9 +313,17 @@ export function LabImaging() {
         title="Lab & Imaging"
         subtitle="Order management, result entry, and turnaround analytics"
         actions={
-          <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => setShowNewOrder(true)}>
-            <Plus size={16} /> New Order
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button style={{ ...S.btn, ...S.btnOutline, borderColor: '#6366f1', color: '#6366f1' }} onClick={() => setShowConnectApiModal(true)}>
+              <Link size={16} /> Connect External API
+            </button>
+            <button style={{ ...S.btn, background: '#6366f1', color: 'white' }} onClick={() => setShowExtOrderModal(true)}>
+              <Building2 size={16} /> Record External Order
+            </button>
+            <button style={{ ...S.btn, ...S.btnPrimary }} onClick={() => setShowNewOrder(true)}>
+              <Plus size={16} /> New Order
+            </button>
+          </div>
         }
       />
 
@@ -295,6 +370,17 @@ export function LabImaging() {
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
+            <button
+              style={{
+                ...S.btn,
+                ...(showExternalOnly
+                  ? { background: '#6366f1', color: 'white' }
+                  : { ...S.btnOutline }),
+              }}
+              onClick={() => setShowExternalOnly(v => !v)}
+            >
+              <ExternalLink size={14} /> External ({externalCount})
+            </button>
           </div>
 
           <div style={S.pipeline}>
@@ -323,8 +409,21 @@ export function LabImaging() {
                         <StatusBadge variant={PRIORITY_VARIANT[o.priority] ?? 'muted'} size="sm">{o.priority}</StatusBadge>
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 4 }}>{o.testName} ({o.testType})</div>
+                      {o.isExternal && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: '#eef2ff', color: '#4f46e5', border: '1px solid #c7d2fe' }}>
+                            <Building2 size={11} /> External – {o.externalFacility}
+                          </span>
+                          {o.externalPartnerFee != null && (
+                            <span style={{ fontSize: 11, fontWeight: 600, color: '#6366f1' }}>₱{o.externalPartnerFee.toLocaleString()}</span>
+                          )}
+                        </div>
+                      )}
                       <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                         {o.id} &middot; Dr. {o.doctorName.replace('Dr. ', '')}
+                        {o.isExternal && o.externalOrderRef && (
+                          <span> &middot; Ref: {o.externalOrderRef}</span>
+                        )}
                       </div>
                       {o.isCritical && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--color-error)', fontWeight: 600, marginTop: 6 }}>
@@ -619,6 +718,347 @@ export function LabImaging() {
               <button style={{ ...S.btn, ...S.btnOutline }} onClick={() => setShowNewOrder(false)}>Cancel</button>
               <button style={{ ...S.btn, ...S.btnPrimary }} onClick={submitNewOrder}>
                 <Plus size={16} /> Create Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════ EXTERNAL ORDER MODAL ═══════════ */}
+      {showExtOrderModal && (
+        <div style={S.overlay} onClick={() => setShowExtOrderModal(false)}>
+          <div style={S.modal} onClick={e => e.stopPropagation()}>
+            <div style={S.modalHeader}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Building2 size={20} style={{ color: '#6366f1' }} /> Record External Order
+              </h2>
+              <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }} onClick={() => setShowExtOrderModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={S.formGroup}>
+              <label style={S.formLabel}>Patient Name *</label>
+              <input style={S.formInput} placeholder="Enter patient name" value={extPatientName} onChange={e => setExtPatientName(e.target.value)} />
+            </div>
+            <div style={S.formGroup}>
+              <label style={S.formLabel}>Test Name *</label>
+              <input style={S.formInput} placeholder="e.g. MRI - Brain, Holter Monitor..." value={extTestName} onChange={e => setExtTestName(e.target.value)} />
+            </div>
+            <div style={S.formRow}>
+              <div style={S.formGroup}>
+                <label style={S.formLabel}>Test Type</label>
+                <select style={S.formSelect} value={extTestType} onChange={e => setExtTestType(e.target.value as LabOrder['testType'])}>
+                  <option value="Laboratory">Laboratory</option>
+                  <option value="Imaging">Imaging</option>
+                  <option value="Cardio">Cardio</option>
+                  <option value="Special">Special</option>
+                </select>
+              </div>
+              <div style={S.formGroup}>
+                <label style={S.formLabel}>Status</label>
+                <select style={S.formSelect} value={extStatus} onChange={e => setExtStatus(e.target.value as 'Ordered' | 'In Progress' | 'Resulted')}>
+                  <option value="Ordered">Ordered</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resulted">Resulted</option>
+                </select>
+              </div>
+            </div>
+            <div style={S.formGroup}>
+              <label style={S.formLabel}>External Facility</label>
+              <select style={S.formSelect} value={extFacility} onChange={e => setExtFacility(e.target.value)}>
+                <option value="Hi-Precision Diagnostics">Hi-Precision Diagnostics</option>
+                <option value="Philippine Heart Center">Philippine Heart Center</option>
+                <option value="St. Lukes Medical Center">St. Lukes Medical Center</option>
+                <option value="Quest Diagnostics Philippines">Quest Diagnostics Philippines</option>
+              </select>
+            </div>
+            <div style={S.formRow}>
+              <div style={S.formGroup}>
+                <label style={S.formLabel}>Partner Fee (₱)</label>
+                <input style={S.formInput} type="number" placeholder="e.g. 8500" value={extPartnerFee} onChange={e => setExtPartnerFee(e.target.value)} />
+              </div>
+              <div style={S.formGroup}>
+                <label style={S.formLabel}>External Reference</label>
+                <input style={S.formInput} placeholder="e.g. HP-2026-08841" value={extOrderRef} onChange={e => setExtOrderRef(e.target.value)} />
+              </div>
+            </div>
+            {/* ── OCR Upload Section ── */}
+            <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--color-border)' }}>
+              <label style={{ ...S.formLabel, fontSize: 14, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Upload size={16} style={{ color: '#6366f1' }} /> Upload Result (OCR)
+              </label>
+              <div
+                style={{
+                  border: '2px dashed var(--color-border)',
+                  borderRadius: 10,
+                  padding: 24,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: 'var(--color-background)',
+                  transition: 'border-color .2s',
+                }}
+                onClick={() => document.getElementById('ocr-file-input')?.click()}
+              >
+                <Upload size={28} style={{ color: 'var(--color-text-muted)', marginBottom: 8 }} />
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>
+                  Upload external lab result (PDF or image)
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                  OCR will automatically extract values from the uploaded document
+                </div>
+                <input
+                  id="ocr-file-input"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setOcrFileName(file.name);
+                    setOcrProcessing(true);
+                    setOcrComplete(false);
+                    setTimeout(() => {
+                      setOcrProcessing(false);
+                      setOcrComplete(true);
+                    }, 2000);
+                  }}
+                />
+              </div>
+
+              {/* OCR Processing State */}
+              {ocrProcessing && (
+                <div style={{
+                  marginTop: 12,
+                  padding: 14,
+                  background: 'var(--color-background)',
+                  borderRadius: 8,
+                  border: '1px solid var(--color-border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                }}>
+                  <Loader2 size={18} style={{ color: 'var(--color-primary)', animation: 'spin 1s linear infinite' }} />
+                  <span style={{ fontSize: 13, color: 'var(--color-text)' }}>Analyzing document with OCR...</span>
+                  <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                </div>
+              )}
+
+              {/* OCR Complete State */}
+              {ocrComplete && !ocrProcessing && (
+                <div style={{
+                  marginTop: 12,
+                  padding: 16,
+                  background: 'var(--color-background)',
+                  borderRadius: 8,
+                  border: '1px solid var(--color-border)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
+                      Extracted Data — {ocrFileName}
+                    </span>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      padding: '4px 10px',
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      background: 'var(--color-success-light)',
+                      color: '#065f46',
+                    }}>
+                      OCR extraction complete ✓
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {[
+                      { label: 'Document Type', value: 'Laboratory Result Report' },
+                      { label: 'Facility', value: extFacility },
+                      { label: 'Date', value: 'Feb 10, 2026' },
+                      { label: 'Tests Found', value: 'CBC, Lipid Panel, FBS' },
+                    ].map(item => (
+                      <div key={item.label} style={{ display: 'flex', fontSize: 13 }}>
+                        <span style={{ fontWeight: 600, color: 'var(--color-text-muted)', minWidth: 120 }}>{item.label}:</span>
+                        <span style={{ color: 'var(--color-text)' }}>{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 16 }}>
+              <button style={{ ...S.btn, ...S.btnOutline }} onClick={() => { setShowExtOrderModal(false); setOcrFileName(null); setOcrProcessing(false); setOcrComplete(false); }}>Cancel</button>
+              <button style={{ ...S.btn, background: '#6366f1', color: 'white' }} onClick={submitExtOrder}>
+                <Building2 size={16} /> Record Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ═══════════ CONNECT API MODAL ═══════════ */}
+      {showConnectApiModal && (
+        <div style={S.overlay} onClick={() => setShowConnectApiModal(false)}>
+          <div style={{ ...S.modal, maxWidth: 580 }} onClick={e => e.stopPropagation()}>
+            <div style={S.modalHeader}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Link size={20} style={{ color: '#6366f1' }} /> Connect External Lab Partner API
+              </h2>
+              <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }} onClick={() => setShowConnectApiModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: '0 0 20px', lineHeight: 1.5 }}>
+              Integrate with external laboratory partners to automatically sync orders, results, and billing data.
+            </p>
+
+            {/* Provider Selection */}
+            <div style={S.formGroup}>
+              <label style={S.formLabel}>Select Provider</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {[
+                  { id: 'hi-precision', name: 'Hi-Precision Diagnostics', desc: 'National reference laboratory network' },
+                  { id: 'phc', name: 'Philippine Heart Center', desc: 'Specialized cardiac diagnostics' },
+                  { id: 'st-lukes', name: 'St. Lukes Medical Center', desc: 'Multi-specialty hospital network' },
+                  { id: 'quest', name: 'Quest Diagnostics Philippines', desc: 'International diagnostics provider' },
+                ].map(p => (
+                  <label
+                    key={p.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '12px 14px',
+                      borderRadius: 8,
+                      border: apiProvider === p.id ? '2px solid #6366f1' : '1px solid var(--color-border)',
+                      background: apiProvider === p.id ? '#eef2ff' : 'var(--color-surface)',
+                      cursor: 'pointer',
+                      transition: 'all .15s',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="api-provider"
+                      value={p.id}
+                      checked={apiProvider === p.id}
+                      onChange={() => setApiProvider(p.id)}
+                      style={{ accentColor: '#6366f1' }}
+                    />
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{p.name}</div>
+                      <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{p.desc}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Connection Settings */}
+            <div style={{ ...S.groupHeader, marginTop: 20 }}>Connection Settings</div>
+
+            <div style={S.formGroup}>
+              <label style={S.formLabel}>API Endpoint URL</label>
+              <input
+                style={S.formInput}
+                placeholder="https://api.partner.com/v1/lab"
+                value={apiEndpoint}
+                onChange={e => setApiEndpoint(e.target.value)}
+              />
+            </div>
+
+            <div style={S.formGroup}>
+              <label style={S.formLabel}>API Key</label>
+              <input
+                style={S.formInput}
+                type="password"
+                placeholder="Enter your API key"
+                value={apiKey}
+                onChange={e => setApiKey(e.target.value)}
+              />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, color: 'var(--color-text)', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={autoSyncResults}
+                  onChange={e => setAutoSyncResults(e.target.checked)}
+                  style={{ accentColor: '#6366f1' }}
+                />
+                Auto-sync results
+              </label>
+            </div>
+
+            <div style={S.formGroup}>
+              <label style={S.formLabel}>Sync Interval</label>
+              <select
+                style={S.formSelect}
+                value={syncInterval}
+                onChange={e => setSyncInterval(e.target.value)}
+              >
+                <option value="realtime">Real-time</option>
+                <option value="hourly">Every hour</option>
+                <option value="6hours">Every 6 hours</option>
+                <option value="daily">Daily</option>
+              </select>
+            </div>
+
+            {/* Connection Status */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 14px',
+              borderRadius: 8,
+              background: connectionStatus === 'connected' ? 'var(--color-success-light)' : 'var(--color-background)',
+              border: '1px solid var(--color-border)',
+              marginBottom: 20,
+            }}>
+              {connectionStatus === 'connected' ? (
+                <Wifi size={16} style={{ color: '#065f46' }} />
+              ) : connectionStatus === 'testing' ? (
+                <Loader2 size={16} style={{ color: 'var(--color-primary)', animation: 'spin 1s linear infinite' }} />
+              ) : (
+                <WifiOff size={16} style={{ color: 'var(--color-text-muted)' }} />
+              )}
+              <span style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: connectionStatus === 'connected' ? '#065f46' : connectionStatus === 'testing' ? 'var(--color-primary)' : 'var(--color-text-muted)',
+              }}>
+                {connectionStatus === 'connected' ? 'Connected ✓' : connectionStatus === 'testing' ? 'Testing connection...' : 'Not Connected'}
+              </span>
+              {connectionStatus === 'testing' && (
+                <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button
+                style={{ ...S.btn, ...S.btnOutline }}
+                onClick={() => {
+                  setConnectionStatus('testing');
+                  setTimeout(() => {
+                    setConnectionStatus('connected');
+                    showToast('Connection successful ✓', 'success');
+                    setTimeout(() => {
+                      // keep connected state visible
+                    }, 3000);
+                  }, 1500);
+                }}
+              >
+                <Wifi size={14} /> Test Connection
+              </button>
+              <button
+                style={{ ...S.btn, background: '#6366f1', color: 'white' }}
+                onClick={() => {
+                  showToast('API configuration saved', 'success');
+                  setShowConnectApiModal(false);
+                }}
+              >
+                Save Configuration
               </button>
             </div>
           </div>

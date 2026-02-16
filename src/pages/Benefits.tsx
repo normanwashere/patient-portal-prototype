@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, Navigate } from 'react-router-dom';
-import { FileText, Plus, X, CreditCard, Shield, QrCode, ClipboardList, Wallet, Receipt, ChevronRight, Info } from 'lucide-react';
+import { FileText, Plus, X, CreditCard, Shield, QrCode, ClipboardList, Wallet, Receipt, ChevronRight, Info, CheckCircle2, Clock, AlertTriangle, ShieldCheck, RefreshCw, Infinity } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useProvider } from '../provider/context/ProviderContext';
 import { useToast } from '../context/ToastContext';
@@ -37,7 +37,7 @@ const PHILHEALTH_SERVICES: ServiceType[] = [
 
 export const Benefits: React.FC = () => {
     const { tenant } = useTheme();
-    const { loaRequests, requestLOA, userProfile, claims, fileClaim } = useData();
+    const { loaRequests, requestLOA, userProfile, claims, fileClaim, currentPatientId } = useData();
     const { addProviderLoa } = useProvider();
     const { showToast } = useToast();
     const location = useLocation();
@@ -60,18 +60,23 @@ export const Benefits: React.FC = () => {
     const [selectedHmoId, setSelectedHmoId] = useState('');
     const [selectedServiceId, setSelectedServiceId] = useState('');
 
-    // Set initial active provider
+    // Consumer package filter state
+    const [packageFilter, setPackageFilter] = useState<'All' | 'Available' | 'Availed' | 'Deferred'>('All');
+
+    // Set active provider — re-evaluate when patient/tenant/cards change
     useEffect(() => {
-        if (!activeProviderId) {
-            if (hmoIdParam) {
-                setActiveProviderId(hmoIdParam);
-            } else if (hmos.length > 0) {
-                setActiveProviderId(hmos[0].id);
-            } else if (ph) {
-                setActiveProviderId('philhealth');
-            }
+        // If URL has an id param AND it matches a card the current patient owns, use it
+        if (hmoIdParam && hmos.some((h: any) => h.id === hmoIdParam)) {
+            setActiveProviderId(hmoIdParam);
+        } else if (hmos.length > 0) {
+            setActiveProviderId(hmos[0].id);
+        } else if (ph) {
+            setActiveProviderId('philhealth');
+        } else {
+            setActiveProviderId('');
         }
-    }, [hmos, ph, hmoIdParam]);
+        setPackageFilter('All');
+    }, [currentPatientId, tenant.id, hmos, ph, hmoIdParam]);
 
     // Derived services based on modal selection
     const availableServices = useMemo(() => {
@@ -100,18 +105,50 @@ export const Benefits: React.FC = () => {
                 mbl: ph?.mbl || '₱ 0.00',
                 mblUsed: ph?.mblUsed || '₱ 0.00',
                 benefitCategories: ph?.benefitCategories || [],
-                isPhilHealth: true
+                isPhilHealth: true,
+                packageType: undefined as string | undefined,
+                packageItems: [] as any[]
             };
         }
-        const hmo = hmos.find(h => h.id === activeProviderId);
+        const hmo = hmos.find((h: any) => h.id === activeProviderId);
         return {
             provider: hmo?.provider || 'Unknown',
+            planType: hmo?.planType || '',
+            coverageAmount: hmo?.coverageAmount || '',
+            validity: hmo?.validity || '',
             mbl: hmo?.mbl || '₱ 0.00',
             mblUsed: hmo?.mblUsed || '₱ 0.00',
             benefitCategories: hmo?.benefitCategories || [],
-            isPhilHealth: false
+            isPhilHealth: false,
+            packageType: hmo?.packageType as string | undefined,
+            packageItems: (hmo?.packageItems || []) as any[]
         };
     }, [activeProviderId, hmos, ph]);
+
+    const filteredPackageItems = useMemo(() => {
+        const items = activeProviderData.packageItems || [];
+        if (packageFilter === 'All') return items;
+        return items.filter((item: any) => item.status === packageFilter);
+    }, [activeProviderData.packageItems, packageFilter]);
+
+    const packageStats = useMemo(() => {
+        const items = activeProviderData.packageItems || [];
+        const total = items.length;
+        const availed = items.filter((i: any) => i.status === 'Availed').length;
+        const available = items.filter((i: any) => i.status === 'Available').length;
+        const deferred = items.filter((i: any) => i.status === 'Deferred').length;
+        const active = items.filter((i: any) => i.status === 'Active').length;
+        return { total, availed, available, deferred, active };
+    }, [activeProviderData.packageItems]);
+
+    const groupedPackageItems = useMemo(() => {
+        const groups: Record<string, any[]> = {};
+        filteredPackageItems.forEach((item: any) => {
+            if (!groups[item.category]) groups[item.category] = [];
+            groups[item.category].push(item);
+        });
+        return groups;
+    }, [filteredPackageItems]);
 
     const filteredLoaRequests = useMemo(() => {
         return loaRequests.filter(req => {
@@ -223,96 +260,293 @@ export const Benefits: React.FC = () => {
                     <div className="provider-indicator">
                         {activeProviderId === 'philhealth' ? <Shield size={16} /> : <CreditCard size={16} />}
                         <span>{activeProviderData.provider}</span>
+                        {activeProviderData.packageType === 'consumer' && (
+                            <span className="package-type-badge consumer">Consumer Package</span>
+                        )}
+                        {activeProviderData.packageType === 'corporate' && (
+                            <span className="package-type-badge corporate">Corporate Plan</span>
+                        )}
                     </div>
 
-                    <div className="benefits-summary-card">
-                        <div className="benefit-item">
-                            <div className="benefit-header">
-                                <span className="label">Maximum Benefit Limit (MBL) - {activeProviderData.provider}</span>
-                                <span className="value">{activeProviderData.mbl}</span>
+                    {activeProviderData.packageType === 'consumer' ? (
+                        /* ========== CONSUMER PACKAGE VIEW ========== */
+                        <>
+                            <div className="consumer-package-header">
+                                <div className="dashlabs-sync-badge">
+                                    <RefreshCw size={13} />
+                                    <span>Dashlabs Sync</span>
+                                    <span className="sync-time">Last synced: 2 hours ago</span>
+                                </div>
                             </div>
-                            <div className="progress-bar">
-                                <div
-                                    className="fill"
-                                    style={{
-                                        width: `${(parseFloat(activeProviderData.mblUsed.replace(/[^\d.]/g, '')) / parseFloat(activeProviderData.mbl.replace(/[^\d.]/g, ''))) * 100}%`
-                                    }}
-                                ></div>
-                            </div>
-                            <div className="benefit-footer">
-                                <span className="subtext">{activeProviderData.mblUsed} used</span>
-                                <span className="subtext">
-                                    ₱ {(parseFloat(activeProviderData.mbl.replace(/[^\d.]/g, '')) - parseFloat(activeProviderData.mblUsed.replace(/[^\d.]/g, ''))).toLocaleString()} remaining
-                                </span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="benefit-grid">
-                        <div className="breakdown-section">
-                            <div className="section-header-v3">
-                                <h3>Benefit Breakdown</h3>
-                                <Info size={16} />
+                            <div className="consumer-package-summary">
+                                <div className="progress-ring-container">
+                                    <svg className="progress-ring" viewBox="0 0 120 120">
+                                        <circle className="progress-ring-bg" cx="60" cy="60" r="52" />
+                                        <circle
+                                            className="progress-ring-fill"
+                                            cx="60" cy="60" r="52"
+                                            strokeDasharray={`${2 * Math.PI * 52}`}
+                                            strokeDashoffset={`${2 * Math.PI * 52 * (1 - packageStats.availed / Math.max(packageStats.total, 1))}`}
+                                        />
+                                    </svg>
+                                    <div className="progress-ring-text">
+                                        <span className="ring-count">{packageStats.availed}</span>
+                                        <span className="ring-total">/ {packageStats.total} availed</span>
+                                    </div>
+                                </div>
+                                <div className="package-summary-details">
+                                    <h3>{activeProviderData.planType || 'Consumer Package'}</h3>
+                                    <p className="package-summary-sub">
+                                        {activeProviderData.coverageAmount && <strong>{activeProviderData.coverageAmount}</strong>}
+                                        {activeProviderData.coverageAmount && ' · '}
+                                        Valid {activeProviderData.validity || '1 year from activation'}
+                                    </p>
+                                    <p className="package-summary-desc">Unlimited consultations across 20+ specialties, diagnostics, Set A lab tests, X-rays, ECG, and 3 advanced imaging tests at Maxicare PCCs nationwide.</p>
+                                    <div className="package-stat-pills">
+                                        <span className="stat-pill availed">{packageStats.availed} Availed</span>
+                                        <span className="stat-pill available">{packageStats.available} Available</span>
+                                        {packageStats.deferred > 0 && <span className="stat-pill deferred">{packageStats.deferred} Deferred</span>}
+                                        {packageStats.active > 0 && <span className="stat-pill active">{packageStats.active} Active</span>}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="breakdown-list">
-                                {activeProviderData.benefitCategories.length > 0 ? (
-                                    activeProviderData.benefitCategories.map(item => (
-                                        <div key={item.id} className="breakdown-item">
-                                            <div className="item-icon">{item.icon}</div>
-                                            <div className="item-info">
-                                                <span className="item-name">{item.name}</span>
-                                                <div className="item-progress">
-                                                    <div className="mini-progress">
-                                                        <div
-                                                            className="mini-fill"
-                                                            style={{ width: `${(parseFloat(item.used.replace(/[^\d.]/g, '')) / parseFloat(item.limit.replace(/[^\d.]/g, ''))) * 100}%` }}
-                                                        ></div>
+
+                            <div className="package-filter-tabs">
+                                {(['All', 'Available', 'Availed', 'Deferred'] as const).map(tab => (
+                                    <button
+                                        key={tab}
+                                        className={`package-filter-btn ${packageFilter === tab ? 'active' : ''}`}
+                                        onClick={() => setPackageFilter(tab)}
+                                    >
+                                        {tab}
+                                        {tab !== 'All' && (
+                                            <span className="filter-count">
+                                                {tab === 'Availed' ? packageStats.availed :
+                                                 tab === 'Available' ? packageStats.available :
+                                                 packageStats.deferred}
+                                            </span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="package-checklist">
+                                {Object.keys(groupedPackageItems).length > 0 ? (
+                                    Object.entries(groupedPackageItems).map(([category, items]) => (
+                                        <div key={category} className="package-category-group">
+                                            <h4 className="package-category-label">{category}</h4>
+                                            <div className="package-items-list">
+                                                {items.map((item: any) => {
+                                                    const isUnlimited = item.limit === 0;
+                                                    const isAvailed = item.status === 'Availed';
+                                                    const isAvailable = item.status === 'Available';
+                                                    const isDeferred = item.status === 'Deferred';
+                                                    const isActive = item.status === 'Active';
+
+                                                    return (
+                                                    <div key={item.id} className={`package-checklist-item status-${item.status.toLowerCase()}`}>
+                                                        <div className="checklist-status-icon">
+                                                            {isAvailed && <CheckCircle2 size={18} />}
+                                                            {isAvailable && <Clock size={18} />}
+                                                            {isDeferred && <AlertTriangle size={18} />}
+                                                            {isActive && <ShieldCheck size={18} />}
+                                                        </div>
+                                                        <div className="checklist-item-content">
+                                                            <div className="checklist-item-header">
+                                                                <span className="checklist-item-name">{item.name}</span>
+                                                                <div className="checklist-badges">
+                                                                    {isUnlimited && (
+                                                                        <span className="checklist-limit-badge unlimited"><Infinity size={10} /> Unlimited</span>
+                                                                    )}
+                                                                    {!isUnlimited && item.limit > 0 && isAvailed && (
+                                                                        <span className="checklist-limit-badge consumed">{item.used}/{item.limit} used</span>
+                                                                    )}
+                                                                    {!isUnlimited && item.limit > 0 && !isAvailed && !isActive && (
+                                                                        <span className="checklist-limit-badge remaining">{item.limit - item.used} left</span>
+                                                                    )}
+                                                                    <span className={`checklist-status-badge ${item.status.toLowerCase()}`}>
+                                                                        {isAvailed && item.used > 0 ? `Availed${isUnlimited ? ` ×${item.used}` : ''}` : item.status}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            {(item.completedDate || item.facility) && (
+                                                                <div className="checklist-item-meta">
+                                                                    {item.completedDate && <span>Last: {item.completedDate}</span>}
+                                                                    {item.completedDate && item.facility && <span> · </span>}
+                                                                    {item.facility && <span>{item.facility}</span>}
+                                                                </div>
+                                                            )}
+                                                            {item.notes && (
+                                                                <div className="checklist-item-notes">{item.notes}</div>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <span className="item-stat">{item.used} / {item.limit}</span>
-                                                </div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     ))
                                 ) : (
                                     <div className="empty-state">
-                                        <p>No category-specific limits.</p>
+                                        <p>No items match the selected filter.</p>
                                     </div>
                                 )}
                             </div>
-                        </div>
 
-                        <div className="requests-section">
-                            <div className="section-header-v3">
-                                <h3>LOA History</h3>
-                                <ChevronRight size={18} />
-                            </div>
-                            <div className="requests-list">
-                                {filteredLoaRequests.length > 0 ? (
-                                    filteredLoaRequests.map(req => (
-                                        <div key={req.id} className="request-card">
-                                            <div className="req-icon">
-                                                <FileText size={20} color="var(--color-primary)" />
-                                            </div>
-                                            <div className="req-details">
-                                                <h4>{req.provider}</h4>
-                                                <span className="req-type">{req.type} • {req.date}</span>
-                                            </div>
-                                            <div className="req-status">
-                                                <span className={`status-badge ${getStatusColor(req.status)}`}>
-                                                    {req.status}
-                                                </span>
-                                                <span className="req-amount">{req.amount}</span>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="empty-state">
-                                        <p>No requests found.</p>
+                            <div className="benefit-grid" style={{ marginTop: '0.5rem' }}>
+                                <div className="requests-section" style={{ gridColumn: '1 / -1' }}>
+                                    <div className="section-header-v3">
+                                        <h3>LOA History</h3>
+                                        <ChevronRight size={18} />
                                     </div>
-                                )}
+                                    <div className="requests-list">
+                                        {filteredLoaRequests.length > 0 ? (
+                                            filteredLoaRequests.map(req => (
+                                                <div key={req.id} className="request-card">
+                                                    <div className="req-icon">
+                                                        <FileText size={20} color="var(--color-primary)" />
+                                                    </div>
+                                                    <div className="req-details">
+                                                        <h4>{req.provider}</h4>
+                                                        <span className="req-type">{req.type} • {req.date}</span>
+                                                    </div>
+                                                    <div className="req-status">
+                                                        <span className={`status-badge ${getStatusColor(req.status)}`}>
+                                                            {req.status}
+                                                        </span>
+                                                        <span className="req-amount">{req.amount}</span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="empty-state">
+                                                <p>No requests found.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        </>
+                    ) : (
+                        /* ========== CORPORATE / DEFAULT MBL VIEW ========== */
+                        <>
+                            {/* Employer info for corporate */}
+                            {(() => {
+                                const hmo = hmos.find((h: any) => h.id === activeProviderId);
+                                return hmo?.accountName ? (
+                                    <div className="corp-employer-bar">
+                                        <span className="corp-employer-label">Employer</span>
+                                        <span className="corp-employer-name">{hmo.accountName}</span>
+                                        {hmo.accountNumber && <span className="corp-employer-acct">Account: {hmo.accountNumber}</span>}
+                                    </div>
+                                ) : null;
+                            })()}
+
+                            <div className="benefits-summary-card">
+                                <div className="benefit-item">
+                                    <div className="benefit-header">
+                                        <span className="label">Maximum Benefit Limit (MBL)</span>
+                                        <span className="value">{activeProviderData.mbl}</span>
+                                    </div>
+                                    <div className="progress-bar">
+                                        <div
+                                            className="fill"
+                                            style={{
+                                                width: `${Math.min((parseFloat(activeProviderData.mblUsed.replace(/[^\d.]/g, '')) / Math.max(parseFloat(activeProviderData.mbl.replace(/[^\d.]/g, '')), 1)) * 100, 100)}%`,
+                                                background: (() => {
+                                                    const pct = parseFloat(activeProviderData.mblUsed.replace(/[^\d.]/g, '')) / Math.max(parseFloat(activeProviderData.mbl.replace(/[^\d.]/g, '')), 1);
+                                                    return pct > 0.8 ? '#ef4444' : pct > 0.5 ? '#f59e0b' : 'var(--color-primary)';
+                                                })()
+                                            }}
+                                        ></div>
+                                    </div>
+                                    <div className="benefit-footer">
+                                        <span className="subtext">{activeProviderData.mblUsed} used</span>
+                                        <span className="subtext" style={{ fontWeight: 700 }}>
+                                            ₱ {(parseFloat(activeProviderData.mbl.replace(/[^\d.]/g, '')) - parseFloat(activeProviderData.mblUsed.replace(/[^\d.]/g, ''))).toLocaleString(undefined, { minimumFractionDigits: 2 })} remaining
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="corp-breakdown-section">
+                                <div className="section-header-v3">
+                                    <h3>Coverage Breakdown</h3>
+                                    <Info size={16} />
+                                </div>
+                                <div className="corp-breakdown-grid">
+                                    {activeProviderData.benefitCategories.length > 0 ? (
+                                        activeProviderData.benefitCategories.map((item: any) => {
+                                            const usedVal = parseFloat(item.used.replace(/[^\d.]/g, ''));
+                                            const limitVal = parseFloat(item.limit.replace(/[^\d.]/g, ''));
+                                            const pct = limitVal > 0 ? usedVal / limitVal : 0;
+                                            const remaining = limitVal - usedVal;
+                                            const barColor = pct > 0.8 ? '#ef4444' : pct > 0.5 ? '#f59e0b' : '#10b981';
+                                            return (
+                                                <div key={item.id} className="corp-benefit-card">
+                                                    <div className="corp-card-top">
+                                                        <span className="corp-card-icon">{item.icon}</span>
+                                                        <span className="corp-card-name">{item.name}</span>
+                                                    </div>
+                                                    <div className="corp-card-bar">
+                                                        <div className="corp-bar-track">
+                                                            <div className="corp-bar-fill" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }}></div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="corp-card-amounts">
+                                                        <span className="corp-used">{item.used} used</span>
+                                                        <span className="corp-limit">of {item.limit}</span>
+                                                    </div>
+                                                    <div className="corp-card-remaining" style={{ color: barColor }}>
+                                                        ₱ {remaining.toLocaleString(undefined, { minimumFractionDigits: 2 })} available
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
+                                            <p>No category-specific limits.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="benefit-grid" style={{ marginTop: '0.5rem' }}>
+                                <div className="requests-section" style={{ gridColumn: '1 / -1' }}>
+                                    <div className="section-header-v3">
+                                        <h3>LOA History</h3>
+                                        <ChevronRight size={18} />
+                                    </div>
+                                    <div className="requests-list">
+                                        {filteredLoaRequests.length > 0 ? (
+                                            filteredLoaRequests.map(req => (
+                                                <div key={req.id} className="request-card">
+                                                    <div className="req-icon">
+                                                        <FileText size={20} color="var(--color-primary)" />
+                                                    </div>
+                                                    <div className="req-details">
+                                                        <h4>{req.provider}</h4>
+                                                        <span className="req-type">{req.type} • {req.date}</span>
+                                                    </div>
+                                                    <div className="req-status">
+                                                        <span className={`status-badge ${getStatusColor(req.status)}`}>
+                                                            {req.status}
+                                                        </span>
+                                                        <span className="req-amount">{req.amount}</span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="empty-state">
+                                                <p>No requests found.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </>
             ) : (
                 <div className="claims-section">

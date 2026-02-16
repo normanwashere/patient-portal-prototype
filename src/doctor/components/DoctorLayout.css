@@ -814,3 +814,8 @@
   background: var(--color-primary);
   color: white;
 }
+
+@keyframes slideUpMore {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

@@ -133,6 +133,10 @@ export interface LabOrder {
     isAbnormal?: boolean;
     isCritical?: boolean;
     notes?: string;
+    isExternal?: boolean;
+    externalFacility?: string;
+    externalPartnerFee?: number;
+    externalOrderRef?: string;
 }
 
 // ---- Doctor Availability ----
@@ -559,6 +563,9 @@ export interface QueuePatient {
 
     /** Pause / hold state — set when patient needs to leave and return later */
     pauseInfo?: PauseInfo;
+
+    /** Whether the patient's location was verified via geofencing at check-in */
+    locationVerified?: boolean;
 }
 
 /** Consultation room definition for queue display */
@@ -680,6 +687,50 @@ export interface HomeCareRequest {
     updatedAt: string;
     notes?: string;
     priority: 'Routine' | 'Urgent';
+}
+
+// =============================================
+// Patient Referrals
+// =============================================
+
+export type ReferralStatus = 'Pending' | 'Accepted' | 'Scheduled' | 'Completed' | 'Declined' | 'Cancelled';
+export type ReferralUrgency = 'Routine' | 'Urgent' | 'Emergent';
+export type ReferralType = 'Internal' | 'External';
+
+export interface PatientReferral {
+    id: string;
+    /** Patient being referred */
+    patientId: string;
+    patientName: string;
+    /** Referring doctor */
+    referringDoctorId: string;
+    referringDoctorName: string;
+    referringSpecialty: string;
+    /** Referred-to doctor/specialty */
+    referredToSpecialty: string;
+    referredToDoctorId?: string;
+    referredToDoctorName?: string;
+    referredToFacility?: string;
+    /** Referral details */
+    type: ReferralType;
+    urgency: ReferralUrgency;
+    status: ReferralStatus;
+    reason: string;
+    clinicalSummary: string;
+    diagnosis?: string;
+    icdCode?: string;
+    /** Relevant attachments / orders */
+    attachedLabOrderIds?: string[];
+    attachedNoteIds?: string[];
+    /** Dates */
+    createdAt: string;
+    acceptedAt?: string;
+    scheduledDate?: string;
+    completedAt?: string;
+    /** Feedback from receiving doctor */
+    responseNotes?: string;
+    /** Tenant awareness */
+    tenantId?: string;
 }
 
 // =============================================

@@ -5,7 +5,7 @@ import {
     Clock, Activity, TestTube, Pill, Syringe,
     Heart, Receipt, Video, Star, Calendar, ClipboardList,
     ChevronDown, ChevronRight, LogOut, Bell, User, Building2, FlaskConical,
-    MapPin, UserPlus, Shield, FileEdit, ListOrdered, HeartHandshake
+    MapPin, UserPlus, Shield, FileEdit, ListOrdered, HeartHandshake, Send
 } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import clsx from 'clsx';
@@ -154,6 +154,7 @@ export const Sidebar: React.FC = () => {
                     {tenant.features.carePlans && (
                         <NavItem to="/health/care-plans" icon={ClipboardList} label="Care Plans" badge={2} />
                     )}
+                    <NavItem to="/referrals" icon={Send} label="Referrals" />
                     <NavItem to="/forms" icon={FileEdit} label="Forms" />
                 </NavGroup>
 

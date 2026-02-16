@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { DrugInfoModal } from '../../provider/pages/DrugMaster';
 import {
   Pill,
   CheckCircle2,
@@ -49,6 +50,7 @@ export const DoctorPrescriptions = () => {
   const [editingRx, setEditingRx] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<Partial<Prescription>>({});
   const [alertActionPanel, setAlertActionPanel] = useState<string | null>(null); // alert id showing actions
+  const [lookupDrug, setLookupDrug] = useState<string | null>(null);
 
   // Only show this doctor's prescriptions
   const myPrescriptions = prescriptions.filter((p) => p.doctorName === currentStaff?.name);
@@ -451,7 +453,13 @@ export const DoctorPrescriptions = () => {
                         <Pill size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            {rx.medication} {rx.dosage}
+                            <span
+                              style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted' }}
+                              onClick={(e) => { e.stopPropagation(); setLookupDrug(rx.medication); }}
+                              title="View drug information"
+                            >
+                              {rx.medication}
+                            </span> {rx.dosage}
                             {rxAlerts.length > 0 && <AlertTriangle size={13} style={{ color: 'var(--color-error)', flexShrink: 0 }} />}
                           </div>
                           <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -666,6 +674,8 @@ export const DoctorPrescriptions = () => {
           })}
         </div>
       )}
+
+      {lookupDrug && <DrugInfoModal drugName={lookupDrug} onClose={() => setLookupDrug(null)} />}
     </div>
   );
 };
