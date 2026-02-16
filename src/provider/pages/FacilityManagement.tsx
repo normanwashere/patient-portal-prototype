@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Building2,
   Stethoscope,
@@ -18,8 +18,6 @@ import {
   Edit3,
   Save,
   X,
-  Plus,
-  Minus,
   ChevronLeft,
   ChevronRight,
   CalendarDays,
@@ -108,16 +106,12 @@ interface ScheduleEditDraft {
 
 export const FacilityManagement = () => {
   const { tenant } = useTheme();
-  const { rooms, equipment, updateRoomStatus, updateEquipmentStatus, addAuditLog, facilitySchedules, updateFacilitySchedule, bookFacilitySlot } = useProvider();
+  const { rooms, equipment, updateRoomStatus, updateEquipmentStatus, addAuditLog, facilitySchedules, updateFacilitySchedule } = useProvider();
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'rooms' | 'equipment' | 'services' | 'schedules'>('rooms');
   const [roomFilter, setRoomFilter] = useState<string | null>(null);
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<ScheduleEditDraft | null>(null);
-  const [simulateDate, setSimulateDate] = useState<string>(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  });
   const [scheduleViewMode, setScheduleViewMode] = useState<'week' | 'month'>('week');
   const [monthCalendarMonth, setMonthCalendarMonth] = useState<Date>(() => new Date());
 
@@ -161,52 +155,6 @@ export const FacilityManagement = () => {
     showToast(`Equipment "${eqName}" updated to ${newStatus}`, 'success');
   };
 
-  const startEditing = useCallback((sched: FacilitySchedule) => {
-    setEditingScheduleId(sched.id);
-    setEditDraft({
-      dailyCap: sched.dailyCap,
-      startTime: sched.startTime,
-      endTime: sched.endTime,
-      slotDurationMin: sched.slotDurationMin,
-      daysOfWeek: [...sched.daysOfWeek],
-    });
-  }, []);
-
-  const cancelEditing = useCallback(() => {
-    setEditingScheduleId(null);
-    setEditDraft(null);
-  }, []);
-
-  const saveEditing = useCallback(() => {
-    if (!editingScheduleId || !editDraft) return;
-    updateFacilitySchedule(editingScheduleId, {
-      dailyCap: editDraft.dailyCap,
-      startTime: editDraft.startTime,
-      endTime: editDraft.endTime,
-      slotDurationMin: editDraft.slotDurationMin,
-      daysOfWeek: editDraft.daysOfWeek,
-    });
-    addAuditLog('schedule_update', 'Scheduling', `Updated schedule ${editingScheduleId}`);
-    showToast('Schedule updated successfully', 'success');
-    setEditingScheduleId(null);
-    setEditDraft(null);
-  }, [editingScheduleId, editDraft, updateFacilitySchedule, addAuditLog, showToast]);
-
-  const toggleDow = useCallback((dow: number) => {
-    setEditDraft(prev => {
-      if (!prev) return prev;
-      const has = prev.daysOfWeek.includes(dow);
-      return {
-        ...prev,
-        daysOfWeek: has ? prev.daysOfWeek.filter(d => d !== dow) : [...prev.daysOfWeek, dow].sort(),
-      };
-    });
-  }, []);
-
-  const handleSimulateBooking = useCallback((schedId: string) => {
-    bookFacilitySlot(schedId, simulateDate);
-    showToast(`Simulated booking on ${simulateDate}`, 'success');
-  }, [bookFacilitySlot, simulateDate, showToast]);
 
   const LAB_IMAGING_CATEGORIES = ['Laboratory', 'Imaging'];
 
@@ -243,7 +191,6 @@ export const FacilityManagement = () => {
   }, [tenantSchedules]);
 
   const DOW_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const DOW_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   const getNext7DaysUsage = (sched: FacilitySchedule) => {
     const days: { date: string; iso: string; dow: number; booked: number; cap: number; operates: boolean }[] = [];
@@ -260,51 +207,6 @@ export const FacilityManagement = () => {
     return days;
   };
 
-  const getMonthCalendarDays = useCallback((sched: FacilitySchedule, month: Date) => {
-    const year = month.getFullYear();
-    const m = month.getMonth();
-    const firstDay = new Date(year, m, 1);
-    const lastDay = new Date(year, m + 1, 0);
-    const startPad = firstDay.getDay();
-    const totalDays = lastDay.getDate();
-    const todayISO = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
-
-    const cells: { day: number; iso: string; dow: number; booked: number; cap: number; operates: boolean; isToday: boolean; inMonth: boolean }[] = [];
-    for (let i = 0; i < startPad; i++) {
-      cells.push({ day: 0, iso: '', dow: i, booked: 0, cap: 0, operates: false, isToday: false, inMonth: false });
-    }
-    for (let d = 1; d <= totalDays; d++) {
-      const date = new Date(year, m, d);
-      const dow = date.getDay();
-      const iso = `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const operates = sched.daysOfWeek.includes(dow);
-      const booked = sched.bookedSlots[iso] ?? 0;
-      cells.push({ day: d, iso, dow, booked, cap: sched.dailyCap, operates, isToday: iso === todayISO, inMonth: true });
-    }
-    const remainder = cells.length % 7;
-    if (remainder > 0) {
-      for (let i = 0; i < 7 - remainder; i++) {
-        cells.push({ day: 0, iso: '', dow: 0, booked: 0, cap: 0, operates: false, isToday: false, inMonth: false });
-      }
-    }
-    return cells;
-  }, []);
-
-  const monthLabel = useMemo(() => monthCalendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }), [monthCalendarMonth]);
-
-  const prevMonth = useCallback(() => setMonthCalendarMonth(prev => {
-    const d = new Date(prev);
-    d.setMonth(d.getMonth() - 1);
-    return d;
-  }), []);
-
-  const nextMonth = useCallback(() => setMonthCalendarMonth(prev => {
-    const d = new Date(prev);
-    d.setMonth(d.getMonth() + 1);
-    return d;
-  }), []);
-
-  const goToToday = useCallback(() => setMonthCalendarMonth(new Date()), []);
 
   const tabs = [
     { id: 'rooms' as const, label: 'Rooms', icon: LayoutGrid },
@@ -577,7 +479,7 @@ export const FacilityManagement = () => {
             return (
               <div key={catId}>
                 <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <CatIcon size={18} style={{ color: 'var(--color-primary)' }} />
+                  <span style={{ color: 'var(--color-primary)' }}><CatIcon size={18} /></span>
                   {catInfo.label}
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

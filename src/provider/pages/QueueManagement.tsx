@@ -1087,7 +1087,7 @@ export const QueueManagement = () => {
                     <span style={{ ...S.ticket, background: '#fef3c7', color: '#92400e' }}>{p.ticketNumber}</span>
                     <span style={{ fontSize: 13, fontWeight: 700 }}>{p.patientName}</span>
                     {p.priority !== 'Normal' && (
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: p.priority === 'Urgent' ? '#fee2e2' : '#fef3c7', color: p.priority === 'Urgent' ? '#dc2626' : '#d97706' }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: p.priority === 'Emergency' ? '#fee2e2' : '#fef3c7', color: p.priority === 'Emergency' ? '#dc2626' : '#d97706' }}>
                         {p.priority}
                       </span>
                     )}
