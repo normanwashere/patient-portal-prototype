@@ -43,6 +43,7 @@ type EncounterTab = 'soap' | 'ai' | 'cdss' | 'orders' | 'prescriptions';
 
 interface WaitingPatient {
   id: string;
+  patientId: string;
   name: string;
   waitMin: number;
   complaint: string;
@@ -63,7 +64,7 @@ interface WaitingPatient {
 
 const MOCK_WAITING: WaitingPatient[] = [
   {
-    id: 'tc-1', name: 'Maria Santos', waitMin: 5, complaint: 'Cough & Cold', age: 34, sex: 'F',
+    id: 'tc-1', patientId: 'p-tc-1', name: 'Maria Santos', waitMin: 5, complaint: 'Cough & Cold', age: 34, sex: 'F',
     intake: {
       chiefComplaint: 'Persistent dry cough for 2 weeks, worse at night. Occasional runny nose.',
       duration: '14 days',
@@ -77,7 +78,7 @@ const MOCK_WAITING: WaitingPatient[] = [
     },
   },
   {
-    id: 'tc-2', name: 'Jose Reyes', waitMin: 12, complaint: 'Follow-up BP', age: 58, sex: 'M',
+    id: 'tc-2', patientId: 'p-tc-2', name: 'Jose Reyes', waitMin: 12, complaint: 'Follow-up BP', age: 58, sex: 'M',
     intake: {
       chiefComplaint: 'Follow-up on blood pressure management. Occasional dizziness in the morning.',
       duration: 'Ongoing — 3 months since last adjustment',
@@ -91,7 +92,7 @@ const MOCK_WAITING: WaitingPatient[] = [
     },
   },
   {
-    id: 'tc-3', name: 'Ana Lopez', waitMin: 2, complaint: 'Skin rash', age: 27, sex: 'F',
+    id: 'tc-3', patientId: 'p-tc-3', name: 'Ana Lopez', waitMin: 2, complaint: 'Skin rash', age: 27, sex: 'F',
     intake: {
       chiefComplaint: 'Red, itchy rash on both forearms and chest for 3 days. No blisters.',
       duration: '3 days',
@@ -258,10 +259,10 @@ export const DoctorTeleconsult = () => {
 
   const doctorName = currentStaff?.name ?? 'Doctor';
   const doctorInitials = getInitials(doctorName);
-  const activeAlerts = cdssAlerts.filter(a => !a.dismissed);
   const firstNote = clinicalNotes[0];
   // Use activePatientData from teleconsult queue, not in-clinic queuePatients
-  const teleconsultPatientId = activePatientData?.id ?? activeCall?.id ?? null;
+  const teleconsultPatientId = activePatientData?.patientId ?? activeCall?.id ?? null;
+  const activeAlerts = cdssAlerts.filter(a => !a.dismissed && a.patientId === teleconsultPatientId);
   const teleconsultPatientName = activePatientData?.name ?? activeCall?.name ?? 'Patient';
   const patientPrescriptions = prescriptions.filter(p =>
     p.patientId === teleconsultPatientId
@@ -336,6 +337,7 @@ export const DoctorTeleconsult = () => {
     // Set global state so PiP and encounter card work across pages
     setActiveTeleconsultCall({
       id,
+      patientId: patientData?.patientId ?? id,
       patientName: name,
       startedAt: Date.now(),
       chiefComplaint: patientData?.intake.chiefComplaint,
@@ -911,7 +913,7 @@ export const DoctorTeleconsult = () => {
           <Link to="/doctor/encounter" state={{ patientId: teleconsultPatientId, patientName: teleconsultPatientName, chiefComplaint: activePatientData?.complaint }} className="tc-action-btn tc-action-btn--primary">
             <FileCheck size={18} /> Review Full Encounter
           </Link>
-          <button className="tc-action-btn" onClick={() => { showToast('Summary pushed to patient records', 'success'); }}>
+          <button className="tc-action-btn" onClick={() => { showToast('Summary pushed to patient records', 'success'); navigate('/doctor/encounter', { state: { patientId: teleconsultPatientId, patientName: teleconsultPatientName } }); }}>
             <Send size={18} /> Push to Records
           </button>
           <button className="tc-action-btn" onClick={() => { showToast('Follow-up scheduled', 'success'); navigate('/doctor/schedule'); }}>

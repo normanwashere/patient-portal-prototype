@@ -162,7 +162,7 @@ export const Appointments: React.FC = () => {
                         Your appointment with {selectedDoctor?.name} is confirmed.
                     </p>
                     <button
-                        onClick={() => navigate('/')}
+                        onClick={() => navigate('/dashboard')}
                         style={{
                             padding: '0.75rem 2rem',
                             background: 'var(--color-surface)',

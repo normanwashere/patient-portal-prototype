@@ -127,7 +127,9 @@ export const DoctorDashboard = () => {
   const labCount = labOrders.filter(o => o.status === 'Resulted' && o.doctorName === currentStaff?.name).length;
   const rxCount = prescriptions.filter(p => p.status === 'Pending Approval' && p.doctorName === currentStaff?.name).length;
   const noteCount = clinicalNotes.filter(n => n.status === 'Draft' && n.doctorId === currentStaff?.id).length;
-  const alertCount = hasCDSS ? criticalAlerts.filter(a => !a.dismissed).length : 0;
+  const myPatientIds = new Set(myQueue.map(p => p.patientId));
+  const myAlerts = hasCDSS ? criticalAlerts.filter(a => !a.dismissed && a.patientId && myPatientIds.has(a.patientId)) : [];
+  const alertCount = myAlerts.length;
   const queueCount = queueEnabled ? myQueue.filter(p => p.status === 'QUEUED' || p.status === 'READY').length : 0;
   const loaPendingCount = providerLoaRequests.filter(r => r.status === 'Pending').length;
 
@@ -182,7 +184,7 @@ export const DoctorDashboard = () => {
     },
     'cdss alert': {
       response: alertCount > 0
-        ? `${alertCount} active CDSS alert${alertCount > 1 ? 's' : ''} requiring review:\n${criticalAlerts.filter(a => !a.dismissed).slice(0, 3).map(a => `• [${a.severity.toUpperCase()}] ${a.title}: ${a.message.substring(0, 80)}...`).join('\n')}\nOpening CDSS overview for full details.`
+        ? `${alertCount} active CDSS alert${alertCount > 1 ? 's' : ''} requiring review:\n${myAlerts.slice(0, 3).map(a => `• [${a.severity.toUpperCase()}] ${a.title}: ${a.message.substring(0, 80)}...`).join('\n')}\nOpening CDSS overview for full details.`
         : 'No active CDSS alerts. All clinical decision support checks have been reviewed.',
       action: alertCount > 0 ? () => navigate('/doctor/cdss') : undefined,
       status: alertCount > 0 ? 'success' : 'info',
@@ -963,7 +965,7 @@ export const DoctorDashboard = () => {
             </button>
           </div>
           <div className="doc-today-alert-strip">
-            {criticalAlerts.filter(a => !a.dismissed).slice(0, 2).map(alert => (
+            {myAlerts.slice(0, 2).map(alert => (
               <div key={alert.id} className="doc-today-alert-chip">
                 <AlertTriangle size={14} />
                 <span>{alert.title}</span>

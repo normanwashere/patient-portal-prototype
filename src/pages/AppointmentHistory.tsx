@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Video, Building2, Calendar, Clock, ChevronRight, HeartHandshake } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { useToast } from '../context/ToastContext';
 import { BackButton } from '../components/Common/BackButton';
 import { AddToCalendar } from '../components/AddToCalendar';
 import './AppointmentHistory.css';
@@ -12,6 +13,8 @@ type AppointmentType = 'all' | 'teleconsult' | 'clinic' | 'homecare';
 
 export const AppointmentHistory: React.FC = () => {
     const { appointments, cancelAppointment } = useData();
+    const { showToast } = useToast();
+    const navigate = useNavigate();
     const [filter, setFilter] = useState<AppointmentType>('all');
     const [selectedAppt, setSelectedAppt] = useState<any | null>(null);
     const location = useLocation();
@@ -65,7 +68,12 @@ export const AppointmentHistory: React.FC = () => {
     };
 
     const handleReschedule = () => {
-        alert('Rescheduling is not yet implemented. Please cancel and book a new appointment.');
+        if (selectedAppt) {
+            cancelAppointment(selectedAppt.id);
+            setSelectedAppt(null);
+            showToast('Appointment cancelled — redirecting to rebooking', 'info');
+            navigate('/visits');
+        }
     };
 
     return (

@@ -236,6 +236,70 @@ const PATIENT_PROFILES: Record<string, PatientProfile> = {
       plan: '1. Start Salbutamol MDI 2 puffs PRN for acute symptoms\n2. Add Fluticasone/Salmeterol (Seretide 250/50) 1 puff BID as controller\n3. Continue Montelukast 10mg daily\n4. Intranasal Fluticasone 2 sprays each nostril daily for post-nasal drip\n5. Order Chest X-ray PA/Lateral to rule out pneumonia or mass\n6. Spirometry if symptoms persist beyond 4 weeks\n7. Trial of PPI if cough persists despite asthma treatment (GERD-related cough)\n8. Follow-up in 2 weeks',
     },
   },
+  // ── Teleconsult patients ──
+  'p-tc-1': {
+    dob: 'May 20, 1991', age: '34', gender: 'Female', bloodType: 'B+', contact: '0917-555-9001',
+    allergies: ['Penicillin'],
+    activeMeds: ['Loratadine 10mg daily'],
+    transcript: [
+      { speaker: D, text: 'Good morning, Maria. What brings you in today?', ts: '00:05' },
+      { speaker: P, text: 'I\'ve had a persistent dry cough for about two weeks. It\'s worse at night.', ts: '00:14' },
+      { speaker: D, text: 'Any fever, chest pain, or shortness of breath?', ts: '00:24' },
+      { speaker: P, text: 'No fever. No chest pain. Mild throat irritation and occasional runny nose.', ts: '00:38' },
+      { speaker: D, text: 'Have you tried any medications for it?', ts: '00:48' },
+      { speaker: P, text: 'Just the Loratadine I already take for allergies. It doesn\'t help the cough.', ts: '01:02' },
+      { speaker: D, text: 'Any history of asthma or recent exposure to sick contacts?', ts: '01:15' },
+      { speaker: P, text: 'No asthma. My colleague at work had a cold a few weeks ago.', ts: '01:28' },
+    ],
+    soap: {
+      subjective: 'Chief complaint: Persistent dry cough × 2 weeks, worse at night.\nHPI: 34F with dry cough, mild throat irritation, occasional rhinorrhea. No fever, chest pain, or dyspnea. Recent sick contact at work.\nMedications: Loratadine 10mg daily.\nAllergies: Penicillin.',
+      objective: 'Vitals: BP 120/78, HR 76, Temp 36.8°C, SpO2 98%.\nGeneral: Appears well, no acute distress.\nENT: Mild pharyngeal erythema, no exudate. TMs clear.\nLungs: Clear bilaterally, no wheezes or crackles.',
+      assessment: '1. Acute bronchitis, likely post-viral (ICD-10: J20.9)\n2. Allergic rhinitis (ICD-10: J30.9) — on Loratadine',
+      plan: '1. Dextromethorphan 15mg q6h PRN cough\n2. Honey and warm fluids for symptomatic relief\n3. Continue Loratadine 10mg daily\n4. Return if fever develops, cough worsens, or persists > 3 weeks\n5. Consider chest X-ray if no improvement in 1 week',
+    },
+  },
+  'p-tc-2': {
+    dob: 'Mar 8, 1967', age: '58', gender: 'Male', bloodType: 'A+', contact: '0918-555-9002',
+    allergies: ['Sulfa drugs', 'Shellfish'],
+    activeMeds: ['Losartan 50mg daily', 'Metformin 500mg BID', 'Aspirin 81mg daily', 'Atorvastatin 20mg nightly'],
+    transcript: [
+      { speaker: D, text: 'Good morning, Jose. How have you been since we adjusted your Losartan?', ts: '00:05' },
+      { speaker: P, text: 'Morning, Doc. I still get dizzy sometimes in the morning when I get up.', ts: '00:15' },
+      { speaker: D, text: 'Is it when you stand up quickly, or does it happen even when you\'re sitting?', ts: '00:28' },
+      { speaker: P, text: 'Mostly when I stand up. It goes away after a few seconds.', ts: '00:40' },
+      { speaker: D, text: 'That sounds like orthostatic hypotension. Have you been monitoring your BP at home?', ts: '00:52' },
+      { speaker: P, text: 'Yes, it\'s been around 142 over 88 most mornings.', ts: '01:04' },
+      { speaker: D, text: 'Still a bit elevated. Are you taking all your medications as prescribed?', ts: '01:16' },
+      { speaker: P, text: 'Yes, everything. The Metformin, Losartan, Aspirin, and the cholesterol one at night.', ts: '01:28' },
+    ],
+    soap: {
+      subjective: 'Chief complaint: Follow-up BP management, occasional morning dizziness.\nHPI: 58M with HTN and T2DM. Losartan increased from 25mg to 50mg 3 months ago. Morning orthostatic dizziness. Home BP ~142/88. Compliant with all meds.\nMedications: Losartan 50mg daily, Metformin 500mg BID, Aspirin 81mg daily, Atorvastatin 20mg nightly.\nAllergies: Sulfa drugs, Shellfish.',
+      objective: 'Vitals: BP 142/88, HR 82, Temp 36.6°C, SpO2 97%.\nOrthostatic check: sitting 142/88 → standing 130/80 (positive drop).\nCardiac: Regular, no murmurs.\nExtremities: No edema.',
+      assessment: '1. Essential HTN (ICD-10: I10) — suboptimally controlled on Losartan 50mg\n2. Orthostatic hypotension (ICD-10: I95.1)\n3. T2DM (ICD-10: E11.65) — on Metformin',
+      plan: '1. Add Amlodipine 5mg daily for BP control (avoid uptitrating Losartan due to orthostasis)\n2. Rise slowly from bed — sit on edge for 30 seconds before standing\n3. Check HbA1c, BMP, and lipid panel\n4. Continue all current medications\n5. Follow-up in 4 weeks with home BP log',
+    },
+  },
+  'p-tc-3': {
+    dob: 'Oct 14, 1998', age: '27', gender: 'Female', bloodType: 'O-', contact: '0919-555-9003',
+    allergies: [],
+    activeMeds: [],
+    transcript: [
+      { speaker: D, text: 'Hello, Ana. I see you have a skin concern today?', ts: '00:05' },
+      { speaker: P, text: 'Yes, I noticed a red itchy rash on both my forearms and chest about 3 days ago.', ts: '00:15' },
+      { speaker: D, text: 'Did anything change recently — new soap, detergent, clothing, or foods?', ts: '00:28' },
+      { speaker: P, text: 'I started using a new laundry detergent last week. No new foods.', ts: '00:40' },
+      { speaker: D, text: 'Any blisters, oozing, or spreading to other areas?', ts: '00:52' },
+      { speaker: P, text: 'No blisters. It\'s just red and itchy. Maybe slightly worse today.', ts: '01:04' },
+      { speaker: D, text: 'Any fever, joint pain, or history of eczema or allergies?', ts: '01:16' },
+      { speaker: P, text: 'No fever, no joint pain. I\'ve never had eczema before.', ts: '01:28' },
+    ],
+    soap: {
+      subjective: 'Chief complaint: Red, itchy rash on forearms and chest × 3 days.\nHPI: 27F with bilateral forearm and chest erythematous pruritic rash. New laundry detergent exposure last week. No blisters, fever, or systemic symptoms. No prior history of eczema or dermatitis.\nMedications: None.\nAllergies: NKDA.',
+      objective: 'Vitals: BP 110/72, HR 68, Temp 36.5°C, SpO2 99%.\nSkin: Bilateral forearm erythematous, maculopapular rash. Scattered patches on anterior chest. No vesicles. No excoriation marks.',
+      assessment: '1. Contact dermatitis (ICD-10: L25.9) — likely irritant, temporal correlation with new detergent\n2. Rule out allergic contact dermatitis if persists',
+      plan: '1. Discontinue new detergent — switch to hypoallergenic, fragrance-free\n2. Hydrocortisone 1% cream BID to affected areas × 7 days\n3. Cetirizine 10mg daily for itch relief\n4. Moisturize with fragrance-free emollient\n5. Return if no improvement in 1 week or if blistering/spreading develops\n6. Consider patch testing referral if recurrent',
+    },
+  },
 };
 
 // Default profile for unknown patients (generic / Metro General)
@@ -706,6 +770,7 @@ export const PatientEncounter = () => {
     currentStaff,
     addCdssAlert,
     addLabOrder,
+    addClinicalNote,
     addReferral,
     staff,
   } = useProvider();
@@ -718,8 +783,8 @@ export const PatientEncounter = () => {
   const labsEnabled = tenant.features.visits.clinicLabFulfillmentEnabled;
   const loaEnabled = tenant.features.loa;
 
-  // Route state from DoctorQueue "Start Consult"
-  const routeState = (location.state ?? {}) as { patientId?: string; patientName?: string; chiefComplaint?: string; ticketNumber?: string };
+  // Route state from DoctorQueue "Start Consult" or TeleconsultPiP "End Call"
+  const routeState = (location.state ?? {}) as { patientId?: string; patientName?: string; chiefComplaint?: string; ticketNumber?: string; fromTeleconsult?: boolean };
 
   const [activeTab, setActiveTab] = useState<TabKey>('soap');
   const [isRecording, setIsRecording] = useState(false);
@@ -786,16 +851,54 @@ export const PatientEncounter = () => {
     icdCode: '',
   });
 
-  // Resolve patient: prefer route state patientId, then IN_SESSION, then first in queue
-  const currentPatient = (routeState.patientId
-    ? queuePatients.find((p) => p.patientId === routeState.patientId)
-    : undefined) ?? queuePatients.find((p) => p.status === 'IN_SESSION') ?? queuePatients[0];
+  // Sync route state for patient resolution — update when location changes
+  // (component may NOT remount when navigating to the same route with different state)
+  const routeKey = routeState.patientId ?? routeState.patientName ?? null;
+  const lastRouteKeyRef = useRef(routeKey);
+  const [consumedRoutePatient, setConsumedRoutePatient] = useState<string | null>(routeKey);
+
+  if (routeKey !== lastRouteKeyRef.current) {
+    lastRouteKeyRef.current = routeKey;
+    setConsumedRoutePatient(routeKey);
+  }
+
+  // Resolve patient: prefer route state patientId (match both patientId and queue id),
+  // then match by name, then IN_SESSION, then first in queue.
+  // For teleconsult patients not in the queue, synthesize a minimal patient object.
+  const queueMatch = (consumedRoutePatient && routeState.patientId
+    ? queuePatients.find((p) => p.patientId === routeState.patientId || p.id === routeState.patientId)
+    : undefined)
+    ?? (consumedRoutePatient && routeState.patientName
+      ? queuePatients.find((p) => p.patientName === routeState.patientName)
+      : undefined);
+
+  const currentPatient = queueMatch
+    ?? (consumedRoutePatient && routeState.patientId && PATIENT_PROFILES[routeState.patientId]
+      ? {
+          id: routeState.patientId,
+          patientId: routeState.patientId,
+          patientName: routeState.patientName ?? 'Teleconsult Patient',
+          chiefComplaint: routeState.chiefComplaint ?? '',
+          status: 'IN_SESSION' as const,
+          ticketNumber: routeState.ticketNumber ?? 'TC',
+          stationType: 'Consult' as const,
+          stationName: 'Teleconsult',
+          priority: 'Normal' as const,
+          queuedAt: new Date().toISOString(),
+          waitMinutes: 0,
+          journeyHistory: [],
+          orders: [],
+          currentOrderIndex: -1,
+          locationVerified: true,
+        }
+      : undefined)
+    ?? queuePatients.find((p) => p.status === 'IN_SESSION') ?? queuePatients[0];
   const patientId = currentPatient?.patientId ?? 'p1';
   const profile = PATIENT_PROFILES[patientId] ?? DEFAULT_PROFILE;
   const patientTranscriptLines = profile.transcript;
   const patientNotes = clinicalNotes.filter((n) => n.patientId === patientId);
   const firstNote = patientNotes[0];
-  const activeAlerts = cdssAlerts.filter((a) => !a.dismissed && (!a.patientId || a.patientId === patientId));
+  const activeAlerts = cdssAlerts.filter((a) => !a.dismissed && a.patientId === patientId);
   const patientLabOrders = labOrders.filter((o) => o.patientId === patientId);
   const patientPrescriptions = prescriptions.filter((p) => p.patientId === patientId).slice(0, 3);
   const pendingOrders = patientLabOrders.filter(
@@ -823,8 +926,70 @@ export const PatientEncounter = () => {
     );
   }, [referralForm.specialty, staff, currentStaff.id]);
 
+  // Reset all encounter state when patient changes
+  const prevPatientRef = useRef(patientId);
   useEffect(() => {
-    const note = firstNote ?? clinicalNotes[0];
+    if (prevPatientRef.current === patientId) return;
+    prevPatientRef.current = patientId;
+
+    // Clear route state lock so future patient switches use IN_SESSION resolution
+    setConsumedRoutePatient(null);
+
+    // Reset encounter UI
+    setActiveTab('soap');
+    setIsRecording(false);
+    setRecordingSeconds(0);
+    setEncounterElapsed(0);
+    setTranscriptLines([]);
+    setAiProcessing(false);
+    setAiGenerated(false);
+    setShowCdssConfirm(false);
+    setSignAction(null);
+    setShowSignedNote(false);
+    setSignedNoteSnapshot(null);
+    setSignedTimestamp('');
+    setEncounterClosed(false);
+
+    // Reset prescription form
+    setRxSearch('');
+    setRxShowDropdown(false);
+    setRxSelectedMed(null);
+    setRxDosage('');
+    setRxFrequency('');
+    setRxDuration('');
+    setRxQuantity('');
+    setRxNotes('');
+    setLookupDrug(null);
+
+    // Reset care plan form
+    setCpCondition('');
+    setCpGender('');
+    setCpAge('');
+    setCpSeverity('');
+    setCpComorbidities([]);
+    setCpAiProcessing(false);
+    setCpAiGenerated(false);
+    setCpGoals([]);
+    setCpInterventions([]);
+    setCpNotes('');
+    setCpPlanName('');
+    setCpSpecialty('');
+    setCpDuration('');
+    setCpNewGoal('');
+    setCpNewIntervention('');
+
+    // Reset referral form
+    setShowReferralModal(false);
+    setReferralForm({
+      specialty: '', doctorId: '', facility: '',
+      type: 'Internal', urgency: 'Routine',
+      reason: '', clinicalSummary: '', diagnosis: '', icdCode: '',
+    });
+  }, [patientId]);
+
+  // Load SOAP form from clinical notes for the current patient
+  useEffect(() => {
+    const note = firstNote ?? clinicalNotes.find(n => n.patientId === patientId);
     if (note) {
       setSoapForm({
         subjective: note.subjective,
@@ -846,7 +1011,7 @@ export const PatientEncounter = () => {
         aiGenerated: false,
       });
     }
-  }, [firstNote?.id, clinicalNotes]);
+  }, [patientId, firstNote?.id, clinicalNotes]);
 
   useEffect(() => {
     if (!isRecording) return;
@@ -910,12 +1075,40 @@ export const PatientEncounter = () => {
     return text.replace(new RegExp(`\\n?\\n?${AI_DELIMITER}\\n?`, 'g'), '\n\n');
   }, []);
 
+  const ensureNoteExists = useCallback(() => {
+    if (firstNote) return firstNote.id;
+    const noteId = `note-${Date.now()}`;
+    addClinicalNote({
+      patientId,
+      patientName: currentPatient?.patientName ?? 'Patient',
+      appointmentId: '',
+      doctorId: currentStaff?.id ?? 'staff-001',
+      date: new Date().toISOString().slice(0, 10),
+      subjective: stripAiDelimiters(soapForm.subjective || ''),
+      objective: stripAiDelimiters(soapForm.objective || ''),
+      assessment: stripAiDelimiters(soapForm.assessment || ''),
+      plan: stripAiDelimiters(soapForm.plan || ''),
+      icdCodes: soapForm.icdCodes ?? [],
+      status: 'Draft',
+      aiGenerated: soapForm.aiGenerated,
+    });
+    return noteId;
+  }, [firstNote, patientId, currentPatient, currentStaff, soapForm, addClinicalNote, stripAiDelimiters]);
+
+  const isSoapEmpty = useCallback(() => {
+    const s = (soapForm.subjective ?? '').trim();
+    const o = (soapForm.objective ?? '').trim();
+    const a = (soapForm.assessment ?? '').trim();
+    const p = (soapForm.plan ?? '').trim();
+    return !s && !o && !a && !p;
+  }, [soapForm]);
+
   const performSign = useCallback((action: 'sign' | 'signAndClose') => {
-    if (!firstNote) {
-      showToast('No note to sign. Save draft first.', 'info');
+    if (isSoapEmpty()) {
+      showToast('Cannot sign an empty note — fill in at least one SOAP field first.', 'error');
       return;
     }
-    // Create a snapshot of the note for display (strip AI delimiters)
+    const noteId = firstNote?.id ?? ensureNoteExists();
     const snapshot: Partial<ClinicalNote> = {
       subjective: stripAiDelimiters(soapForm.subjective || ''),
       objective: stripAiDelimiters(soapForm.objective || ''),
@@ -924,14 +1117,13 @@ export const PatientEncounter = () => {
       icdCodes: soapForm.icdCodes,
       aiGenerated: soapForm.aiGenerated,
     };
-    // Save the draft with cleaned content first, then sign
-    saveDraftNote(firstNote.id, {
+    saveDraftNote(noteId, {
       subjective: stripAiDelimiters(soapForm.subjective || ''),
       objective: stripAiDelimiters(soapForm.objective || ''),
       assessment: stripAiDelimiters(soapForm.assessment || ''),
       plan: stripAiDelimiters(soapForm.plan || ''),
     });
-    signNote(firstNote.id);
+    signNote(noteId);
     setSignedNoteSnapshot(snapshot);
     setSignedTimestamp(new Date().toLocaleString());
 
@@ -944,16 +1136,14 @@ export const PatientEncounter = () => {
       showToast('Note signed successfully', 'success');
       setShowSignedNote(true);
     }
-    // Also stop recording if it's still going
     if (isRecording) setIsRecording(false);
-  }, [firstNote, soapForm, signNote, saveDraftNote, currentPatient, completePatient, showToast, isRecording, stripAiDelimiters]);
+  }, [firstNote, ensureNoteExists, isSoapEmpty, soapForm, signNote, saveDraftNote, currentPatient, completePatient, showToast, isRecording, stripAiDelimiters]);
 
   const handleSignNote = () => {
-    if (!firstNote) {
-      showToast('No note to sign. Save draft first.', 'info');
+    if (isSoapEmpty()) {
+      showToast('Cannot sign an empty note — fill in at least one SOAP field first.', 'error');
       return;
     }
-    // Check for unreviewed CDSS alerts
     if (activeAlerts.length > 0) {
       setSignAction('sign');
       setShowCdssConfirm(true);
@@ -1063,11 +1253,10 @@ export const PatientEncounter = () => {
   };
 
   const handleSignAndClose = () => {
-    if (!firstNote) {
-      showToast('No note to sign. Save draft first.', 'info');
+    if (isSoapEmpty()) {
+      showToast('Cannot sign an empty note — fill in at least one SOAP field first.', 'error');
       return;
     }
-    // Check for unreviewed CDSS alerts
     if (activeAlerts.length > 0) {
       setSignAction('signAndClose');
       setShowCdssConfirm(true);
@@ -1084,10 +1273,10 @@ export const PatientEncounter = () => {
         assessment: soapForm.assessment ?? '',
         plan: soapForm.plan ?? '',
       });
-      showToast('Draft saved', 'success');
     } else {
-      showToast('Draft saved locally', 'info');
+      ensureNoteExists();
     }
+    showToast('Draft saved', 'success');
   };
 
   const handleReferPatient = () => {

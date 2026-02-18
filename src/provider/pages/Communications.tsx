@@ -433,7 +433,7 @@ export const Communications = () => {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          <button style={{ ...S.btn, ...S.btnOutline, ...S.btnSm }} title="Members">
+          <button style={{ ...S.btn, ...S.btnOutline, ...S.btnSm }} title="Members" onClick={() => showToast(`${participantCount} member${participantCount !== 1 ? 's' : ''} in this conversation`, 'info')}>
             <Users size={14} /> {participantCount}
           </button>
         </div>

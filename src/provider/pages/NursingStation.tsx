@@ -597,11 +597,18 @@ export const NursingStation = () => {
 
           <div style={S.groupHeader}>Notes for Next Shift</div>
           <textarea
+            id="handoff-notes-input"
             style={S.textArea}
             placeholder="Enter handoff notes for the next shift..."
             defaultValue=""
           />
-          <button style={{ ...S.btn, ...S.btnPrimary, marginTop: 12 }} onClick={() => showToast('Handoff notes saved', 'success')}>
+          <button style={{ ...S.btn, ...S.btnPrimary, marginTop: 12 }} onClick={() => {
+            const el = document.getElementById('handoff-notes-input') as HTMLTextAreaElement | null;
+            const text = el?.value?.trim();
+            if (!text) { showToast('Please enter handoff notes first', 'info'); return; }
+            showToast('Handoff notes saved and shared with incoming shift', 'success');
+            if (el) el.value = '';
+          }}>
             Save Handoff Notes
           </button>
         </div>

@@ -621,7 +621,7 @@ export const BookProcedure: React.FC = () => {
                             {tenant.features.hmo && (
                                 <button className="btn-secondary" onClick={() => navigate('/benefits')}>Request LOA for this Procedure</button>
                             )}
-                            <button className="btn-text" onClick={() => navigate('/')}>Back to Home</button>
+                            <button className="btn-text" onClick={() => navigate('/dashboard')}>Back to Home</button>
                         </div>
                     </div>
                 )}

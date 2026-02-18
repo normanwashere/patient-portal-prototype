@@ -4,6 +4,7 @@ import {
     User, Building2, FileText, Printer, Activity, Search,
     X, XCircle
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useData, type PatientReferralView } from '../context/DataContext';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -45,6 +46,7 @@ type StatusFilter = 'All' | 'Pending' | 'Scheduled' | 'Completed';
 export default function Referrals() {
     const { referrals, userProfile } = useData();
     const { tenant } = useTheme();
+    const navigate = useNavigate();
 
     const [filter, setFilter] = useState<StatusFilter>('All');
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -284,6 +286,7 @@ export default function Referrals() {
                             referral={ref}
                             onViewDetails={() => openDetail(ref)}
                             onPrint={() => handlePrint(ref)}
+                            onBook={() => navigate('/visits')}
                         />
                     ))}
                 </div>
@@ -327,9 +330,9 @@ function SummaryCard({ label, count, color, icon }: { label: string; count: numb
 }
 
 /* ── Referral Card ── */
-function ReferralCard({ referral: ref, onViewDetails, onPrint }: {
+function ReferralCard({ referral: ref, onViewDetails, onPrint, onBook }: {
     referral: PatientReferralView;
-    onViewDetails: () => void; onPrint: () => void;
+    onViewDetails: () => void; onPrint: () => void; onBook: () => void;
 }) {
     const statusStyle = STATUS_COLORS[ref.status] ?? STATUS_COLORS.Pending;
     const urgencyBorder = URGENCY_BORDER[ref.urgency] ?? URGENCY_BORDER.Routine;
@@ -436,7 +439,7 @@ function ReferralCard({ referral: ref, onViewDetails, onPrint }: {
                     <Printer size={13} /> Print Referral
                 </button>
                 {ref.status === 'Accepted' && (
-                    <button style={actionBtnStyle('#3b82f6', true)}>
+                    <button onClick={onBook} style={actionBtnStyle('#3b82f6', true)}>
                         <Calendar size={13} /> Book Appointment
                     </button>
                 )}

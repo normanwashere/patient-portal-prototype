@@ -101,6 +101,7 @@ type DoctorMode = 'in-clinic' | 'teleconsult';
 /** Lightweight global state for an active teleconsult call — persists across page navigation */
 export interface ActiveTeleconsultCall {
   id: string;
+  patientId: string;
   patientName: string;
   startedAt: number;          // Date.now() when the call started
   chiefComplaint?: string;
@@ -443,7 +444,20 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
     const found = staff.find((s) => s.id === staffId);
     if (found) setCurrentStaff(found);
   }, [staff]);
-  const switchApp = useCallback((app: CurrentApp) => setCurrentApp(app), []);
+  const switchApp = useCallback((app: CurrentApp) => {
+    setCurrentApp(app);
+    if (app === 'doctor') {
+      setCurrentStaff((prev) => {
+        if (prev.role === 'doctor') return prev;
+        return staff.find((s) => s.role === 'doctor') ?? prev;
+      });
+    } else {
+      setCurrentStaff((prev) => {
+        if (prev.role === 'super_admin' || prev.role === 'doctor') return prev;
+        return staff.find((s) => s.role === 'super_admin') ?? staff.find((s) => s.role === 'doctor') ?? prev;
+      });
+    }
+  }, [staff]);
   const toggleQueueMode = useCallback(() => setQueueMode((p) => (p === 'LINEAR' ? 'MULTI_STREAM' : 'LINEAR')), []);
   const setDoctorMode = useCallback((mode: DoctorMode) => setDoctorModeState(mode), []);
 

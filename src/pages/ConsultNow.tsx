@@ -167,7 +167,7 @@ export const ConsultNow: React.FC = () => {
                         <button className="btn-primary" onClick={() => navigate('/visits')}>
                             Back to Visits
                         </button>
-                        <button className="btn-secondary" onClick={() => navigate('/')}>
+                        <button className="btn-secondary" onClick={() => navigate('/dashboard')}>
                             Go Home
                         </button>
                     </div>

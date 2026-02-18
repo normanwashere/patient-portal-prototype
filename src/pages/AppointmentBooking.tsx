@@ -608,7 +608,7 @@ export const AppointmentBooking: React.FC = () => {
                     <h3>Booking Confirmed!</h3>
                     <p>You are booked with {selectedDoctor?.name} on {selectedDate} at {selectedTime}.</p>
                     <button className="btn-primary" onClick={() => navigate('/appointments')}>View Appointments</button>
-                    <button className="btn-secondary" onClick={() => navigate('/')}>Back to Home</button>
+                    <button className="btn-secondary" onClick={() => navigate('/dashboard')}>Back to Home</button>
                 </div>
             )}
         </div>

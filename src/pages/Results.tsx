@@ -222,7 +222,7 @@ export const Results: React.FC = () => {
                                         <span className="status-booked">Follow-up Booked</span>
                                     )}
                                 </div>
-                                <button className="btn-icon" onClick={(e) => e.stopPropagation()}>
+                                <button className="btn-icon" onClick={(e) => { e.stopPropagation(); showToast('Downloading result PDF...', 'info'); }} title="Download result">
                                     <Download size={20} color="var(--color-primary)" />
                                 </button>
                             </div>

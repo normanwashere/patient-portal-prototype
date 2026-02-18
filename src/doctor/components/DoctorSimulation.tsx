@@ -137,6 +137,7 @@ export const DoctorSimulation: React.FC<Props> = ({ onClose }) => {
       action: () => {
         setActiveTeleconsultCall({
           id: 'sim-tc',
+          patientId: 'p-tc-1',
           patientName: 'Ana Reyes',
           startedAt: Date.now(),
           chiefComplaint: 'Persistent cough and low-grade fever',

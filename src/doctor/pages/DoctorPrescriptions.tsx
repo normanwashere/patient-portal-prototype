@@ -622,7 +622,23 @@ export const DoctorPrescriptions = () => {
                                   <button onClick={() => startEdit(rx)} style={btn()}>
                                     <Edit3 size={12} /> Edit
                                   </button>
-                                  <button onClick={() => showToast('Refill requested', 'success')} style={btn()}>
+                                  <button onClick={() => {
+                                    addPrescription({
+                                      patientId: rx.patientId,
+                                      patientName: rx.patientName,
+                                      doctorName: rx.doctorName,
+                                      medication: rx.medication,
+                                      dosage: rx.dosage,
+                                      frequency: rx.frequency,
+                                      duration: rx.duration,
+                                      quantity: rx.quantity,
+                                      refillsRemaining: Math.max(0, (rx.refillsRemaining ?? 1) - 1),
+                                      status: 'Active',
+                                      prescribedDate: new Date().toISOString().slice(0, 10),
+                                      notes: `Refill of ${rx.medication}`,
+                                    });
+                                    showToast(`Refill created for ${rx.medication}`, 'success');
+                                  }} style={btn()}>
                                     <RefreshCw size={12} /> Refill
                                   </button>
                                   <button onClick={() => {
