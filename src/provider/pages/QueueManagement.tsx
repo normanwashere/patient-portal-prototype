@@ -1026,7 +1026,6 @@ export const QueueManagement = () => {
     );
   };
 
-  const emergencyPatients = tenantQueuePatients.filter(p => p.priority === 'Emergency' && p.status !== 'COMPLETED' && p.status !== 'NO_SHOW');
 
   const renderLinear = () => (
     <>

@@ -908,7 +908,7 @@ export const DoctorTeleconsult = () => {
         )}
 
         <div className="tc-post-actions">
-          <Link to="/doctor/encounter" state={{ patientId: teleconsultPatientId, patientName: teleconsultPatientName, chiefComplaint: activePatientData?.reason }} className="tc-action-btn tc-action-btn--primary">
+          <Link to="/doctor/encounter" state={{ patientId: teleconsultPatientId, patientName: teleconsultPatientName, chiefComplaint: activePatientData?.complaint }} className="tc-action-btn tc-action-btn--primary">
             <FileCheck size={18} /> Review Full Encounter
           </Link>
           <button className="tc-action-btn" onClick={() => { showToast('Summary pushed to patient records', 'success'); }}>

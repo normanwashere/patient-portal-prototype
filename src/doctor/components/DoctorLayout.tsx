@@ -10,7 +10,6 @@ import {
   FlaskConical,
   Pill,
   Syringe,
-  FileCheck,
   Bell,
   ArrowLeftRight,
   ClipboardList,
