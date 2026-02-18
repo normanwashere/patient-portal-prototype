@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Bell, Shield, Settings, Phone, ChevronRight, LogOut, CreditCard, Users, HeartPulse, X, Eye, Fingerprint, Lock, Smartphone, Key, Globe, Moon, ToggleLeft, ToggleRight } from 'lucide-react';
+import { User, Bell, Shield, Settings, Phone, ChevronRight, LogOut, CreditCard, Users, HeartPulse, X, Eye, Fingerprint, Lock, Smartphone, Key, Globe, Moon, ToggleLeft, ToggleRight, ShieldPlus } from 'lucide-react';
 import { useTheme } from '../theme/ThemeContext';
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
@@ -153,6 +153,20 @@ export const Profile: React.FC = () => {
                     <ChevronRight size={18} className="chevron-v2" />
                 </button>
             </section>
+
+            {/* Activate Member Gateway — visible for HMO tenants */}
+            {tenant.features.hmo && (
+                <section className="menu-list-v2" style={{ marginTop: 0 }}>
+                    <button className="menu-item-v2" onClick={() => navigate('/profile/activate')} style={{ borderColor: 'var(--color-primary)', background: 'color-mix(in srgb, var(--color-primary) 4%, var(--color-surface))' }}>
+                        <div className="icon-v2" style={{ background: 'color-mix(in srgb, var(--color-primary) 14%, transparent)' }}><ShieldPlus size={20} style={{ color: 'var(--color-primary)' }} /></div>
+                        <div className="menu-text">
+                            <span className="menu-title" style={{ color: 'var(--color-primary)' }}>Activate Member Gateway</span>
+                            <span className="menu-desc">Set up your account, MFA & membership</span>
+                        </div>
+                        <ChevronRight size={18} className="chevron-v2" />
+                    </button>
+                </section>
+            )}
 
             <button className="btn-logout-v2" onClick={handleSignOut}>
                 <LogOut size={20} />

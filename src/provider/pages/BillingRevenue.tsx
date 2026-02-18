@@ -132,6 +132,215 @@ const INITIAL_ECLAIMS: EClaimRecord[] = [
   { id: 'EC-MC05', claimSeriesNo: 'CS-MC-2026-0005', claimType: 'Outpatient Emergency', pin: '44-998877665-4', patientName: 'Carmen Santos', admissionDate: 'Feb 8, 2026', dischargeDate: 'Feb 8, 2026', icdCode: 'J06.9', diagnosis: 'Acute upper respiratory infection, unspecified', caseRateCode: 'CC-OECB-URI', caseRateDesc: 'OECB — Acute URI', totalAmountClaimed: 5500, totalAmountApproved: 0, facilityShare: 3300, professionalFee: 2200, status: 'In Process', transmittalNo: 'TN-MC-2026-0005', dateSubmitted: 'Feb 9, 2026', claimForms: ['CF1', 'CF2'], remarks: '' },
 ];
 
+/* ─── Maxicare Membership / Subscription mock data ─── */
+/*
+ * Consumer (PRIMA) plans: line-item specific. The `coveredServices` array
+ * lists service name patterns that are included in the package at ₱0 co-pay.
+ * Each entry can be "exhausted" (already used up) or "available".
+ * Items not matching any covered service → patient pays out-of-pocket.
+ *
+ * Corporate plans: MBL-based. Every service maps to a benefit bucket
+ * (Outpatient, Inpatient, Dental, etc.). Charges deduct from the remaining
+ * bucket balance until exhausted; overage goes to patient.
+ */
+
+type BenefitBucket = 'Outpatient' | 'Inpatient' | 'Dental' | 'Emergency' | 'APE';
+
+interface CoveredService {
+  keywords: string[];               // fuzzy match against line-item description
+  category: string;                 // display grouping, e.g. "APE", "Consultations"
+  limit: number;                    // 0 = unlimited; >0 = finite uses/year
+  used: number;
+  note?: string;
+}
+
+interface BenefitCategoryLimit {
+  bucket: BenefitBucket;
+  limit: number;
+  used: number;
+}
+
+interface MaxicareMembership {
+  id: string;
+  patientId: string;
+  patientName: string;
+  memberNo: string;
+  planType: string;
+  planTier: string;
+  packageType: 'consumer' | 'corporate';
+  accountName?: string;
+  accountNo?: string;
+  validity: string;
+  status: 'Active' | 'Expired' | 'Suspended';
+  mbl: number;
+  mblUsed: number;
+  // consumer: line-item coverage
+  coveredServices?: CoveredService[];
+  // corporate: bucket-based coverage
+  benefitBuckets?: BenefitCategoryLimit[];
+}
+
+/* maps invoice line-item categories to corporate benefit buckets */
+const CATEGORY_TO_BUCKET: Record<string, BenefitBucket> = {
+  Consultation: 'Outpatient',
+  Laboratory: 'Outpatient',
+  Imaging: 'Outpatient',
+  Medication: 'Outpatient',
+  Procedure: 'Outpatient',
+};
+
+/* Fuzzy matcher: does the description contain any of the keywords? */
+function matchesCoveredService(desc: string, svc: CoveredService): boolean {
+  const lower = desc.toLowerCase();
+  return svc.keywords.some(kw => lower.includes(kw.toLowerCase()));
+}
+
+const PRIMA_ELITE_SERVICES: CoveredService[] = [
+  // APE Basic 5
+  { keywords: ['physical exam'], category: 'Annual Physical Exam', limit: 1, used: 1 },
+  { keywords: ['cbc', 'complete blood count', 'blood count'], category: 'Annual Physical Exam', limit: 1, used: 1 },
+  { keywords: ['urinalysis', 'urine'], category: 'Annual Physical Exam', limit: 1, used: 1 },
+  { keywords: ['fecalysis', 'stool', 'fecal'], category: 'Annual Physical Exam', limit: 1, used: 1 },
+  { keywords: ['chest x-ray', 'chest xray', 'cxr'], category: 'Annual Physical Exam', limit: 1, used: 0 },
+  // Consultations — unlimited at PCC
+  { keywords: ['consultation', 'consult', 'follow-up', 'follow up'], category: 'Consultations (Unlimited)', limit: 0, used: 5 },
+  // Routine Diagnostics — unlimited
+  { keywords: ['fbs', 'fasting blood', 'blood sugar'], category: 'Routine Diagnostics', limit: 0, used: 1 },
+  { keywords: ['lipid', 'cholesterol'], category: 'Routine Diagnostics', limit: 0, used: 1 },
+  { keywords: ['hba1c', 'glycated'], category: 'Routine Diagnostics', limit: 0, used: 1 },
+  { keywords: ['creatinine', 'kidney function', 'egfr', 'renal'], category: 'Routine Diagnostics', limit: 0, used: 1 },
+  { keywords: ['sgpt', 'alt', 'liver function', 'sgot', 'ast'], category: 'Routine Diagnostics', limit: 0, used: 0 },
+  { keywords: ['x-ray', 'xray', 'x ray'], category: 'Routine Diagnostics', limit: 0, used: 1 },
+  { keywords: ['ecg', 'electrocardiogram', 'ekg'], category: 'Routine Diagnostics', limit: 0, used: 0 },
+  // Advanced Diagnostics — pick 3 of 4
+  { keywords: ['ultrasound', 'pelvic'], category: 'Advanced Diagnostics (3 of 4)', limit: 3, used: 1 },
+  { keywords: ['2d echo', 'echocardiogram'], category: 'Advanced Diagnostics (3 of 4)', limit: 3, used: 0, note: '2 of 3 remaining' },
+  { keywords: ['treadmill', 'stress test', 'cardiac stress'], category: 'Advanced Diagnostics (3 of 4)', limit: 3, used: 0 },
+  { keywords: ['ct scan', 'ct plain', 'computed tomography'], category: 'Advanced Diagnostics (3 of 4)', limit: 3, used: 0 },
+];
+
+const PRIMA_LITE_SERVICES: CoveredService[] = [
+  { keywords: ['physical exam'], category: 'Annual Physical Exam', limit: 1, used: 0 },
+  { keywords: ['cbc', 'complete blood count'], category: 'Annual Physical Exam', limit: 1, used: 0 },
+  { keywords: ['urinalysis', 'urine'], category: 'Annual Physical Exam', limit: 1, used: 0 },
+  { keywords: ['fecalysis', 'stool'], category: 'Annual Physical Exam', limit: 1, used: 0 },
+  { keywords: ['chest x-ray', 'chest xray'], category: 'Annual Physical Exam', limit: 1, used: 0 },
+  { keywords: ['consultation', 'consult'], category: 'Consultations (Unlimited)', limit: 0, used: 0 },
+  { keywords: ['fbs', 'fasting blood'], category: 'Routine Diagnostics', limit: 0, used: 0 },
+  { keywords: ['lipid', 'cholesterol'], category: 'Routine Diagnostics', limit: 0, used: 0 },
+  { keywords: ['ecg', 'electrocardiogram'], category: 'Routine Diagnostics', limit: 0, used: 0 },
+];
+
+const PRIMA_SILVER_SERVICES: CoveredService[] = [
+  ...PRIMA_LITE_SERVICES,
+  { keywords: ['hba1c', 'glycated'], category: 'Routine Diagnostics', limit: 0, used: 0 },
+  { keywords: ['creatinine', 'kidney'], category: 'Routine Diagnostics', limit: 0, used: 0 },
+  { keywords: ['alt', 'sgpt', 'liver'], category: 'Routine Diagnostics', limit: 0, used: 0 },
+  { keywords: ['x-ray', 'xray'], category: 'Routine Diagnostics', limit: 0, used: 0 },
+];
+
+const PRIMA_GOLD_SERVICES: CoveredService[] = [
+  ...PRIMA_SILVER_SERVICES,
+  { keywords: ['ultrasound'], category: 'Advanced Diagnostics (2 of 4)', limit: 2, used: 0 },
+  { keywords: ['2d echo', 'echocardiogram'], category: 'Advanced Diagnostics (2 of 4)', limit: 2, used: 0 },
+  { keywords: ['treadmill', 'stress test'], category: 'Advanced Diagnostics (2 of 4)', limit: 2, used: 0 },
+  { keywords: ['ct scan'], category: 'Advanced Diagnostics (2 of 4)', limit: 2, used: 0 },
+];
+
+const MAXICARE_MEMBERSHIPS: MaxicareMembership[] = [
+  // Andrea Reyes — PRIMA Elite (consumer, line-item)
+  { id: 'mem-mc1', patientId: 'p-mc1', patientName: 'Andrea Reyes', memberNo: 'MC-PRIMA-88001', planType: 'PRIMA Elite by MaxiHealth', planTier: 'PRIMA Elite', packageType: 'consumer', validity: 'Jan 15, 2026 — Jan 14, 2027', status: 'Active', mbl: 19999, mblUsed: 4200, coveredServices: PRIMA_ELITE_SERVICES },
+  // Mark Anthony Lim — Corporate Gold (MBL buckets)
+  { id: 'mem-mc2a', patientId: 'p-mc2', patientName: 'Mark Anthony Lim', memberNo: 'MC-CORP-44002', planType: 'Maxicare Gold', planTier: 'Corporate Gold', packageType: 'corporate', accountName: 'Accenture Philippines Inc.', accountNo: 'ACCT-MXC-2024-0817', validity: 'Mar 31, 2025 — Mar 31, 2026', status: 'Active', mbl: 200000, mblUsed: 18750, benefitBuckets: [
+    { bucket: 'Outpatient', limit: 50000, used: 14250 },
+    { bucket: 'Inpatient', limit: 200000, used: 0 },
+    { bucket: 'Dental', limit: 10000, used: 0 },
+    { bucket: 'Emergency', limit: 30000, used: 0 },
+    { bucket: 'APE', limit: 5000, used: 4500 },
+  ] },
+  // Mark Anthony Lim — secondary personal PRIMA Lite
+  { id: 'mem-mc2b', patientId: 'p-mc2', patientName: 'Mark Anthony Lim', memberNo: 'MC-PRIMA-44099', planType: 'PRIMA Lite', planTier: 'PRIMA Lite', packageType: 'consumer', validity: 'Jun 1, 2025 — May 31, 2026', status: 'Active', mbl: 9999, mblUsed: 1200, coveredServices: PRIMA_LITE_SERVICES },
+  // Grace Lim — Corporate dependent
+  { id: 'mem-mc3', patientId: 'p-mc3', patientName: 'Grace Lim', memberNo: 'MC-CORP-44002-D1', planType: 'Maxicare Gold (Dependent)', planTier: 'Corporate Gold', packageType: 'corporate', accountName: 'Accenture Philippines Inc.', accountNo: 'ACCT-MXC-2024-0817', validity: 'Mar 31, 2025 — Mar 31, 2026', status: 'Active', mbl: 150000, mblUsed: 3200, benefitBuckets: [
+    { bucket: 'Outpatient', limit: 35000, used: 3200 },
+    { bucket: 'Inpatient', limit: 150000, used: 0 },
+    { bucket: 'Dental', limit: 5000, used: 0 },
+    { bucket: 'Emergency', limit: 20000, used: 0 },
+    { bucket: 'APE', limit: 5000, used: 0 },
+  ] },
+  // Paolo Reyes — PRIMA Silver
+  { id: 'mem-mc4', patientId: 'p-mc4', patientName: 'Paolo Reyes', memberNo: 'MC-PRIMA-77044', planType: 'PRIMA Silver', planTier: 'PRIMA Silver', packageType: 'consumer', validity: 'Aug 1, 2025 — Jul 31, 2026', status: 'Active', mbl: 14999, mblUsed: 6800, coveredServices: PRIMA_SILVER_SERVICES },
+  // Carmen Santos — Corporate Platinum
+  { id: 'mem-mc5', patientId: 'p-mc5', patientName: 'Carmen Santos', memberNo: 'MC-CORP-55010', planType: 'Maxicare Platinum', planTier: 'Corporate Platinum', packageType: 'corporate', accountName: 'Globe Telecom Inc.', accountNo: 'ACCT-MXC-2024-1102', validity: 'Jan 1, 2026 — Dec 31, 2026', status: 'Active', mbl: 500000, mblUsed: 12500, benefitBuckets: [
+    { bucket: 'Outpatient', limit: 100000, used: 8200 },
+    { bucket: 'Inpatient', limit: 500000, used: 0 },
+    { bucket: 'Dental', limit: 15000, used: 4300 },
+    { bucket: 'Emergency', limit: 50000, used: 0 },
+    { bucket: 'APE', limit: 8000, used: 0 },
+  ] },
+  // Roberto Lim — PRIMA Gold
+  { id: 'mem-mc6a', patientId: 'p-mc6', patientName: 'Roberto Lim', memberNo: 'MC-PRIMA-22088', planType: 'PRIMA Gold', planTier: 'PRIMA Gold', packageType: 'consumer', validity: 'Oct 1, 2025 — Sep 30, 2026', status: 'Active', mbl: 49999, mblUsed: 15200, coveredServices: PRIMA_GOLD_SERVICES },
+  // Roberto Lim — expired corporate
+  { id: 'mem-mc6b', patientId: 'p-mc6', patientName: 'Roberto Lim', memberNo: 'MC-CORP-OLD-001', planType: 'Maxicare Silver (Former Employer)', planTier: 'Corporate Silver', packageType: 'corporate', accountName: 'PLDT Inc. (Inactive)', accountNo: 'ACCT-MXC-2023-0444', validity: 'Jan 1, 2024 — Dec 31, 2024', status: 'Expired', mbl: 100000, mblUsed: 42000, benefitBuckets: [
+    { bucket: 'Outpatient', limit: 30000, used: 18000 },
+    { bucket: 'Inpatient', limit: 100000, used: 24000 },
+    { bucket: 'Dental', limit: 5000, used: 0 },
+  ] },
+  // Elisa Tan — PRIMA Elite
+  { id: 'mem-mc7', patientId: 'p-mc7', patientName: 'Elisa Tan', memberNo: 'MC-PRIMA-33077', planType: 'PRIMA Elite by MaxiHealth', planTier: 'PRIMA Elite', packageType: 'consumer', validity: 'Apr 1, 2025 — Mar 31, 2026', status: 'Active', mbl: 19999, mblUsed: 8900, coveredServices: PRIMA_ELITE_SERVICES },
+  // Riza Mendoza — Corporate Gold
+  { id: 'mem-mc8a', patientId: 'p-mc8', patientName: 'Riza Mendoza', memberNo: 'MC-CORP-66020', planType: 'Maxicare Gold', planTier: 'Corporate Gold', packageType: 'corporate', accountName: 'BPI', accountNo: 'ACCT-MXC-2025-0330', validity: 'Feb 1, 2026 — Jan 31, 2027', status: 'Active', mbl: 200000, mblUsed: 5600, benefitBuckets: [
+    { bucket: 'Outpatient', limit: 50000, used: 5600 },
+    { bucket: 'Inpatient', limit: 200000, used: 0 },
+    { bucket: 'Dental', limit: 10000, used: 0 },
+    { bucket: 'Emergency', limit: 30000, used: 0 },
+    { bucket: 'APE', limit: 5000, used: 0 },
+  ] },
+  // Riza Mendoza — PRIMA Lite (personal)
+  { id: 'mem-mc8b', patientId: 'p-mc8', patientName: 'Riza Mendoza', memberNo: 'MC-PRIMA-66099', planType: 'PRIMA Lite', planTier: 'PRIMA Lite', packageType: 'consumer', validity: 'Jul 1, 2025 — Jun 30, 2026', status: 'Active', mbl: 9999, mblUsed: 0, coveredServices: PRIMA_LITE_SERVICES },
+];
+
+/* ── Coverage resolution: determines per-line-item HMO coverage ── */
+type CoverageStatus = 'covered' | 'partial' | 'not-covered';
+interface LineCoverage {
+  lineId: string;
+  status: CoverageStatus;
+  hmoPays: number;
+  patientPays: number;
+  reason: string;
+}
+
+function resolveLineCoverage(
+  items: { id: string; category: string; description: string; unitPrice: number; quantity: number; selected: boolean }[],
+  mem: MaxicareMembership,
+): LineCoverage[] {
+  const selected = items.filter(li => li.selected);
+  if (mem.packageType === 'consumer' && mem.coveredServices) {
+    return selected.map(li => {
+      const amt = li.unitPrice * li.quantity;
+      const svc = mem.coveredServices!.find(s => matchesCoveredService(li.description, s));
+      if (!svc) return { lineId: li.id, status: 'not-covered' as const, hmoPays: 0, patientPays: amt, reason: 'Not in plan' };
+      if (svc.limit > 0 && svc.used >= svc.limit) return { lineId: li.id, status: 'not-covered' as const, hmoPays: 0, patientPays: amt, reason: `${svc.category} exhausted (${svc.used}/${svc.limit})` };
+      return { lineId: li.id, status: 'covered' as const, hmoPays: amt, patientPays: 0, reason: svc.category + (svc.limit === 0 ? ' (Unlimited)' : ` (${svc.used}/${svc.limit} used)`) };
+    });
+  }
+  if (mem.packageType === 'corporate' && mem.benefitBuckets) {
+    const remaining = new Map<BenefitBucket, number>();
+    for (const b of mem.benefitBuckets) remaining.set(b.bucket, b.limit - b.used);
+    return selected.map(li => {
+      const amt = li.unitPrice * li.quantity;
+      const bucket = CATEGORY_TO_BUCKET[li.category] ?? 'Outpatient';
+      const avail = remaining.get(bucket) ?? 0;
+      if (avail <= 0) return { lineId: li.id, status: 'not-covered' as const, hmoPays: 0, patientPays: amt, reason: `${bucket} limit exhausted` };
+      const covered = Math.min(amt, avail);
+      remaining.set(bucket, avail - covered);
+      if (covered >= amt) return { lineId: li.id, status: 'covered' as const, hmoPays: amt, patientPays: 0, reason: `${bucket} (₱${avail.toLocaleString()} was avail.)` };
+      return { lineId: li.id, status: 'partial' as const, hmoPays: covered, patientPays: amt - covered, reason: `${bucket} limit reached — ₱${(amt - covered).toLocaleString()} excess` };
+    });
+  }
+  return selected.map(li => ({ lineId: li.id, status: 'not-covered' as const, hmoPays: 0, patientPays: li.unitPrice * li.quantity, reason: 'No coverage data' }));
+}
+
 /* ─── PhilHealth Yakap mock data ─── */
 /* Yakap (Yaman ng Kalusugan Para Malayo sa Sakit) = OUTPATIENT PRIMARY CARE.
    Replaced the old Konsulta program. Members register at an accredited YAKAP clinic
@@ -654,8 +863,11 @@ export function BillingRevenue() {
   // invoice form — patient journey based
   const [invPatientId, setInvPatientId] = useState('');
   const [invMethod, setInvMethod] = useState<PaymentTransaction['method']>('Cash');
-  const [invDiscount, setInvDiscount] = useState<'none' | 'senior' | 'pwd' | 'philhealth'>('none');
+  const [invDiscount, setInvDiscount] = useState<'none' | 'senior' | 'pwd' | 'philhealth' | 'hmo'>('none');
   const [invNotes, setInvNotes] = useState('');
+
+  // Maxicare membership/subscription selection
+  const [selectedMembership, setSelectedMembership] = useState<string | null>(null);
 
   /* ── Line item types for invoice builder ── */
   interface InvoiceLineItem {
@@ -747,8 +959,26 @@ export function BillingRevenue() {
 
   const handlePatientSelect = (pid: string) => {
     setInvPatientId(pid);
+    setSelectedMembership(null);
     loadPatientBillableItems(pid);
   };
+
+  /* ── patient memberships for selected patient (Maxicare only) ── */
+  const patientMemberships = useMemo(() => {
+    if (!invPatientId || tenant.id !== 'maxicare') return [];
+    return MAXICARE_MEMBERSHIPS.filter(m => m.patientId === invPatientId);
+  }, [invPatientId, tenant.id]);
+
+  const activeMembership = patientMemberships.find(m => m.id === selectedMembership) ?? null;
+
+  /* ── per-line-item coverage when HMO is selected ── */
+  const lineCoverageMap = useMemo(() => {
+    if (invDiscount !== 'hmo' || !activeMembership) return new Map<string, LineCoverage>();
+    const coverages = resolveLineCoverage(lineItems, activeMembership);
+    const m = new Map<string, LineCoverage>();
+    for (const c of coverages) m.set(c.lineId, c);
+    return m;
+  }, [lineItems, invDiscount, activeMembership]);
 
   const toggleLineItem = (id: string) => {
     setLineItems(prev => prev.map(li => li.id === id ? { ...li, selected: !li.selected } : li));
@@ -790,11 +1020,34 @@ export function BillingRevenue() {
     if (invDiscount === 'senior') { discountPct = 20; discountLabel = 'Senior Citizen (20%)'; }
     else if (invDiscount === 'pwd') { discountPct = 20; discountLabel = 'PWD (20%)'; }
     else if (invDiscount === 'philhealth') { discountPct = 0; discountLabel = 'PhilHealth — see eClaims'; }
-    const discountAmt = Math.round(subtotal * discountPct / 100);
-    const convFee = (invMethod === 'GCash' || invMethod === 'Maya') ? Math.round((subtotal - discountAmt) * 0.02) : 0;
-    const total = subtotal - discountAmt + convFee;
-    return { selected: selected.length, subtotal, byCategory, discountPct, discountLabel, discountAmt, convFee, total };
-  }, [lineItems, invDiscount, invMethod]);
+
+    // HMO coverage: use per-line-item coverage instead of flat discount
+    let hmoCovered = 0;
+    let patientResponsibility = 0;
+    let coveredCount = 0;
+    let partialCount = 0;
+    let notCoveredCount = 0;
+    if (invDiscount === 'hmo' && activeMembership) {
+      discountLabel = `HMO: ${activeMembership.planTier}`;
+      const coverages = resolveLineCoverage(selected, activeMembership);
+      for (const c of coverages) {
+        hmoCovered += c.hmoPays;
+        patientResponsibility += c.patientPays;
+        if (c.status === 'covered') coveredCount++;
+        else if (c.status === 'partial') partialCount++;
+        else notCoveredCount++;
+      }
+    }
+    const discountAmt = invDiscount === 'hmo' ? hmoCovered : Math.round(subtotal * discountPct / 100);
+    const afterDiscount = subtotal - discountAmt;
+    const convFee = (invMethod === 'GCash' || invMethod === 'Maya') ? Math.round(afterDiscount * 0.02) : 0;
+    const total = afterDiscount + convFee;
+    return {
+      selected: selected.length, subtotal, byCategory,
+      discountPct, discountLabel, discountAmt, convFee, total,
+      hmoCovered, patientResponsibility, coveredCount, partialCount, notCoveredCount,
+    };
+  }, [lineItems, invDiscount, invMethod, activeMembership]);
 
   // claims
   const [claims, setClaims] = useState(INITIAL_CLAIMS);
@@ -1221,6 +1474,121 @@ export function BillingRevenue() {
               </select>
             </div>
 
+            {/* ─ Maxicare Membership/Subscription Selector ─ */}
+            {invPatientId && tenant.id === 'maxicare' && patientMemberships.length > 0 && (
+              <div style={{ ...s.card, marginBottom: 16, padding: 0, overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <CreditCard size={15} style={{ color: 'var(--color-primary)' }} />
+                    Membership / Subscription
+                  </h3>
+                  <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                    {patientMemberships.length} plan{patientMemberships.length > 1 ? 's' : ''} found
+                  </span>
+                </div>
+                <div style={{ padding: 16, display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+                  {patientMemberships.map(mem => {
+                    const isSelected = selectedMembership === mem.id;
+                    const isExpired = mem.status === 'Expired';
+                    const usedPct = mem.mbl > 0 ? Math.round((mem.mblUsed / mem.mbl) * 100) : 0;
+                    return (
+                      <div
+                        key={mem.id}
+                        onClick={() => !isExpired && setSelectedMembership(isSelected ? null : mem.id)}
+                        style={{
+                          padding: 14, borderRadius: 10,
+                          border: `2px solid ${isSelected ? 'var(--color-primary)' : isExpired ? 'var(--color-border)' : 'var(--color-border)'}`,
+                          background: isSelected ? 'color-mix(in srgb, var(--color-primary) 4%, var(--color-surface))' : isExpired ? 'var(--color-background)' : 'var(--color-surface)',
+                          cursor: isExpired ? 'not-allowed' : 'pointer',
+                          opacity: isExpired ? 0.55 : 1,
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                          <div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                              {mem.planType}
+                              {isSelected && <CheckCircle2 size={14} style={{ color: 'var(--color-primary)' }} />}
+                            </div>
+                            <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                              {mem.memberNo} · {mem.packageType === 'corporate' ? `${mem.accountName}` : 'Individual Plan'}
+                            </div>
+                          </div>
+                          <span style={{
+                            ...s.badge, fontSize: 10, padding: '2px 8px',
+                            background: mem.status === 'Active' ? 'var(--color-success-light, #d1fae5)' : 'var(--color-error-light, #fee2e2)',
+                            color: mem.status === 'Active' ? 'var(--color-success)' : 'var(--color-error)',
+                          }}>
+                            {mem.status}
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 6 }}>
+                          Valid: {mem.validity}
+                        </div>
+
+                        {/* MBL progress bar */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                          <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--color-border)', overflow: 'hidden' }}>
+                            <div style={{
+                              width: `${Math.min(usedPct, 100)}%`, height: '100%', borderRadius: 3,
+                              background: usedPct > 80 ? 'var(--color-error)' : usedPct > 50 ? 'var(--color-warning)' : 'var(--color-primary)',
+                            }} />
+                          </div>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' as const }}>
+                            {usedPct}% used
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--color-text-muted)', flexWrap: 'wrap' as const }}>
+                          <span>MBL: <strong style={{ color: 'var(--color-text)' }}>₱{mem.mbl.toLocaleString()}</strong></span>
+                          <span>Used: <strong style={{ color: 'var(--color-text)' }}>₱{mem.mblUsed.toLocaleString()}</strong></span>
+                          <span>Remaining: <strong style={{ color: 'var(--color-success)' }}>₱{(mem.mbl - mem.mblUsed).toLocaleString()}</strong></span>
+                        </div>
+
+                        {/* Breakdown for corporate plans — bucket limits */}
+                        {isSelected && mem.packageType === 'corporate' && mem.benefitBuckets && (
+                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                            {mem.benefitBuckets.filter(b => b.limit > 0).map(b => (
+                              <div key={b.bucket} style={{ padding: 8, borderRadius: 6, background: 'var(--color-background)', textAlign: 'center' as const }}>
+                                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 4 }}>{b.bucket}</div>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text)' }}>₱{(b.limit - b.used).toLocaleString()}</div>
+                                <div style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>of ₱{b.limit.toLocaleString()}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Covered services for consumer plans */}
+                        {isSelected && mem.packageType === 'consumer' && mem.coveredServices && (
+                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--color-border)', fontSize: 11 }}>
+                            <div style={{ fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 6 }}>Covered Services</div>
+                            {(() => {
+                              const cats = [...new Set(mem.coveredServices!.map(s => s.category))];
+                              return cats.map(cat => {
+                                const svcs = mem.coveredServices!.filter(s => s.category === cat);
+                                const anyExhausted = svcs.some(s => s.limit > 0 && s.used >= s.limit);
+                                return (
+                                  <div key={cat} style={{ marginBottom: 4 }}>
+                                    <span style={{ fontWeight: 600, color: anyExhausted ? 'var(--color-warning)' : 'var(--color-success)', fontSize: 10 }}>
+                                      {cat}
+                                    </span>
+                                    <span style={{ color: 'var(--color-text-muted)', fontSize: 10, marginLeft: 4 }}>
+                                      {svcs[0].limit === 0 ? '(Unlimited)' : `(${svcs.reduce((a, x) => a + x.used, 0)}/${svcs[0].limit} used)`}
+                                    </span>
+                                  </div>
+                                );
+                              });
+                            })()}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {invPatientId && (
               <>
                 {/* ─ Billable Line Items ─ */}
@@ -1249,6 +1617,9 @@ export function BillingRevenue() {
                           <th style={{ ...s.th, padding: '8px 12px', textAlign: 'right' as const }}>Unit Price</th>
                           <th style={{ ...s.th, padding: '8px 12px', textAlign: 'center' as const, width: 50 }}>Qty</th>
                           <th style={{ ...s.th, padding: '8px 12px', textAlign: 'right' as const }}>Amount</th>
+                          {invDiscount === 'hmo' && activeMembership && (
+                            <th style={{ ...s.th, padding: '8px 10px', textAlign: 'center' as const, minWidth: 90 }}>Coverage</th>
+                          )}
                           <th style={{ ...s.th, padding: '8px 6px', width: 30 }}></th>
                         </tr>
                       </thead>
@@ -1257,7 +1628,9 @@ export function BillingRevenue() {
                           const catItems = lineItems.filter(li => li.category === cat);
                           if (catItems.length === 0) return null;
                           const catColors: Record<string, string> = { Consultation: '#8b5cf6', Laboratory: '#3b82f6', Imaging: '#06b6d4', Medication: '#10b981', Procedure: '#f59e0b' };
-                          return catItems.map((li, idx) => (
+                          return catItems.map((li, idx) => {
+                            const cov = lineCoverageMap.get(li.id);
+                            return (
                             <tr key={li.id} style={{ background: li.selected ? undefined : 'color-mix(in srgb, var(--color-text-muted) 3%, var(--color-surface))', opacity: li.selected ? 1 : 0.55 }}>
                               <td style={{ ...s.td, padding: '8px 10px', borderBottom: '1px solid var(--color-border)' }}>
                                 <input
@@ -1295,6 +1668,31 @@ export function BillingRevenue() {
                               <td style={{ ...s.td, padding: '8px 12px', textAlign: 'right' as const, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                                 ₱{(li.unitPrice * li.quantity).toLocaleString()}
                               </td>
+                              {invDiscount === 'hmo' && activeMembership && (
+                                <td style={{ ...s.td, padding: '8px 10px', textAlign: 'center' as const }}>
+                                  {li.selected && cov ? (
+                                    <div title={cov.reason}>
+                                      <span style={{
+                                        ...s.badge, fontSize: 9, padding: '2px 6px', fontWeight: 700,
+                                        background: cov.status === 'covered' ? 'var(--color-success-light, #d1fae5)' : cov.status === 'partial' ? 'var(--color-warning-light, #fef3c7)' : 'var(--color-error-light, #fee2e2)',
+                                        color: cov.status === 'covered' ? 'var(--color-success)' : cov.status === 'partial' ? 'var(--color-warning)' : 'var(--color-error)',
+                                      }}>
+                                        {cov.status === 'covered' ? 'COVERED' : cov.status === 'partial' ? 'PARTIAL' : 'NOT COVERED'}
+                                      </span>
+                                      {cov.status === 'partial' && (
+                                        <div style={{ fontSize: 9, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                                          ₱{cov.patientPays.toLocaleString()} excess
+                                        </div>
+                                      )}
+                                      <div style={{ fontSize: 8, color: 'var(--color-text-muted)', marginTop: 1, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                                        {cov.reason}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>—</span>
+                                  )}
+                                </td>
+                              )}
                               <td style={{ ...s.td, padding: '8px 6px' }}>
                                 {li.source === 'manual' && (
                                   <button onClick={() => removeLineItem(li.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', padding: 2 }}>
@@ -1303,7 +1701,7 @@ export function BillingRevenue() {
                                 )}
                               </td>
                             </tr>
-                          ));
+                          );});
                         })}
                       </tbody>
                     </table>
@@ -1341,6 +1739,16 @@ export function BillingRevenue() {
                   Invoice Summary
                 </h3>
                 {selectedPatientName && <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4 }}>{selectedPatientName}</div>}
+                {activeMembership && (
+                  <div style={{ marginTop: 6, padding: '6px 10px', borderRadius: 6, background: 'color-mix(in srgb, var(--color-primary) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <CreditCard size={11} /> {activeMembership.planTier}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                      {activeMembership.memberNo} · ₱{(activeMembership.mbl - activeMembership.mblUsed).toLocaleString()} remaining
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div style={{ padding: '16px 20px' }}>
@@ -1379,8 +1787,45 @@ export function BillingRevenue() {
                       )}
                     </div>
 
+                    {/* HMO coverage breakdown */}
+                    {invDiscount === 'hmo' && activeMembership && invoiceTotals.hmoCovered > 0 && (
+                      <div style={{ marginTop: 10, marginBottom: 10, padding: '10px 12px', borderRadius: 8, background: 'color-mix(in srgb, var(--color-primary) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--color-primary) 15%, transparent)' }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Shield size={12} /> HMO Coverage Breakdown
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
+                          <span style={{ color: 'var(--color-text-muted)' }}>HMO Covers</span>
+                          <span style={{ fontWeight: 700, color: 'var(--color-success)' }}>−₱{invoiceTotals.hmoCovered.toLocaleString()}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
+                          <span style={{ color: 'var(--color-text-muted)' }}>Patient Pays</span>
+                          <span style={{ fontWeight: 700, color: invoiceTotals.patientResponsibility > 0 ? 'var(--color-warning)' : 'var(--color-success)' }}>₱{invoiceTotals.patientResponsibility.toLocaleString()}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' as const }}>
+                          {invoiceTotals.coveredCount > 0 && (
+                            <span style={{ ...s.badge, fontSize: 9, padding: '2px 6px', background: 'var(--color-success-light, #d1fae5)', color: 'var(--color-success)' }}>
+                              {invoiceTotals.coveredCount} covered
+                            </span>
+                          )}
+                          {invoiceTotals.partialCount > 0 && (
+                            <span style={{ ...s.badge, fontSize: 9, padding: '2px 6px', background: 'var(--color-warning-light, #fef3c7)', color: 'var(--color-warning)' }}>
+                              {invoiceTotals.partialCount} partial
+                            </span>
+                          )}
+                          {invoiceTotals.notCoveredCount > 0 && (
+                            <span style={{ ...s.badge, fontSize: 9, padding: '2px 6px', background: 'var(--color-error-light, #fee2e2)', color: 'var(--color-error)' }}>
+                              {invoiceTotals.notCoveredCount} not covered
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ marginTop: 6, fontSize: 10, color: 'var(--color-text-muted)' }}>
+                          {activeMembership.memberNo} · {activeMembership.packageType === 'consumer' ? 'Line-item coverage' : 'MBL bucket coverage'}
+                        </div>
+                      </div>
+                    )}
+
                     <div style={{ borderTop: '2px solid var(--color-text)', padding: '10px 0 0', display: 'flex', justifyContent: 'space-between', fontSize: 18, fontWeight: 800, color: 'var(--color-text)' }}>
-                      <span>Total</span>
+                      <span>{invDiscount === 'hmo' ? 'Patient Due' : 'Total'}</span>
                       <span style={{ fontVariantNumeric: 'tabular-nums' }}>₱{invoiceTotals.total.toLocaleString()}</span>
                     </div>
                   </>
@@ -1390,9 +1835,10 @@ export function BillingRevenue() {
               {/* Payment & Discount Controls */}
               <div style={{ padding: '0 20px 16px', display: 'flex', flexDirection: 'column' as const, gap: 12 }}>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 4, display: 'block' }}>Discount</label>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 4, display: 'block' }}>Discount / Coverage</label>
                   <select style={{ ...s.input, padding: '8px 10px', fontSize: 12 }} value={invDiscount} onChange={(e) => setInvDiscount(e.target.value as typeof invDiscount)}>
                     <option value="none">No Discount</option>
+                    {activeMembership && <option value="hmo">Charge to HMO — {activeMembership.planTier}</option>}
                     <option value="senior">Senior Citizen (20%)</option>
                     <option value="pwd">PWD (20%)</option>
                     <option value="philhealth">PhilHealth Deduction</option>

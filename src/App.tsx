@@ -35,6 +35,7 @@ import { Checkout } from './pages/Checkout';
 import { PaymentSuccess } from './pages/PaymentSuccess';
 import { Dependents } from './pages/Dependents';
 import { PhilHealthDetail } from './pages/PhilHealthDetail';
+import { MemberActivation } from './pages/MemberActivation';
 import Referrals from './pages/Referrals';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DemoControls } from './components/DemoControls';
@@ -139,6 +140,7 @@ function App() {
                                         <Route path="/events/:id" element={<EventDetail />} />
                                         <Route path="/profile" element={<Profile />} />
                                         <Route path="/profile/dependents" element={<Dependents />} />
+                                        <Route path="/profile/activate" element={<MemberActivation />} />
                                         <Route path="/coverage/philhealth" element={<PhilHealthDetail />} />
                                         <Route path="/branches" element={<Branches />} />
                                         <Route path="/forms" element={<Forms />} />
