@@ -81,7 +81,6 @@ const SIDEBAR_SECTIONS: NavSection[] = [
       { to: `${PREFIX}/messages`, icon: MessageSquare, label: 'Messages', hasBadge: 'messages' },
       { to: `${PREFIX}/tasks`, icon: ClipboardList, label: 'Tasks', hasBadge: 'tasks' },
       { to: `${PREFIX}/immunizations`, icon: Syringe, label: 'Immunizations' },
-      { to: `${PREFIX}/loa`, icon: FileCheck, label: 'LOA Review', visible: (f) => f.loa },
     ],
   },
 ];
@@ -141,7 +140,6 @@ export const DoctorLayout = () => {
     { to: `${PREFIX}/messages`, icon: MessageSquare, label: 'Messages' },
     { to: `${PREFIX}/immunizations`, icon: Syringe, label: 'Immunizations' },
     { to: `${PREFIX}/schedule`, icon: Calendar, label: 'My Schedule' },
-    { to: `${PREFIX}/loa`, icon: FileCheck, label: 'LOA Review' },
     { to: `${PREFIX}/profile`, icon: User, label: 'My Profile' },
   ];
 

@@ -411,8 +411,8 @@ export const QueueManagement = () => {
     setAssignRoomFor(null);
   };
 
-  const handleCall = (station: StationType) => {
-    callNextPatient(station);
+  const handleCall = (patientId: string, station: StationType) => {
+    callNextPatient(station, patientId);
     showToast('Patient called', 'info');
   };
 
@@ -584,7 +584,7 @@ export const QueueManagement = () => {
             {/* QUEUED: Call / Skip / No-Show */}
             {p.status === 'QUEUED' && (
               <>
-                <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm, padding: '5px 10px' }} onClick={() => handleCall(p.stationType)}>
+                <button style={{ ...S.btn, ...S.btnPrimary, ...S.btnSm, padding: '5px 10px' }} onClick={() => handleCall(p.id, p.stationType)}>
                   <PhoneCall size={11} /> Call
                 </button>
                 <button
@@ -1030,13 +1030,6 @@ export const QueueManagement = () => {
 
   const renderLinear = () => (
     <>
-    {emergencyPatients.length > 0 && (
-      <div style={{ background: '#fef2f2', border: '2px solid #fca5a5', borderRadius: 'var(--radius)', padding: '8px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, animation: 'emergencyFlash 1s ease-in-out infinite' }}>
-        <span style={{ fontSize: 16 }}>🚨</span>
-        <span style={{ fontWeight: 700, fontSize: 12, color: '#dc2626' }}>EMERGENCY — {emergencyPatients.length} patient{emergencyPatients.length > 1 ? 's' : ''}</span>
-        <span style={{ fontSize: 11, color: '#b91c1c' }}>{emergencyPatients.map(p => `${p.patientName} (${p.stationType})`).join(' · ')}</span>
-      </div>
-    )}
     <div style={S.kanban}>
       {visibleStations.map((station, i) => {
         const patients = byStation.get(station) ?? [];

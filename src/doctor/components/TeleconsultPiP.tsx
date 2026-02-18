@@ -95,7 +95,13 @@ export const TeleconsultPiP = () => {
   };
 
   const handleEndCall = () => {
+    const patientName = activeTeleconsultCall?.patientName;
+    const patientId = activeTeleconsultCall?.id;
+    const chiefComplaint = activeTeleconsultCall?.chiefComplaint;
     setActiveTeleconsultCall(null);
+    navigate('/doctor/encounter', {
+      state: { patientId, patientName, chiefComplaint },
+    });
   };
 
   return (

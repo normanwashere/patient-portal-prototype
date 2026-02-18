@@ -401,7 +401,7 @@ export const DoctorDashboard = () => {
       iconColor: 'var(--color-warning-dark)',
       route: '/doctor/loa',
       badge: loaPendingCount,
-      visible: loaEnabled,
+      visible: false,
       description: loaPendingCount > 0 ? `${loaPendingCount} pending review` : 'No pending',
     },
   ];
@@ -577,8 +577,8 @@ export const DoctorDashboard = () => {
         </div>
       )}
 
-      {/* ===== AI & Voice Assistant Section (Functional + Collapsible) ===== */}
-      <section style={{
+      {/* ===== AI & Voice Assistant Section — hidden for now ===== */}
+      {false && <section style={{
         background: aiEnabled
           ? 'linear-gradient(135deg, var(--color-gray-900) 0%, var(--color-gray-800) 60%, var(--color-gray-900) 100%)'
           : 'linear-gradient(135deg, var(--color-gray-800) 0%, var(--color-gray-700) 60%, var(--color-gray-800) 100%)',
@@ -826,7 +826,7 @@ export const DoctorDashboard = () => {
             </div>
           </div>
         )}
-      </section>
+      </section>}
 
       {/* ===== In-clinic patient cards (hidden when in teleconsult mode) ===== */}
       {doctorMode === 'in-clinic' && (

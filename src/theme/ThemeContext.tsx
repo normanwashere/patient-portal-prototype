@@ -19,7 +19,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [tenants, setTenants] = useState<Record<string, TenantConfig>>({ ...defaultTenants });
     const [tenantId, setTenantIdRaw] = useState<string>(() => {
         const params = new URLSearchParams(window.location.search);
-        return params.get('tenant') || 'metroGeneral';
+        return params.get('tenant') || 'maxicare';
     });
 
     const tenant = tenants[tenantId] || defaultTenant;
@@ -40,7 +40,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             delete next[id];
             return next;
         });
-        setTenantIdRaw(prev => prev === id ? 'metroGeneral' : prev);
+        setTenantIdRaw(prev => prev === id ? 'maxicare' : prev);
     }, []);
 
     // Update features for the currently active tenant in real-time

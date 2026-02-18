@@ -176,7 +176,7 @@ interface ProviderContextType {
   deferOrder: (patientId: string, orderId: string) => void;
   /** Check in a new walk-in patient */
   checkInPatient: (name: string, complaint: string, priority: QueuePatient['priority']) => void;
-  callNextPatient: (stationId: string) => void;
+  callNextPatient: (stationId: string, patientId?: string) => void;
   startPatient: (patientId: string) => void;
   completePatient: (patientId: string) => void;
   markNoShow: (patientId: string) => void;
@@ -350,9 +350,9 @@ const isToday = (dateStr: string) => {
 
 export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { tenant } = useTheme();
-  const firstDoctor = MOCK_STAFF.find((s) => s.role === 'doctor') ?? MOCK_STAFF[0];
+  const defaultStaff = MOCK_STAFF.find((s) => s.role === 'super_admin') ?? MOCK_STAFF.find((s) => s.role === 'doctor') ?? MOCK_STAFF[0];
 
-  const [currentStaff, setCurrentStaff] = useState<StaffUser>(firstDoctor);
+  const [currentStaff, setCurrentStaff] = useState<StaffUser>(defaultStaff);
   const [currentApp, setCurrentApp] = useState<CurrentApp>('provider');
   const [queueMode, setQueueMode] = useState<QueueMode>('LINEAR');
   const [doctorMode, setDoctorModeState] = useState<DoctorMode>('in-clinic');
@@ -625,8 +625,13 @@ export const ProviderProvider: React.FC<{ children: ReactNode }> = ({ children }
     _audit('order_complete', 'Queue', 'Completed current order');
   }, [_audit]);
 
-  const callNextPatient = useCallback((stationId: string) => {
+  const callNextPatient = useCallback((stationId: string, patientId?: string) => {
     setQueuePatients((prev) => {
+      if (patientId) {
+        const target = prev.find((p) => p.id === patientId && p.status === 'QUEUED');
+        if (!target) return prev;
+        return prev.map((p) => (p.id === patientId ? { ...p, status: 'READY' as const } : p));
+      }
       const queued = prev.filter(
         (p) => p.status === 'QUEUED' && (p.stationName === stationId || p.stationType === stationId)
       );

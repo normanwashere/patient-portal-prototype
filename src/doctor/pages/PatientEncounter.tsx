@@ -987,6 +987,7 @@ export const PatientEncounter = () => {
         const onMetformin = patientMeds.some(p => p.medication.toLowerCase().includes('metformin'));
         if (onMetformin) {
           addCdssAlert({
+            patientId,
             type: 'drug_interaction',
             severity: 'major',
             title: 'Contrast-Drug Interaction Risk',
@@ -1006,6 +1007,7 @@ export const PatientEncounter = () => {
       );
       if (existingOrder) {
         addCdssAlert({
+          patientId,
           type: 'duplicate_order',
           severity: 'moderate',
           title: 'Possible Duplicate Order',
@@ -1775,6 +1777,7 @@ export const PatientEncounter = () => {
         const crossReactive = allergyKeywords[allergy] ?? [];
         if (crossReactive.some(k => medNameLower.includes(k))) {
           addCdssAlert({
+            patientId,
             type: 'drug_allergy',
             severity: 'contraindicated',
             title: 'Allergy Cross-Reactivity',
@@ -1811,6 +1814,7 @@ export const PatientEncounter = () => {
           const conflicting = existingMeds.filter(m => rule.with.some(w => m.includes(w)));
           if (conflicting.length > 0) {
             addCdssAlert({
+              patientId,
               type: 'drug_interaction',
               severity,
               title: 'Drug-Drug Interaction',
@@ -1826,6 +1830,7 @@ export const PatientEncounter = () => {
         // Check reverse too — if existing meds contain the key drug
         if (rule.with.some(w => medNameLower.includes(w)) && existingMeds.some(m => m.includes(drug))) {
           addCdssAlert({
+            patientId,
             type: 'drug_interaction',
             severity,
             title: 'Drug-Drug Interaction',
@@ -1843,6 +1848,7 @@ export const PatientEncounter = () => {
       const dosageNum = parseFloat(rxDosage);
       if (medNameLower.includes('amlodipine') && dosageNum >= 10) {
         addCdssAlert({
+          patientId,
           type: 'dosage_range',
           severity: 'moderate',
           title: 'High Dose Alert',
@@ -1857,6 +1863,7 @@ export const PatientEncounter = () => {
       // Controlled substance warning
       if (rxSelectedMed.stockStatus && pharmacyItems.find(p => p.name === medName)?.isControlled) {
         addCdssAlert({
+          patientId,
           type: 'guideline',
           severity: 'moderate',
           title: 'Controlled Substance Prescribed',
