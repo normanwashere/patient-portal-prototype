@@ -626,6 +626,7 @@ export const DoctorPrescriptions = () => {
                                     addPrescription({
                                       patientId: rx.patientId,
                                       patientName: rx.patientName,
+                                      doctorId: rx.doctorId,
                                       doctorName: rx.doctorName,
                                       medication: rx.medication,
                                       dosage: rx.dosage,
